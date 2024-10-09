@@ -1,0 +1,99 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="F6B5E0D0-7B65-B867-6B3E-62CA1DFCB1D9" name="PetnCo.Ordenes">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 01:48:09 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<ordsAlias>table_5</ordsAlias>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="CodigoUnicoOrden" id="F7E98DE4-472E-E73A-5F8D-AC8C94F52E6D">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:20:34 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="SKUProducto" id="7B18A122-69CE-2098-ED05-B02D5B7D60A5">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:20:34 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="NombreProducto" id="D4FE5696-6EC4-7879-7864-D6A001DEA65C">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:20:34 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128</dataTypeSize>
+<ownDataTypeParameters>128,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="RutUsuario" id="8B9A6668-E438-CA82-F544-0AC5D5AE31B4">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:20:34 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="EmailUsuario" id="0FD9588F-F5CD-7BEC-59F9-AFBBE1BC7741">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:20:34 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128 CHAR</dataTypeSize>
+<ownDataTypeParameters>128 CHAR,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="DomicilioUsuario" id="A7AEA830-0887-A22C-7F2C-12CF282EC3C3">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:20:34 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128</dataTypeSize>
+<ownDataTypeParameters>128,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="FechaEstimadaOrden" id="016EF5F6-9491-CFB4-A57E-D45F87FC2A76">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:20:34 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="6264F97A-1F5D-6832-9817-22D9A7DFCC23" name="PetnCo.Ordenes_PK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:21:51 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="F7E98DE4-472E-E73A-5F8D-AC8C94F52E6D"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

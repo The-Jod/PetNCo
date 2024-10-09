@@ -1,0 +1,17 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<FKIndexAssociation class="oracle.dbtools.crest.model.design.relational.FKIndexAssociation" directorySegmentName="seg_0" id="414B7568-AD2F-7DDF-E8DF-04B5F14F624F" containerWithKeyObject="ED94705A-F46D-061D-59BB-C7043E8D69D7" localFKIndex="5CBEA0D9-0557-4BB9-001E-AA98F49BF6CC" name="PetnCo.Veterinarias_PetnCo.Usuarios_FK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<generatorID>4E0FCEE7-A648-4B33-B529-218B9997CE48</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<referredTableLongName>PetnCo.Usuarios</referredTableLongName>
+<deleteRule>NO ACTION</deleteRule>
+<referredTableID>0691D3D5-D1EF-98CE-4095-A7493B8BFF43</referredTableID>
+<keyObject>9F04C0E6-CE31-540E-2C55-DF9338B38A1D</keyObject>
+<referredKeyID>9F04C0E6-CE31-540E-2C55-DF9338B38A1D</referredKeyID>
+<mandatory>false</mandatory>
+<refColNames>RutUsuario</refColNames>
+<transferable>true</transferable>
+<rely>false</rely>
+<columnDependencyConstraintGenerateInDDL>true</columnDependencyConstraintGenerateInDDL>
+</FKIndexAssociation>

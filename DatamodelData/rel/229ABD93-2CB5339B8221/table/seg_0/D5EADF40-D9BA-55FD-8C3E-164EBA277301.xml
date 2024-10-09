@@ -1,0 +1,75 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="D5EADF40-D9BA-55FD-8C3E-164EBA277301" name="Relation_3">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="PetnCo.Productos_SKUProducto" id="4D427824-F418-587D-4B94-06850942EE3B">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="D8A20569-69E2-B4AC-6135-86F5F6C9A448" referredColumn="6D1FCC74-2F23-8A32-D42D-7DBB8BA203AD"/>
+</associations>
+</Column>
+<Column name="PetnCo.Ordenes_CodigoUnicoOrden" id="71F261CF-FC39-2BA0-BE4D-85B863A77CDE">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="DA3EB357-AD51-C42C-AC26-F893F41963D3" referredColumn="F7E98DE4-472E-E73A-5F8D-AC8C94F52E6D"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="D9B6C458-6B0E-506D-4D83-A05B9FC53D32" name="Relation_3_PK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="4D427824-F418-587D-4B94-06850942EE3B"/>
+<colUsage columnID="71F261CF-FC39-2BA0-BE4D-85B863A77CDE"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="35AFAC58-8197-53C1-1424-97AF481C81A1" name="Relation_3_PetnCo.Productos_FK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<generatorID>EDA9294E-A7E2-84D4-3B38-8B632B5B7D4F</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="4D427824-F418-587D-4B94-06850942EE3B"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="203E67AF-DC6A-097C-C726-D9D12D712069" name="Relation_3_PetnCo.Ordenes_FK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<generatorID>EDA9294E-A7E2-84D4-3B38-8B632B5B7D4F</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="71F261CF-FC39-2BA0-BE4D-85B863A77CDE"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

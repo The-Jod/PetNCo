@@ -1,0 +1,137 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="ED94705A-F46D-061D-59BB-C7043E8D69D7" name="PetnCo.Veterinarias">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 01:47:57 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<ordsAlias>table_4</ordsAlias>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="CodigoVeterinaria" id="85D3A041-C3F0-6C09-FFA7-3867F46E9412">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>2F9FF457-DC63-4B0E-539A-CDFA0CE85E97</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="NombreVeterinaria" id="A1BF7D61-BCA0-C4C8-045C-2A46CE62A80B">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>4DE9E595-E810-997B-E1D2-807ACDAE4539</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="LocalidadVeterinaria" id="CC8A2E8C-72B4-95B8-C5C2-C99B7DE555CC">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>67602CE4-C0CB-D830-4B25-922C3BF548E9</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="HoraInicioVeterinaria" id="98C85784-54F8-E6B8-839F-0BB6B479804E">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>CC1BD9FA-7868-3477-8A18-5034EF6B7003</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT015</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="HoraCierreVeterinaria" id="FE49AD4D-F3C0-0A3B-1AB2-EC3F1E3B6741">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>C743336B-67C7-DB09-068C-934DE7167840</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT015</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="CalificacionVeterinaria" id="78AC8210-6383-7640-215C-F99C96ABA349">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>0D753285-37C7-3C92-BF6B-16ABE974191D</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT021</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="DisponibilidadVeterinaria" id="F02F4C88-AC30-30A9-525A-283B83162AC8">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>43C54A7B-6EDE-60D8-F49E-17DB696281F2</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT006</logicalDatatype>
+<dataTypeSize>1</dataTypeSize>
+<ownDataTypeParameters>1,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="TipoAnimal" id="25A16AD8-7207-DDA5-3379-6B774BA0D7EA">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>D7099EEF-0755-B5D5-847A-747627690100</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT021</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="PetnCo.Usuarios_RutUsuario" id="C0B63FD2-4F3C-8039-965B-1F5660ECA019">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:14 UTC</createdTime>
+<generatorID>55B0F6D3-2A63-1155-06CD-A99DCC6FEE41</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="414B7568-AD2F-7DDF-E8DF-04B5F14F624F" referredColumn="F8F907EA-0EB7-55BE-2A54-2023759C7D55"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="5CBEA0D9-0557-4BB9-001E-AA98F49BF6CC" name="PetnCo.Veterinarias_PetnCo.Usuarios_FK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<generatorID>4E0FCEE7-A648-4B33-B529-218B9997CE48</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="C0B63FD2-4F3C-8039-965B-1F5660ECA019"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

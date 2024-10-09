@@ -1,0 +1,118 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="61747AB9-43FE-95CA-91EB-722EEF4A19B2" name="PetnCo.Productos">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>BF573B2C-7756-93DF-35CF-4905282D4BFB</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="SKUProducto" id="7367241D-EAC0-324C-96BA-F718D777E27A">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>6D1FCC74-2F23-8A32-D42D-7DBB8BA203AD</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="NombreProducto" id="B52917FB-3909-211A-3EE4-CF9E7F35AC30">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>DB8890E8-D9A1-1E5A-F88D-7264D53F6502</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128 CHAR</dataTypeSize>
+<ownDataTypeParameters>128 CHAR,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="StockProducto" id="0F200A7A-E487-A191-90EF-78D36299F09C">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>919BB332-E79F-C1BE-B86C-56DB9590E3A8</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="PrecioProducto" id="85AA6FC7-B2DB-7E6E-3970-22E33F79736B">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>0525A35C-EB3A-ECFA-5932-705A9BD7FD80</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="DescripcionProducto" id="6061F96E-E242-3796-E614-014457B3362C">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>1E2D715E-548A-052C-4FB8-93C6F5F8CA3C</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>500 CHAR</dataTypeSize>
+<ownDataTypeParameters>500 CHAR,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="TipoAnimal" id="78DECF0C-C829-23BC-5A90-A3D7C9C0277E">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>7B5585C0-7A06-43E3-E039-D85E55BC1F9F</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT021</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="B0432335-CB27-1027-651A-783AEF9F4ADE" name="PetnCo.Productos PK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>87863F68-7912-5F84-81E3-21C20FA601C4</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<shouldEngineer>false</shouldEngineer>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="false"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>7367241D-EAC0-324C-96BA-F718D777E27A</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

@@ -1,0 +1,131 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="C7F98C78-DDD7-4FA8-C1CB-87B2A022C9F4" name="PetnCo.Ordenes">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>F6B5E0D0-7B65-B867-6B3E-62CA1DFCB1D9</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="CodigoUnicoOrden" id="B08F7524-8575-0631-5B2A-AE07DE7CE3AF">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>F7E98DE4-472E-E73A-5F8D-AC8C94F52E6D</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="SKUProducto" id="8744E1E9-9B91-5D08-DBA4-363C402AE4DB">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>7B18A122-69CE-2098-ED05-B02D5B7D60A5</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="NombreProducto" id="6A28D1F8-EC8C-4F18-0C2A-CAA47DD5A94A">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>D4FE5696-6EC4-7879-7864-D6A001DEA65C</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128</dataTypeSize>
+<ownDataTypeParameters>128,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="RutUsuario" id="B6F6DB73-C7A8-DC4C-710A-5C3AF263C77F">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>8B9A6668-E438-CA82-F544-0AC5D5AE31B4</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="EmailUsuario" id="7A322E45-F84F-2687-A1EC-E8816460EA0D">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>0FD9588F-F5CD-7BEC-59F9-AFBBE1BC7741</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128 CHAR</dataTypeSize>
+<ownDataTypeParameters>128 CHAR,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="DomicilioUsuario" id="A2623965-6D4C-FF36-1FEE-0B4CB3DE2794">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>A7AEA830-0887-A22C-7F2C-12CF282EC3C3</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128</dataTypeSize>
+<ownDataTypeParameters>128,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="FechaEstimadaOrden" id="899D9DB0-8F96-1EFA-0EEB-8FD39CC00AFB">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>016EF5F6-9491-CFB4-A57E-D45F87FC2A76</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="0872DCE4-D588-9752-96BC-B47DD44BB5EF" name="PetnCo.Ordenes PK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>6264F97A-1F5D-6832-9817-22D9A7DFCC23</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<shouldEngineer>false</shouldEngineer>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="false"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>B08F7524-8575-0631-5B2A-AE07DE7CE3AF</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

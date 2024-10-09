@@ -1,0 +1,119 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="28C72AA5-917F-4EF1-6D00-3C63FD3AED78" name="PetnCo.Usuarios">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>0691D3D5-D1EF-98CE-4095-A7493B8BFF43</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="RutUsuario" id="7230EC84-60CA-CDCA-5904-FBC98263FE5E">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>F8F907EA-0EB7-55BE-2A54-2023759C7D55</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="NombreUsuario" id="458FF4A9-DDEF-057A-7518-A1C944C5472E">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>01009B0D-A229-EAD9-047D-D2DA41E318A7</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>60 CHAR</dataTypeSize>
+<ownDataTypeParameters>60 CHAR,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="PasswordUsuario" id="8E4079D6-15DB-7CA6-BD9E-8A3BECABF29B">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>26088FA0-94E9-7FD7-5FBB-6F615808C4FA</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>60</dataTypeSize>
+<ownDataTypeParameters>60,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="EmailUsuario" id="2CFBDF05-0F24-9EE2-2352-5FE53A7B4011">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>0603CB0C-FC8E-2B07-4569-5F16208D080A</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128 CHAR</dataTypeSize>
+<ownDataTypeParameters>128 CHAR,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="DomicilioUsuario" id="F07BC37D-5499-79FE-464D-8A3FE3EEC0F5">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>3047AEBC-B72B-B6AE-9A92-CF157458F865</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128 CHAR</dataTypeSize>
+<ownDataTypeParameters>128 CHAR,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="TipoAnimal" id="2E8FC9D8-6B7C-1FC8-1346-A93840601389">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>AC55CA5F-7845-3DD2-7C30-71DF13DD90C9</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT021</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="F428A9E6-880A-A3CF-3F7A-EC4858812E1A" name="PetnCo.Usuarios PK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:25:04 UTC</createdTime>
+<generatorID>9F04C0E6-CE31-540E-2C55-DF9338B38A1D</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<shouldEngineer>false</shouldEngineer>
+<engineerTo>
+<item key="229ABD93-A9A2-3E84-05A0-2CB5339B8221" value="false"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>7230EC84-60CA-CDCA-5904-FBC98263FE5E</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

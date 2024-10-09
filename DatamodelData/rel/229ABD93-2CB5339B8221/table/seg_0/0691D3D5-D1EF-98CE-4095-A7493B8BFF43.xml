@@ -1,0 +1,90 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="0691D3D5-D1EF-98CE-4095-A7493B8BFF43" name="PetnCo.Usuarios">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 01:46:54 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<ordsAlias>table_1</ordsAlias>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="RutUsuario" id="F8F907EA-0EB7-55BE-2A54-2023759C7D55">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:11:28 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="NombreUsuario" id="01009B0D-A229-EAD9-047D-D2DA41E318A7">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:11:28 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>60 CHAR</dataTypeSize>
+<ownDataTypeParameters>60 CHAR,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="PasswordUsuario" id="26088FA0-94E9-7FD7-5FBB-6F615808C4FA">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:11:28 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>60</dataTypeSize>
+<ownDataTypeParameters>60,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="EmailUsuario" id="0603CB0C-FC8E-2B07-4569-5F16208D080A">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:11:28 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128 CHAR</dataTypeSize>
+<ownDataTypeParameters>128 CHAR,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="DomicilioUsuario" id="3047AEBC-B72B-B6AE-9A92-CF157458F865">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:11:28 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>128 CHAR</dataTypeSize>
+<ownDataTypeParameters>128 CHAR,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="TipoAnimal" id="AC55CA5F-7845-3DD2-7C30-71DF13DD90C9">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:11:28 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT021</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="9F04C0E6-CE31-540E-2C55-DF9338B38A1D" name="PetnCo.Usuarios_PK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:11:28 UTC</createdTime>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="F8F907EA-0EB7-55BE-2A54-2023759C7D55"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

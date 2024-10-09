@@ -1,0 +1,17 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<FKIndexAssociation class="oracle.dbtools.crest.model.design.relational.FKIndexAssociation" directorySegmentName="seg_0" id="D8A20569-69E2-B4AC-6135-86F5F6C9A448" containerWithKeyObject="D5EADF40-D9BA-55FD-8C3E-164EBA277301" localFKIndex="35AFAC58-8197-53C1-1424-97AF481C81A1" name="Relation_3_PetnCo.Productos_FK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<generatorID>EDA9294E-A7E2-84D4-3B38-8B632B5B7D4F</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<referredTableLongName>PetnCo.Productos</referredTableLongName>
+<deleteRule>NO ACTION</deleteRule>
+<referredTableID>BF573B2C-7756-93DF-35CF-4905282D4BFB</referredTableID>
+<keyObject>87863F68-7912-5F84-81E3-21C20FA601C4</keyObject>
+<referredKeyID>87863F68-7912-5F84-81E3-21C20FA601C4</referredKeyID>
+<mandatory>true</mandatory>
+<refColNames>SKUProducto</refColNames>
+<transferable>true</transferable>
+<rely>false</rely>
+<columnDependencyConstraintGenerateInDDL>true</columnDependencyConstraintGenerateInDDL>
+</FKIndexAssociation>

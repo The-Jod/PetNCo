@@ -1,0 +1,17 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<FKIndexAssociation class="oracle.dbtools.crest.model.design.relational.FKIndexAssociation" directorySegmentName="seg_0" id="DA3EB357-AD51-C42C-AC26-F893F41963D3" containerWithKeyObject="D5EADF40-D9BA-55FD-8C3E-164EBA277301" localFKIndex="203E67AF-DC6A-097C-C726-D9D12D712069" name="Relation_3_PetnCo.Ordenes_FK">
+<createdBy>Jod</createdBy>
+<createdTime>2024-10-05 02:43:15 UTC</createdTime>
+<generatorID>EDA9294E-A7E2-84D4-3B38-8B632B5B7D4F</generatorID>
+<ownerDesignName>DatamodelData</ownerDesignName>
+<referredTableLongName>PetnCo.Ordenes</referredTableLongName>
+<deleteRule>NO ACTION</deleteRule>
+<referredTableID>F6B5E0D0-7B65-B867-6B3E-62CA1DFCB1D9</referredTableID>
+<keyObject>6264F97A-1F5D-6832-9817-22D9A7DFCC23</keyObject>
+<referredKeyID>6264F97A-1F5D-6832-9817-22D9A7DFCC23</referredKeyID>
+<mandatory>true</mandatory>
+<refColNames>CodigoUnicoOrden</refColNames>
+<transferable>true</transferable>
+<rely>false</rely>
+<columnDependencyConstraintGenerateInDDL>true</columnDependencyConstraintGenerateInDDL>
+</FKIndexAssociation>
