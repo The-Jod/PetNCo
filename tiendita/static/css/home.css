@@ -1,0 +1,222 @@
+/*css camilo*/
+
+
+
+.marg {
+    /*Margen que nos permitirá que alejar nuestros elementos para evitar solapamiento*/
+    margin-bottom: 30px;
+}
+
+.zoom img {
+    width: 65%;
+    /*Definiremos el porcentaje del tamaño que utilizará la imagen (en base a su tamaño original)*/
+    height: auto;
+    /*Definimos la altura de nuestra imagen, la etiqueta "auto" la ajustará dependiendo de otros ajustes(el 65% que tenemos arriba, etc)*/
+    overflow: hidden;
+    /*Esconderá los bordes de la imagen al agrandarsee*/
+}
+
+.zoom:hover img {
+    transform: scale(1.25);
+    /*Modificará el tamaño de la imagen*/
+    transition: .5s ease;
+    /*Definirá el tiempo para que suceda el evento anterior*/
+}
+
+
+.carousel-item {
+    height: 100vh;
+    min-height: 350px;
+    background: no-repeat center center scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+
+.carousel-item img {
+    object-fit: cover;
+    object-position: center;
+    height: 90vh;
+
+}
+
+.carousel-caption {
+    bottom: 20%;
+    z-index: 10;
+    padding: 20px;
+    color: #fff;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.5);
+
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+}
+
+.carousel-caption h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.carousel-caption h2 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.btn-light {
+    color: #000;
+    background-color: #fff;
+    border-color: #fff;
+}
+
+@media (max-width: 768px) {
+    .carousel-item {
+        height: 70vh;
+    }
+
+    .carousel-caption {
+        bottom: 10%;
+        padding: 10px;
+    }
+
+    .carousel-caption h1 {
+        font-size: 2rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1.2rem;
+    }
+
+    .btn-lg {
+        padding: .5rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .carousel-item {
+        height: 50vh;
+    }
+
+    .carousel-caption h1 {
+        font-size: 1.5rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1rem;
+    }
+}
+
+@keyframes offsetr
+
+/*Ajustaremos los puntos de trayectoria de nuestra animacion*/
+    {
+    from {
+        transform: translateX(-5px);
+    }
+
+    /*modifica la animacion*/
+    to {
+        transform: translateX(5px);
+    }
+
+    /*modifica la animacion*/
+}
+
+.separador {
+    background-color: rgb(47, 0, 255);
+    /*Le daremos color a nuestro separador*/
+    width: auto;
+    /*ajustamos el ancho*/
+    height: 7px;
+    /*ajustamos la altura*/
+    border-radius: 30px;
+    /*Ajustaremos el borde para suavizar las esquinas*/
+}
+
+.sombreado {
+    border-radius: 30px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.5);
+    transition: 0.3s;
+    width: 50%;
+}
+
+.sombreado:hover {
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.5);
+}
+
+.footer-general {
+    padding: 70px 10px 20px;
+    font-size: 15px;
+    line-height: 15px;
+    color: #737373;
+}
+
+.center {
+    display: block;
+    margin-left: 150px;
+    margin-right: auto;
+    width: 55%;
+}
+
+.horizontal {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.brand-adjust {
+    margin-left: 20px;
+}
+
+.footer-pic {
+    margin-bottom: 30px;
+    float: left;
+}
+
+.footer-links {
+    padding-left: 0;
+    list-style: none
+}
+
+.footer-links li {
+    display: block;
+    margin-top: 8px;
+}
+
+.footer-links a {
+    color: #737373;
+    text-decoration: none;
+}
+
+.card {
+    transition: transform 0.2s;
+    /* Efecto de transformación suave */
+}
+
+.card:hover {
+    transform: scale(1.05);
+    /* Aumentar el tamaño de la tarjeta al pasar el mouse */
+}
+
+.card-img-top {
+    height: 200px;
+    /* Ajustar la altura de la imagen */
+    object-fit: cover;
+    /* Cubrir el espacio de la imagen */
+}
+
+.round-image {
+    border-radius: 50%;
+    /* Hace las imágenes circulares */
+    width: 100px;
+    /* Ajusta el tamaño según tus necesidades */
+    height: 100px;
+    /* Asegúrate de que la altura y el ancho sean iguales */
+    object-fit: cover;
+    /* Para asegurar que la imagen se recorte adecuadamente */
+}

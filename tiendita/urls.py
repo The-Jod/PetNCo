@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from tiendita import views
+from . import views
 
 """
 URL configuration for Petnco project.
@@ -27,5 +27,7 @@ Including another URLconf
 
 
 urlpatterns = [
-    path('', include('tiendita.urls')),
+    path('',views.home_view, name='home'),
+    path('catalogo',views.storefront_view, name='catalogo'),
+    path('registro_citas',views.vetdate_view, name='registro'),
 ]
