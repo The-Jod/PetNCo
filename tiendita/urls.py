@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from . import views
+from .views import  Product_ListView, Product_CreateView, Product_UpdateView, Product_DeleteView
 
 """
 URL configuration for Petnco project.
@@ -30,4 +31,8 @@ urlpatterns = [
     path('',views.home_view, name='home'),
     path('catalogo',views.storefront_view, name='catalogo'),
     path('registro_citas',views.vetdate_view, name='registro'),
+    path('productos/', Product_ListView.as_view(), name='catalog'),  # List products
+    path('productos/add/', Product_CreateView.as_view(), name='product_add'),  # Add new product
+    path('productos/<int:pk>/edit/', Product_UpdateView.as_view(), name='product_edit'),  # Edit product
+    path('productos/<int:pk>/delete/', Product_DeleteView.as_view(), name='product_delete'),  # Delete product
 ]
