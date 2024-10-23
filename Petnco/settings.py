@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
-ALLOWED_HOSTS = ['petnco.onrender.com', 'localhost',]
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +25,7 @@ SECRET_KEY = 'django-insecure-*ld_0&zk7w$hw@nd*z%ja=7&&jj%t)g4ca4t=u-^9**^dh-xse
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['petnco.onrender.com', 'localhost',]
 
 
 # Application definition
