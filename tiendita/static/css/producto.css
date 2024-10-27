@@ -1,0 +1,133 @@
+div {
+    margin-top: 20px;
+    /* Margen superior */
+    margin-right: 15px;
+    /* Margen derecho */
+    margin-bottom: 20px;
+    /* Margen inferior */
+    margin-left: 15px;
+    /* Margen izquierdo */
+}
+
+
+/* Estilos personalizados mejorados */
+.product-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.product-card {
+    position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    /* Borde gris claro para las tarjetas */
+    border-radius: 8px;
+    /* Esquinas redondeadas */
+}
+
+.product-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+}
+
+.sale-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    background: #dc3545;
+    color: white;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+.product-image {
+    aspect-ratio: 3/4;
+    background: #f0f0f0;
+    width: 100%;
+    transition: transform 0.3s;
+    /* Transición suave para hover */
+}
+
+.product-image:hover {
+    transform: scale(1.05);
+    /* Efecto zoom al pasar el ratón */
+}
+
+.product-title {
+    margin-top: 10px;
+    font-weight: 600;
+    /* Título más destacado */
+}
+
+.product-price {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    /* Centra los elementos verticalmente */
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+
+.select2-drpdwn-product {
+    min-width: 150px;
+}
+
+/* Estilos adicionales para botones */
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    transition: background-color 0.3s;
+    /* Efecto de transición */
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    /* Color más oscuro al pasar el ratón */
+}
+
+.category-a {
+    background-color: #e7f1ff;
+    /* Azul claro */
+}
+
+.category-b {
+    background-color: #ffe7e7;
+    /* Rosa claro */
+}
+
+.product-card {
+    border: 1px solid #ccc;
+    /* Borde estándar */
+    transition: transform 0.2s;
+    /* Efecto de hover */
+}
+
+.product-card:hover {
+    transform: scale(1.05);
+    /* Aumenta un poco el tamaño al pasar el mouse */
+}
+
+.card-body {
+    padding: 15px;
+    /* Espaciado dentro de la tarjeta */
+}
+
+/* Media queries para responsive */
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* Dos columnas en pantallas pequeñas */
+    }
+}
+
+@media (max-width: 576px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+        /* Una columna en pantallas muy pequeñas */
+    }
+}

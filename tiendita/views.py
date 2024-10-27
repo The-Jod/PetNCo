@@ -3,6 +3,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 from .models import Producto
+from django.core.paginator import Paginator
 
 # Aqui van las famosas vistas, no confundir
 
@@ -21,10 +22,13 @@ def vetdate_view(request):
 def storefront_view(request):
     return render(request, 'catalogo.html')
 
+
+
 class Product_ListView(ListView):
     model = Producto
     template_name = 'catalog/product_list.html'
     context_object_name = 'productos'
+
 
 class Product_CreateView(CreateView):
     model = Producto
