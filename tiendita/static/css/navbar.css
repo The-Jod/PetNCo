@@ -1,0 +1,24 @@
+/* Estilo del Navbar */
+.navbar {
+    background-color: rgba(74, 144, 226, 1);
+    /* Color de fondo principal */
+    border-bottom: 2px solid rgba(142, 68, 173, 1);
+    /* Color del borde inferior */
+}
+
+/* Estilo de los enlaces */
+.nav-link {
+    color: white;
+    /* Color de texto de los enlaces */
+}
+
+.nav-link:hover {
+    background-color: rgba(142, 68, 173, 0.8);
+    /* Color de fondo al pasar el ratón */
+}
+
+/* Estilo del menú desplegable (si lo tienes) */
+.navbar-collapse {
+    background-color: rgba(74, 144, 226, 1);
+    /* Color de fondo del menú desplegable */
+}

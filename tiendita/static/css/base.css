@@ -1,0 +1,272 @@
+/* Variables Globales */
+:root {
+    /* Colores Principales */
+    --primary: #4A90E2;
+    --secondary: #8E44AD;
+    --accent: #2ECC71;
+
+    /* Gradientes */
+    --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+    --gradient-hover: linear-gradient(135deg, var(--secondary), var(--primary));
+
+    /* Neutros */
+    --dark: #2C3E50;
+    --light: #ECF0F1;
+    --white: #FFFFFF;
+
+    /* Estados */
+    --success: #27AE60;
+    --warning: #F1C40F;
+    --danger: #E74C3C;
+
+    /* Sombras */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    /* Animaciones */
+    --transition-fast: 200ms ease-in-out;
+    --transition-normal: 300ms ease-in-out;
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset y Estilos Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--dark);
+    overflow-x: hidden;
+}
+
+/* Navbar Styles */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 1rem 2rem;
+    transition: var(--transition-normal);
+}
+
+.navbar-scrolled {
+    box-shadow: var(--shadow-md);
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-logo {
+    height: 50px;
+    transition: var(--transition-normal);
+}
+
+.navbar-scrolled .nav-logo {
+    height: 45px;
+}
+
+.brand-text {
+    color: var(--white);
+    font-weight: 600;
+    font-size: 1.5rem;
+    transition: var(--transition-normal);
+}
+
+.navbar-nav {
+    gap: 1rem;
+}
+
+.nav-link {
+    color: var(--white) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--white);
+    transform: translateX(-100%);
+    transition: var(--transition-normal);
+}
+
+.nav-link:hover::before {
+    transform: translateX(0);
+}
+
+.nav-icon {
+    transition: var(--transition-normal);
+}
+
+.nav-link:hover .nav-icon {
+    transform: translateY(-3px);
+}
+
+.cart-link {
+    position: relative;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent);
+    color: var(--white);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+}
+
+/* Estilos generales del footer */
+.footer-general {
+    padding: 70px 10px 20px;
+    font-size: 0.9375rem;
+    /* 15px convertido a rem */
+    line-height: 1.5;
+    /* Mejor legibilidad */
+    color: #737373;
+}
+
+/* Clases de alineación y disposición */
+.center {
+    display: block;
+    margin: 0 auto;
+    width: 55%;
+    max-width: 800px;
+    /* Previene imágenes demasiado grandes */
+    height: auto;
+    /* Mantiene la proporción */
+}
+
+.horizontal {
+    width: 90%;
+    max-width: 1200px;
+    /* Límite máximo de ancho */
+    margin: 0 auto;
+    height: auto;
+}
+
+/* Ajustes de marca y logos */
+.brand-adjust {
+    margin-left: 1.25rem;
+    /* 20px convertido a rem */
+}
+
+/* Estilos del footer */
+.footer-pic {
+    margin-bottom: 1.875rem;
+    /* 30px convertido a rem */
+    float: left;
+    max-width: 100%;
+    /* Responsividad */
+    height: auto;
+}
+
+.footer-links {
+    padding-left: 0;
+    list-style: none;
+    margin: 0;
+    /* Reset de margen */
+}
+
+.footer-links li {
+    display: block;
+    margin-top: 0.5rem;
+    /* 8px convertido a rem */
+}
+
+.footer-links a {
+    color: #737373;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    /* Transición suave */
+}
+
+.footer-links a:hover {
+    color: #333;
+    /* Efecto hover */
+}
+
+/* Estilos de tarjetas */
+.card {
+    transition: transform 0.2s ease;
+    will-change: transform;
+    /* Optimización de rendimiento */
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+    /* Asegura que la imagen ocupe todo el ancho */
+}
+
+/* Imágenes circulares */
+.round-image {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+    /* Mejor control del espaciado */
+}
+
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+    .center {
+        width: 85%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .horizontal {
+        width: 95%;
+    }
+
+    .card-img-top {
+        height: 150px;
+        /* Altura reducida para móviles */
+    }
+
+    .round-image {
+        width: 80px;
+        /* Tamaño reducido para móviles */
+        height: 80px;
+    }
+}
+
+/* Optimizaciones de rendimiento para imágenes */
+img {
+    max-width: 100%;
+    height: auto;
+    backface-visibility: hidden;
+    /* Mejora rendimiento en transformaciones */
+    -webkit-font-smoothing: antialiased;
+    transform: translateZ(0);
+    /* Fuerza aceleración por hardware */
+}

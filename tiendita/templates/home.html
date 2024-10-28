@@ -5,66 +5,15 @@
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
 {% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
 
 {% endblock %}
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
-<!-- Modal para crear el Usuario -->
-<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="userModalLabel">Crear Nuevo Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="userForm" method="POST" action="#">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="nombreUsuario" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombreUsuario" name="nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="correoUsuario" class="form-label">Correo</label>
-                        <input type="email" class="form-control" id="correoUsuario" name="correo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="passwordUsuario" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="passwordUsuario" name="password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Crear Usuario</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Modal para crear el Carrito -->
-<div class="modal fade" id="carritoModal" tabindex="-1" aria-labelledby="carritoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="carritoModalLabel">Crear Carrito de Compras</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="carritoForm" method="POST" action="#">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="nombreCarrito" class="form-label">Nombre del Carrito</label>
-                        <input type="text" class="form-control" id="nombreCarrito" name="nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productosCarrito" class="form-label">Productos (IDs, separados por
-                            comas)</label>
-                        <input type="text" class="form-control" id="productosCarrito" name="productos" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Crear Carrito</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Carrusel Hero -->
 <section class="hero-section">
@@ -233,80 +182,6 @@
     </div>
 
 </section>
-{% block extra_scripts %}
-<!-- Cierra extencion y fin de pagina  -->
+
 
 {% endblock %}
-{% endblock %}
-<section class="features py-5">
-    <div class="container">
-        <h2 class="title display-6 mb-4">Nuestros productos</h2>
-        <div class="row service-options">
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaRopa.png' %}" class="round-image" alt="Categoria Ropa">
-                <h4 class="service-title">Ropa</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaComida.png' %}" class="round-image" alt="Categoria Comida">
-                <h4 class="service-title">Alimentos</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaJuguetes.png' %}" class="round-image" alt="Categoria Juguetes">
-                <h4 class="service-title">Juguetes</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaAccesorios.png' %}" class="round-image" alt="Categoria Accesorios">
-                <h4 class="service-title">Accesorios</h4>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="features py-5">
-    <div class="container">
-        <h2 class="title display-6 mb-4">Nuestros servicios</h2>
-        <div class="row service-options">
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaLimpieza.png' %}" class="round-image" alt="Categoria Limpieza">
-                <h4 class="service-title">Limpieza y aseo</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaVacunas.png' %}" class="round-image" alt="Categoria Vacunas">
-                <h4 class="service-title">Vacunas</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaConsultasLP.png' %}" class="round-image" alt="Categoria Consultas">
-                <h4 class="service-title">Consultas y chequeos</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/VeterinarioLP.png' %}" class="round-image" alt="Categoria Veterinario">
-                <h4 class="service-title">Veterinario a domicilio</h4>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="features py-5">
-    <div class="container">
-        <h2 class="title display-6 mb-4">Tenemos todo lo que necesitas</h2>
-        <div class="row service-options">
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaLimpieza.png' %}" class="round-image" alt="Categoría Limpieza">
-                <h4 class="service-title">Limpieza</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaSalud.png' %}" class="round-image" alt="Categoría Salud">
-                <h4 class="service-title">Salud</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/categoriaAdopcion.jpg' %}" class="round-image" alt="Categoría Adopción">
-                <h4 class="service-title">Adopción</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/categoriaEntrenamiento.jpg' %}" class="round-image"
-                    alt="Categoría Entrenamiento">
-                <h4 class="service-title">Entrenamiento</h4>
-            </div>
-        </div>
-    </div>
-</section>

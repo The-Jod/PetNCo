@@ -1,12 +1,3 @@
-/*css camilo*/
-
-
-
-.marg {
-    /*Margen que nos permitirá que alejar nuestros elementos para evitar solapamiento*/
-    margin-bottom: 30px;
-}
-
 .zoom img {
     width: 65%;
     /*Definiremos el porcentaje del tamaño que utilizará la imagen (en base a su tamaño original)*/
