@@ -44,6 +44,187 @@ body {
     overflow-x: hidden;
 }
 
+.hero-section {
+    position: relative;
+    overflow: hidden;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+}
+
+#heroCarousel {
+    position: relative;
+    height: 100vh;
+    min-height: 600px;
+}
+
+.carousel-item {
+    height: 100vh;
+    min-height: 600px;
+    background-color: #000;
+}
+
+.carousel-item img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    opacity: 0.8;
+    transition: transform 6s ease-in-out;
+}
+
+.carousel-item.active img {
+    transform: scale(1.1);
+}
+
+.carousel-caption {
+    bottom: 50%;
+    transform: translateY(50%);
+    padding: 0 20px;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.carousel-caption h1 {
+    font-size: 4.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.5s ease-out 0.3s;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.carousel-caption h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.5s ease-out 0.5s;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.carousel-item.active .carousel-caption h1,
+.carousel-item.active .carousel-caption h2 {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.carousel-caption .btn {
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.5s ease-out 0.7s;
+    background: linear-gradient(45deg, #4285f4, #34a853);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-item.active .carousel-caption .btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.carousel-caption .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(45deg, #34a853, #4285f4);
+}
+
+.carousel-indicators {
+    bottom: 40px;
+}
+
+.carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 8px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    transition: all 0.5s ease;
+}
+
+.carousel-indicators button.active {
+    width: 30px;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 10%;
+    opacity: 0;
+    transition: all 0.5s ease;
+}
+
+.hero-section:hover .carousel-control-prev,
+.hero-section:hover .carousel-control-next {
+    opacity: 0.8;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    background-size: 50%;
+}
+
+@media (max-width: 992px) {
+    .carousel-caption h1 {
+        font-size: 3.5rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    #heroCarousel {
+        height: 80vh;
+    }
+
+    .carousel-item {
+        height: 80vh;
+    }
+
+    .carousel-caption {
+        padding: 0 15px;
+    }
+
+    .carousel-caption h1 {
+        font-size: 2.5rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1.4rem;
+    }
+
+    .carousel-caption .btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .carousel-caption h1 {
+        font-size: 2rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1.2rem;
+    }
+}
+
 /* Navbar Styles */
 .navbar {
     position: fixed;
@@ -228,12 +409,121 @@ body {
 /* Imágenes circulares */
 .round-image {
     border-radius: 50%;
-    width: 100px;
-    height: 100px;
+    width: 200px;
+    height: 200px;
     object-fit: cover;
     display: block;
-    /* Mejor control del espaciado */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Transiciones suaves */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    /* Sombra para un efecto de profundidad */
 }
+
+.round-image:hover {
+    transform: scale(1.1);
+    /* Escala la imagen al pasar el mouse */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    /* Aumenta la sombra al pasar el mouse */
+}
+
+.features {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.category-container {
+    padding: 2rem 0;
+}
+
+.category-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 16px rgba(0, 0, 0, 0.2);
+}
+
+.category-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(66, 133, 244, 0.15), rgba(219, 68, 55, 0.15));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.category-card:hover::before {
+    opacity: 1;
+}
+
+.category-icon {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.category-card:hover .category-icon {
+    transform: scale(1.1);
+}
+
+.category-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 1rem 0;
+    font-weight: 600;
+}
+
+.category-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.category-card:hover .category-description {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.title-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.title-section::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background: #4285f4;
+    margin: 1rem auto;
+    border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+    .category-card {
+        margin-bottom: 2rem;
+    }
+}
+
 
 
 /* Media queries para responsividad */
