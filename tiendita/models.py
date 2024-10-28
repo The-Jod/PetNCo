@@ -7,7 +7,7 @@ class Producto(models.Model):
     StockProducto = models.IntegerField()
     PrecioProducto = models.FloatField()
     DescripcionProducto = models.CharField(max_length=500)
-    TipoAnimal = models.FloatField()  
+    TipoAnimal = models.CharField(max_length=50)  # Cambio a CharField
 
     def __str__(self):
         return self.NombreProducto
