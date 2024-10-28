@@ -2,92 +2,87 @@
 {% load static %} <!-- Renderiza archivos staticos-->
 
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
-{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
+{% block title %}Agenda tu Cita{%endblock%}
 
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
+<link rel="stylesheet" href="{% static 'css/citas.css' %}">
 
 <body>
+   
+    <div class="row">
+        <div class="col-3 filter-position">
+             <!--Filtro de comunas-->
+                <label for="sortComunas" class="form-label">Ingresa tu comuna:</label>
+            <select id="sortComunas" class="form-select">
+                <option value="todas">Todas las comunas</option>
+                <option value="maipu">Maipú</option>
+                <option value="pudahuel">Pudahuel</option>
+                <option value="loprado">Lo Prado</option>
+                <option value="cerrillos">Cerrillos</option>
+                <option value="cerronavia">Cerro Navia</option>
+                <option value="estacioncentral">Estación Central</option>
+            </select>
+            <!--Filtro de citas-->
+                <label for="sortTipoCita" class="form-label">Ingresa tu tipo de cita:</label>
+            <select id="sortTipoCita" class="form-select">
+                <option value="">Todas las citas</option>
+                <option value="adomicilio">A domicilio</option>
+                <option value="onsite">On-Site</option>
+            </select>
+            <!--Filtro de mascotas-->
+            <label for="sortMascota" class="form-label">Ingresa tu mascota:</label>
+            <select id="sortMascota" class="form-select">
+                <option value="">Todas las mascotas</option>
+                <option value="perro">Perro</option>
+                <option value="gato">Gato</option>
+            </select>
+            <button class="filter-button">Aplicar filtros</button>
 
-    <!--Modal AGenda cita-->
-    <div>
-        <!-- Modal para crear el la cita medica -->
-        <div class="modal fade" id="citaModal" tabindex="-1" aria-labelledby="citaModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="citaModalLabel">Crear Cita medica</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="citaForm">
-                            <div class="mb-3">
-                                <label for="nombreMascota" class="form-label">Nombre de la Mascota</label>
-                                <input type="text" class="form-control" id="nombreMascota" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="tipoMascota" class="form-label">Tipo de Mascota</label>
-                                <select class="form-select" id="tipoMascota" required>
-                                    <option value="">Seleccione tipo de mascota</option>
-                                    <option value="perro">Perro</option>
-                                    <option value="gato">Gato</option>
-                                    <option value="ave">Ave</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="especialista" class="form-label">Tipo de Consulta</label>
-                                <select class="form-select" id="especialista" required>
-                                    <option value="general">Veterinario General</option>
-                                    <option value="dermatologia">Dermatología</option>
-                                    <option value="cirugia">Cirugía</option>
-                                    <option value="odontologia">Odontología</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="fechaCita" class="form-label">Fecha y Hora de la Cita</label>
-                                <input type="text" class="form-control" id="fechaCita" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="motivoCita" class="form-label">Motivo de la Cita</label>
-                                <textarea class="form-control" id="motivoCita" rows="3" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Agendar Cita</button>
-                        </form>
+            <!--Las cartas para mostrar al veterinario son un dummy, se volverá a codificar cuando tengamos datos para mostrar :p-->
+        </div>
+            <div class="col-9">
+                <div class="col-4 profile-card">
+                    <img src="{% static 'img/probando12.png' %}" alt="Veterinario" class="profile-image">
+                    <div class="profile-info">
+                        <h4>Arturo Pineda</h4>
+                        <p>Especialista en caninos</p>
+                        <div class="rating">
+                            <span>⭐ 4.5 / 5</span>
+                            <small>en 23 reseñas</small>
+                        </div>
+                        <p class="description">
+                            Profesional con 10 años de experiencia al cuidado y atención de animales, especializado en conocimientos sobre perros.
+                        </p>
+                        <p><strong>Opera en:</strong> Maipú, Pudahuel, Lo Prado</p>
+                        <div class="profile-buttons">
+                            <button class="btn view-profile">Ver perfil</button>
+                            <button class="btn schedule-appointment">Agendar una cita</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Contenedor para el selector de ordenamiento -->
-    <div class="mb-3">
-        <label for="sortSelect" class="form-label">Ordenar por:</label>
-        <select id="sortSelect" class="form-select">
-            <option value="nombre">Nombre</option>
-            <option value="especialidad">Especialidad</option>
-            <option value="disponibilidad">Disponibilidad</option>
-        </select>
-    </div>
-
-    <div class="row" id="veterinarioCards">
-        {% for veterinario in veterinarios %}
-        <div class="col-md-4 veterinario-card" data-nombre="{{ veterinario.nombre }}"
-            data-especialidad="{{ veterinario.especialidad }}" data-disponibilidad="{{ veterinario.disponibilidad }}">
-            <div class="card">
-                <img src="{% static veterinario.imagen %}" class="card-img-top" alt="{{ veterinario.nombre }}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ veterinario.nombre }}</h5>
-                    <p class="card-text">Especialidad: {{ veterinario.especialidad }}</p>
-                    <p class="card-text">Disponibilidad: {{ veterinario.disponibilidad }}</p>
+                <div class="col-4 profile-card">
+                    <img src="{% static 'img/probando123.jpg' %}" alt="Veterinario" class="profile-image">
+                    <div class="profile-info">
+                        <h4>Arturo Pineda</h4>
+                        <p>Especialista en caninos</p>
+                        <div class="rating">
+                            <span>⭐ 4.5 / 5</span>
+                            <small>en 23 reseñas</small>
+                        </div>
+                        <p class="description">
+                            Profesional con 10 años de experiencia al cuidado y atención de animales, especializado en conocimientos sobre perros.
+                        </p>
+                        <p><strong>Opera en:</strong> Maipú, Pudahuel, Lo Prado</p>
+                        <div class="profile-buttons">
+                            <button class="btn view-profile">Ver perfil</button>
+                            <button class="btn schedule-appointment">Agendar una cita</button>
+                        </div>
+                    </div>
                 </div>
-                <a href="#" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#citaModal"
-                    aria-label="Abrir Agenda de citas">Solicitar Cita</a>
-            </div>
-        </div>
-        {% endfor %}
+            </div>    
     </div>
 
+   
 
 
 

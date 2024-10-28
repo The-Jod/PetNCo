@@ -1,0 +1,108 @@
+.filter-position {
+   padding-left: 4%;
+}
+
+.filter-position label{
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.filter-position option {
+    font-weight: 100;
+ }
+
+ .filter-position select {
+    font-weight: 100;
+    width: 100%;
+ }
+ 
+ .filter-button {
+    margin-top: 30px;
+    width: 100%;
+    border-radius: 12px;
+    border-width: 1px;
+    transition-duration: 0.4s;
+ }
+  
+  .filter-button:hover {
+    background-color: #081A49;
+    color: white;
+  }
+
+
+
+
+
+
+
+
+  .profile-grid {
+   display: grid;
+   grid-template-columns: repeat(2, 1fr); /* Muestra 2 tarjetas por fila */
+   gap: 20px;
+}
+
+.profile-card {
+   display: flex;
+   flex-direction: row;
+   border: 1px solid #ddd;
+   border-radius: 10px;
+   padding: 1px;
+   background-color: #fff;
+   margin-top: 30px;
+   width: 35%;
+   margin-right: 10px;
+}
+
+.profile-image {
+   width: 150px;
+   height: 150px;
+   border-radius: 50%;
+   margin-top: 15px;
+   margin-left: 10px;
+   margin-right: 10px;
+}
+
+.profile-info h4 {
+   margin: 0;
+   font-size: 18px;
+   font-weight: bold;
+}
+
+.profile-info p {
+   margin: 5px 0;
+   color: #666;
+}
+
+.rating {
+   font-size: 14px;
+   color: #FFA500;
+}
+
+.description {
+   font-size: 14px;
+   color: #333;
+}
+
+.profile-buttons {
+   display: flex;
+   gap: 10px;
+}
+
+.btn {
+   padding: 8px 12px;
+   border: 1px solid #000;
+   border-radius: 5px;
+   font-size: 14px;
+   cursor: pointer;
+}
+
+.btn.view-profile {
+   background-color: #000;
+   color: #fff;
+}
+
+.btn.schedule-appointment {
+   background-color: #fff;
+   color: #000;
+}
