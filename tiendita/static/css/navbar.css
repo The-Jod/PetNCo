@@ -1,24 +1,205 @@
-/* Estilo del Navbar */
+/* Variables Globales - Sistema de diseño base */
+:root {
+    /* Paleta de colores principales */
+    --primary: #4A90E2;
+    --secondary: #8E44AD;
+    --accent: #2ECC71;
+
+    /* Gradientes predefinidos */
+    --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+    --gradient-hover: linear-gradient(135deg, var(--secondary), var(--primary));
+
+    /* Colores de estado del sistema */
+    --success: #27AE60;
+    --warning: #F1C40F;
+    --danger: #E74C3C;
+
+    /* Colores neutrales para texto y fondos */
+    --dark: #2C3E50;
+    --light: #ECF0F1;
+    --white: #FFFFFF;
+
+    /* Sistema de sombras escalonado */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    /* Transiciones estandarizadas */
+    --transition-fast: 200ms ease-in-out;
+    --transition-normal: 300ms ease-in-out;
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset y configuración base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--dark);
+    overflow-x: hidden;
+    padding-top: 80px;
+    /* Compensación para el navbar estático */
+}
+
+/* Estilos del Navbar - Versión estática */
 .navbar {
-    background-color: rgba(74, 144, 226, 1);
-    /* Color de fondo principal */
-    border-bottom: 2px solid rgba(142, 68, 173, 1);
-    /* Color del borde inferior */
+    background-color: var(--dark);
+    /* Fondo sólido para mejor legibilidad */
+    position: static;
+    /* Cambiado de fixed a static */
+    width: 100%;
+    padding: 1rem 2rem;
+    box-shadow: var(--shadow-md);
 }
 
-/* Estilo de los enlaces */
+/* Logo y marca */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-logo {
+    height: 50px;
+    transition: var(--transition-normal);
+}
+
+.brand-text {
+    color: var(--white);
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+/* Navegación principal */
+.navbar-nav {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
 .nav-link {
-    color: white;
-    /* Color de texto de los enlaces */
+    color: var(--white) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition-normal);
+    position: relative;
+    text-decoration: none;
 }
 
-.nav-link:hover {
-    background-color: rgba(142, 68, 173, 0.8);
-    /* Color de fondo al pasar el ratón */
+/* Efecto hover para enlaces de navegación */
+.nav-link::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--white);
+    transform: translateX(-100%);
+    transition: var(--transition-normal);
 }
 
-/* Estilo del menú desplegable (si lo tienes) */
-.navbar-collapse {
-    background-color: rgba(74, 144, 226, 1);
-    /* Color de fondo del menú desplegable */
+.nav-link:hover::before {
+    transform: translateX(0);
+}
+
+/* Iconos de navegación */
+.nav-icon {
+    transition: var(--transition-normal);
+}
+
+.nav-link:hover .nav-icon {
+    transform: translateY(-3px);
+}
+
+/* Contador del carrito */
+.cart-link {
+    position: relative;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent);
+    color: var(--white);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
+/* Utilidades de disposición */
+.center {
+    display: block;
+    margin: 0 auto;
+    width: 55%;
+    max-width: 800px;
+    height: auto;
+}
+
+.horizontal {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: auto;
+}
+
+/* Estilos del footer */
+.footer-general {
+    background-color: var(--light);
+    padding: 70px 10px 20px;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--dark);
+    margin-top: 2rem;
+}
+
+/* Optimizaciones para imágenes */
+img {
+    max-width: 100%;
+    height: auto;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    transform: translateZ(0);
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+
+    .nav-logo {
+        height: 40px;
+    }
+
+    .center {
+        width: 85%;
+    }
+
+    .horizontal {
+        width: 95%;
+    }
+
+    .navbar-nav {
+        gap: 0.5rem;
+    }
+
+    .nav-link {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.9rem;
+    }
 }
