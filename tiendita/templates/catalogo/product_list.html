@@ -1,0 +1,159 @@
+{% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
+{% load static %} <!-- Renderiza archivos staticos-->
+<!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
+{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<script>
+    function showProductDetails(button) {
+        const productData = JSON.parse(button.parentElement.parentElement.parentElement.getAttribute('data-product'));
+
+        // Actualiza los elementos del modal con los detalles del producto
+        document.getElementById('productModalLabel').textContent = productData.name;
+        document.getElementById('modalProductImage').src = productData.image;
+        document.getElementById('modalProductDescription').textContent = productData.description;
+        document.getElementById('modalProductPrice').textContent = `$${productData.price}`;
+        document.getElementById('modalProductOriginalPrice').textContent = `$${productData.originalPrice}`;
+    }
+</script>
+{% endblock %}
+{% block content %}<!-- Deja pasar el contenido de esta vista -->
+
+
+
+
+<div class="container-fluid" style="padding-top: 6%;">
+    <!-- Promociones en la parte superior -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card promotion-card">
+                <div class="card-body">
+                    <h5 class="card-title">10% de descuento</h5>
+                    <p class="card-text">para tu primera compra en alimentos de marca PX Formula</p>
+                    <img src="dog-food.jpg" alt="Dog Food" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card promotion-card">
+                <div class="card-body">
+                    <h5 class="card-title">Envío gratis</h5>
+                    <p class="card-text">Para compras con un monto superior a $70.000</p>
+                    <img src="free-shipping.jpg" alt="Free Shipping" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Contenido principal: Filtros a la izquierda y lista de productos a la derecha -->
+    <div class="row" style="padding-left: 1.5%; padding-right: 1.5%;">
+        <div class="container mt-4">
+            <form class="d-flex" method="get" action="{% url 'productos' %}">
+        
+            <!-- Campo de búsqueda -->
+            <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos" aria-label="Search" style="border-radius: 30px;">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+        </div>
+
+        <!-- Filtros-->
+        <div class="col-md-3" style="padding-top: 1.5%;">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Filtros</h5>
+                </div>
+            <div class="card-body">
+
+                <!-- Rango de precio -->
+                <h6>Rango de Precio</h6>
+                    <label for="min_price">Precio mínimo:</label>
+                        <input class="form-range" type="number" name="min_price" min="0" max="1000000" step="1">
+                    <label for="max_price">Precio máximo:</label>
+                        <input class="form-range" type="number" name="max_price" min="0" max="1000000" step="1">
+                        
+                <!-- Categorías -->
+                <h6>Categorías</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="categorias" value="Alimentos"> Alimentos<br>
+                        <input class="form-check-input" type="checkbox" name="categorias" value="Accesorios"> Accesorios<br>
+                        <input class="form-check-input" type="checkbox" name="categorias" value="Juguetes"> Juguetes<br>
+                        <input class="form-check-input" type="checkbox" name="categorias" value="Camas y rascadores"> Camas y rascadores<br>
+                    </div>
+
+                <!-- Tipo de Animal -->
+                <h6>Tipo de Animal</h6>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.1"> Gato<br>
+                    <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.2"> Perro<br>
+                    <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.3"> Ave<br>
+                    <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.4"> Hamster<br>
+                </div>
+            <!-- Botón de búsqueda -->
+            <button class="btn btn-secondary"type="submit">Filtrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de productos -->
+<div class="col-md-9" style="padding-top: 1.5%;">
+    <div class="row" id="product-list">
+    {% for producto in productos %}
+        <div class="col-md-4 mb-4">
+            <div class="card product-card">
+                <!--Es chistoso porque no se si es la imagen la que deforma la carta o si yo lo programe como el pico-->
+                <img class="card-img-top" src="{% if producto.ImagenProducto %}{{ producto.ImagenProducto.url }}{% else %}https://via.placeholder.com/300x400{% endif %}" alt="{{ producto.NombreProducto }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ producto.NombreProducto }}</h5>
+                    <p class="card-text">{{ producto.DescripcionProducto }}</p>
+                    <ul>
+                        <span class="original-price text-decoration-line-through">$ {{ producto.PrecioProductoOriginal }} </span>
+                        <span class="text-success fw-bold">${{ producto.PrecioProducto }}</span>
+                    </ul>
+                    <button class="btn btn-primary mt-2">Ver Producto</button>
+                    </div>
+                </div>
+            </div>
+    {% endfor %}
+    </div>
+</div>
+
+
+    <!-- Modal de detalles del producto -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <img class="img-fluid" src="{% static 'images/ecommerce/03.jpg' %}" alt="Producto">
+                        <h4>Nombre del Producto</h4>
+                        <p>Descripción detallada del producto.</p>
+                        <div class="product-price">$45.00 <del>$52.00</del></div>
+                        <div class="product-qnty">
+                            <h6>Cantidad</h6>
+                            <div class="input-group">
+                                <button class="btn btn-primary" type="button"><i class="fa fa-minus"></i></button>
+                                <input type="number" class="form-control text-center" value="1">
+                                <button class="btn btn-primary" type="button"><i class="fa fa-plus"></i></button>
+                            </div>
+                            <div class="mt-3">
+                                <a class="btn btn-primary me-3" href="#">Añadir al Carrito</a>
+                                <a class="btn btn-primary" href="#">Ver Detalles</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{%endblock%}

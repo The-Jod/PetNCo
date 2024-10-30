@@ -7,8 +7,9 @@ class Producto(models.Model):
     StockProducto = models.IntegerField()
     PrecioProducto = models.FloatField()
     DescripcionProducto = models.CharField(max_length=500)
-    TipoAnimal = models.CharField(max_length=50)  # Cambio a CharField
-
+    TipoAnimal = models.FloatField()
+    ImagenProducto = models.ImageField(upload_to='productos/', null=True, blank=True)
+    
     def __str__(self):
         return self.NombreProducto
     

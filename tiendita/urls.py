@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from . import views
 from .views import  Product_ListView, Product_CreateView, Product_UpdateView, Product_DeleteView
@@ -29,12 +31,11 @@ Including another URLconf
 
 urlpatterns = [
     path('',views.home_view, name='home'),
-    path('catalogo',views.storefront_view, name='catalogo'),
     path('registro_citas',views.vetdate_view, name='registro'),
     path('pago/',views.pago_view,name='checkout'),
     path('carrito/',views.carrito_view,name='carrito'),
-    path('productos/', Product_ListView.as_view(), name='catalog'),  # List products
-    path('productos/add/', Product_CreateView.as_view(), name='product_add'),  # Add new product
-    path('productos/<int:pk>/edit/', Product_UpdateView.as_view(), name='product_edit'),  # Edit product
-    path('productos/<int:pk>/delete/', Product_DeleteView.as_view(), name='product_delete'),  # Delete product
-]
+    path('productos/', views.catalogo_view, name='productos'),  
+    path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
+    path('productos/<int:pk>/edit/', Product_UpdateView.as_view(), name='product_edit'),  
+    path('productos/<int:pk>/delete/', Product_DeleteView.as_view(), name='product_delete'),  
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
