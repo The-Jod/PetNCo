@@ -5,308 +5,145 @@
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
 {% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
 
 {% endblock %}
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
-<!-- Modal para crear el Usuario -->
-<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="userModalLabel">Crear Nuevo Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="userForm" method="POST" action="#">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="nombreUsuario" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombreUsuario" name="nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="correoUsuario" class="form-label">Correo</label>
-                        <input type="email" class="form-control" id="correoUsuario" name="correo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="passwordUsuario" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="passwordUsuario" name="password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Crear Usuario</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para crear el Carrito -->
-<div class="modal fade" id="carritoModal" tabindex="-1" aria-labelledby="carritoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="carritoModalLabel">Crear Carrito de Compras</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="carritoForm" method="POST" action="#">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="nombreCarrito" class="form-label">Nombre del Carrito</label>
-                        <input type="text" class="form-control" id="nombreCarrito" name="nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productosCarrito" class="form-label">Productos (IDs, separados por
-                            comas)</label>
-                        <input type="text" class="form-control" id="productosCarrito" name="productos" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Crear Carrito</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Carrusel Hero -->
 <section class="hero-section">
-    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-        <div class="carousel-indicators"> <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0"
-                class="active" aria-current="true" aria-label="Slide 1"></button> <button type="button"
-                data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button> <button type="button"
-                data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"
+                aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
             <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
         </div>
         <div class="carousel-inner">
-            <div class="carousel-item active"> <img src="{% static 'img/carrusel.jpg' %}" class="d-block w-100"
-                    alt="Comodidad y calidad">
-                <div class="carousel-caption d-none d-md-block">
-                    <h1 class="display-4">Comodidad y calidad</h1>
-                    <h2 class="h3">para ti y para tus mascotas</h2> <a href="" class="btn btn-light btn-lg"
-                        role="button">Explora nuestros productos</a>
+            <div class="carousel-item active">
+                <img src="{% static 'img/carrusel.jpg' %}" class="d-block" alt="Comodidad y calidad">
+                <div class="carousel-caption">
+                    <h1>Comodidad y calidad</h1>
+                    <h2>para ti y para tus mascotas</h2>
+                    <a href="" class="btn">Explora nuestros productos</a>
                 </div>
             </div>
-            <div class="carousel-item"> <img src="{% static 'img/carrusel2.jpg' %}" class="d-block w-100"
-                    alt="Atención personalizada">
-                <div class="carousel-caption d-none d-md-block">
-                    <h1 class="display-4">Atención personalizada</h1>
-                    <h2 class="h3">Servicios a la medida de tu mascota</h2> <a href="" class="btn btn-light btn-lg"
-                        role="button">Agenda una cita</a>
+            <div class="carousel-item">
+                <img src="{% static 'img/carrusel2.jpg' %}" class="d-block" alt="Atención personalizada">
+                <div class="carousel-caption">
+                    <h1>Atención personalizada</h1>
+                    <h2>Servicios a la medida de tu mascota</h2>
+                    <a href="" class="btn">Agenda una cita</a>
                 </div>
             </div>
-            <div class="carousel-item"> <img src="{% static 'img/carrusel3.jpg' %}" class="d-block w-100"
-                    alt="La mejor experiencia">
-                <div class="carousel-caption d-none d-md-block">
-                    <h1 class="display-4">La mejor experiencia</h1>
-                    <h2 class="h3">Para ti y tu mascota</h2> <a href="" class="btn btn-light btn-lg"
-                        role="button">Compra ahora</a>
+            <div class="carousel-item">
+                <img src="{% static 'img/carrusel3.jpg' %}" class="d-block" alt="La mejor experiencia">
+                <div class="carousel-caption">
+                    <h1>La mejor experiencia</h1>
+                    <h2>Para ti y tu mascota</h2>
+                    <a href="" class="btn">Compra ahora</a>
                 </div>
             </div>
-            <div class="carousel-item"> <img src="{% static 'img/carrusel4.jpg' %}" class="d-block w-100"
-                    alt="La mejor experiencia">
-                <div class="carousel-caption d-none d-md-block">
-                    <h1 class="display-4">La mejor experiencia</h1>
-                    <h2 class="h3">Para ti y tu mascota</h2> <a href="" class="btn btn-light btn-lg"
-                        role="button">Compra ahora</a>
+            <div class="carousel-item">
+                <img src="{% static 'img/carrusel4.jpg' %}" class="d-block" alt="La mejor experiencia">
+                <div class="carousel-caption">
+                    <h1>La mejor experiencia</h1>
+                    <h2>Para ti y tu mascota</h2>
+                    <a href="" class="btn">Compra ahora</a>
                 </div>
             </div>
-
         </div>
 
-        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev"
-            aria-label="Anterior">
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Anterior</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"
-            aria-label="Siguiente">
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Siguiente</span>
         </button>
     </div>
 </section>
-
-<!-- Categoria de productos -->
-<section class="features py-5">
+<!-- Productos Section -->
+<section class="features">
     <div class="container">
-        <div class="title display-6 marg">Nuestros productos</div>
-        <div class="row">
-            <div class="col-md-3 text-center feature zoom" data-feature="1">
-                <img src="{% static 'img/CategoriaRopa.png' %}" class="round-image" alt="Categoria Ropa">
-                <h4>Ropa</h4>
+        <div class="title-section">
+            <h2 class="display-6">Nuestros productos</h2>
+        </div>
+        <div class="row category-container">
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/CategoriaRopa.png' %}" class="category-icon" alt="Ropa">
+                    <h3 class="category-title">Ropa</h3>
+                    <p class="category-description">Encuentra la mejor ropa y accesorios para tu mascota</p>
+                </div>
             </div>
-            <div class="zoom col-md-3 text-center feature zoom" data-feature="2">
-                <img src="{% static 'img/CategoriaComida.png' %}" class="round-image" alt="Categoria Comida">
-                <h4>Alimentos</h4>
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/CategoriaComida.png' %}" class="category-icon" alt="Alimentos">
+                    <h3 class="category-title">Alimentos</h3>
+                    <p class="category-description">Alimentos premium para una nutrición óptima</p>
+                </div>
             </div>
-            <div class="col-md-3 text-center feature zoom" data-feature="3">
-                <img src="{% static 'img/CategoriaJuguetes.png' %}" class="round-image" alt="Categoria Juguetes">
-                <h4>Juguetes</h4>
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/CategoriaJuguetes.png' %}" class="category-icon" alt="Juguetes">
+                    <h3 class="category-title">Juguetes</h3>
+                    <p class="category-description">Juguetes divertidos y seguros para tu mascota</p>
+                </div>
             </div>
-            <div class="col-md-3 text-center feature zoom" data-feature="4">
-                <img src="{% static 'img/CategoriaAccesorios.png' %}" class="round-image" alt="Categoria Accesorios">
-                <h4>Accesorios</h4>
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/CategoriaAccesorios.png' %}" class="category-icon" alt="Accesorios">
+                    <h3 class="category-title">Accesorios</h3>
+                    <p class="category-description">Los mejores accesorios para tu mascota</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!--Categorias de servicios-->>
-<section class="features py-5">
+<!-- Servicios Section -->
+<section class="features">
     <div class="container">
-        <div class="title display-6 marg">Nuestros servicios</div>
-        <div class="row">
-            <div class="col-md-3 text-center feature zoom" data-feature="1">
-                <img src="{% static 'img/CategoriaLimpieza.png' %}" class="round-image" alt="Categoria Ropa">
-                <h4>Limpieza y aseo</h4>
+        <div class="title-section">
+            <h2 class="display-6">Nuestros servicios</h2>
+        </div>
+        <div class="row category-container">
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/CategoriaLimpieza.png' %}" class="category-icon" alt="Limpieza">
+                    <h3 class="category-title">Limpieza y aseo</h3>
+                    <p class="category-description">Servicio profesional de limpieza para tu mascota</p>
+                </div>
             </div>
-            <div class="col-md-3 text-center feature zoom" data-feature="2">
-                <img src="{% static 'img/CategoriaVacunas.png' %}" class="round-image" alt="Categoria Comida">
-                <h4>Vacunas</h4>
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/CategoriaVacunas.png' %}" class="category-icon" alt="Vacunas">
+                    <h3 class="category-title">Vacunas</h3>
+                    <p class="category-description">Mantén al día las vacunas de tu mascota</p>
+                </div>
             </div>
-            <div class="col-md-3 text-center feature zoom" data-feature="3">
-                <img src="{% static 'img/CategoriaConsultasLP.png' %}" class="round-image" alt="Categoria Juguetes">
-                <h4>Consultas y chequeos</h4>
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/CategoriaConsultasLP.png' %}" class="category-icon" alt="Consultas">
+                    <h3 class="category-title">Consultas y chequeos</h3>
+                    <p class="category-description">Atención veterinaria profesional</p>
+                </div>
             </div>
-            <div class="col-md-3 text-center feature zoom" data-feature="4">
-                <img src="{% static 'img/VeterinarioLP.png' %}" class="round-image" alt="Categoria Accesorios">
-                <h4>Veterinario a domicilio</h4>
+            <div class="col-md-3 col-sm-6">
+                <div class="category-card">
+                    <img src="{% static 'img/VeterinarioLP.png' %}" class="category-icon" alt="Veterinario">
+                    <h3 class="category-title">Veterinario a domicilio</h3>
+                    <p class="category-description">Atención médica en la comodidad de tu hogar</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-
-<!-- Categorías de Servicios -->
-<section class="features py-5">
-    <div class="container">
-        <div class="title display-6 marg">Tenemos todo lo que ncesitas</div>
-        <div class="row ">
-            <div class="col-md-3 text-center feature zoom">
-                <div class="image-container">
-                    <img src="{% static 'img/CategoriaLimpieza.png' %}" class="round-image" alt="Categoría Limpieza">
-                </div>
-                <div class="category-label">Limpieza</div>
-            </div>
-            <div class="col-md-3 text-center feature zoom">
-                <div class="image-container">
-                    <img src="{% static 'img/CategoriaSalud.png' %}" class="round-image" alt="Categoría Salud">
-                </div>
-                <div class="category-label">Salud</div>
-            </div>
-            <div class="col-md-3 text-center feature zoom">
-                <div class="image-container">
-                    <img src="{% static 'img/categoriaAdopcion.jpg' %}" class="round-image" alt="Categoría Adopción">
-                </div>
-                <div class="category-label">Adopción</div>
-            </div>
-            <div class="col-md-3 text-center feature zoom">
-                <div class=" image-container">
-                    <img src="{% static 'img/categoriaEntrenamiento.jpg' %}" class="round-image"
-                        alt="Categoría Entrenamiento">
-                </div>
-                <div class="category-label">Entrenamiento</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Misión de la Empresa -->
-
-<section class="mision py-5 bg-light">
-    <div class="container">
-        <div class="title display-6 text-center mb-4">Nuestra Misión</div>
-        <div class="row align-items-start"> <!-- Asegúrate de que ambas tarjetas estén en la misma fila -->
-            <div class="col-md-6">
-                <hr class="separador"> <!-- Separador encima de la tarjeta -->
-                <div class="card bg-light sombreado p-4">
-                    <p class="fs-5">El principal objetivo de Vet & Pet Center es ofrecer productos para tus mascotas
-                        y conectarte con veterinarios confiables que operen cerca de ti.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <hr class="separador"> <!-- Separador encima de la tarjeta -->
-                <div class="card bg-light sombreado p-4">
-                    <p class="fs-5">Nuestro compromiso es garantizar el bienestar de tus mascotas a través de
-                        productos de calidad y servicios profesionales.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</section>
-{% block extra_scripts %}
-<!-- Cierra extencion y fin de pagina  -->
 
 {% endblock %}
-{% endblock %}
-<section class="features py-5">
-    <div class="container">
-        <h2 class="title display-6 mb-4">Nuestros productos</h2>
-        <div class="row service-options">
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaRopa.png' %}" class="round-image" alt="Categoria Ropa">
-                <h4 class="service-title">Ropa</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaComida.png' %}" class="round-image" alt="Categoria Comida">
-                <h4 class="service-title">Alimentos</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaJuguetes.png' %}" class="round-image" alt="Categoria Juguetes">
-                <h4 class="service-title">Juguetes</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaAccesorios.png' %}" class="round-image" alt="Categoria Accesorios">
-                <h4 class="service-title">Accesorios</h4>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="features py-5">
-    <div class="container">
-        <h2 class="title display-6 mb-4">Nuestros servicios</h2>
-        <div class="row service-options">
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaLimpieza.png' %}" class="round-image" alt="Categoria Limpieza">
-                <h4 class="service-title">Limpieza y aseo</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaVacunas.png' %}" class="round-image" alt="Categoria Vacunas">
-                <h4 class="service-title">Vacunas</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaConsultasLP.png' %}" class="round-image" alt="Categoria Consultas">
-                <h4 class="service-title">Consultas y chequeos</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/VeterinarioLP.png' %}" class="round-image" alt="Categoria Veterinario">
-                <h4 class="service-title">Veterinario a domicilio</h4>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="features py-5">
-    <div class="container">
-        <h2 class="title display-6 mb-4">Tenemos todo lo que necesitas</h2>
-        <div class="row service-options">
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaLimpieza.png' %}" class="round-image" alt="Categoría Limpieza">
-                <h4 class="service-title">Limpieza</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/CategoriaSalud.png' %}" class="round-image" alt="Categoría Salud">
-                <h4 class="service-title">Salud</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/categoriaAdopcion.jpg' %}" class="round-image" alt="Categoría Adopción">
-                <h4 class="service-title">Adopción</h4>
-            </div>
-            <div class="col-md-3 service-item">
-                <img src="{% static 'img/categoriaEntrenamiento.jpg' %}" class="round-image"
-                    alt="Categoría Entrenamiento">
-                <h4 class="service-title">Entrenamiento</h4>
-            </div>
-        </div>
-    </div>
-</section>

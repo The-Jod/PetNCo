@@ -22,6 +22,13 @@ def vetdate_view(request):
 def storefront_view(request):
     return render(request, 'catalogo.html')
 
+def pago_view(request):
+    return render(request,'checkout.html')
+
+def carrito_view(request):
+    return render(request,'carrito.html')
+
+
 
 
 class Product_ListView(ListView):

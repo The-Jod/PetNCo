@@ -1,0 +1,19 @@
+{% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
+{% load static %} <!-- Renderiza archivos staticos-->
+
+
+<!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
+{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
+
+{% endblock %}
+{% block content %}<!-- Deja pasar el contenido de esta vista -->
+
+
+
+
+{% endblock %}
