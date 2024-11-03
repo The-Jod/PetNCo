@@ -1,9 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.contrib.auth import views as auth_views
+from django.contrib import messages
 from django.urls import include, path, reverse_lazy
-from .models import Producto
+from django.http import HttpResponse
 from django.core.paginator import Paginator
+from .models import Producto
+from .forms import ProductoForm
+
 
 # Aqui van las famosas vistas, no confundir
 
@@ -83,21 +87,66 @@ class Product_ListView(ListView):
     template_name = 'catalogo/product_list.html'
     context_object_name = 'productos'
 
+#As shrimple as that....
+def buscar_producto_por_sku(sku):
+    try:
+        return Producto.objects.get(SKUProducto=sku)
+    except Producto.DoesNotExist:
+        return None
 
 class Product_CreateView(CreateView):
     model = Producto
-    fields = ['SKUProducto', 'NombreProducto', 'StockProducto', 'PrecioProducto', 'DescripcionProducto', 'TipoAnimal']
+    form_class = ProductoForm
     template_name = 'catalogo/product_form.html'
-    success_url = reverse_lazy('catalog')
+    success_url = reverse_lazy('productos')
 
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        sku = request.POST.get('SKUProducto')
+
+        # busca
+        if 'buscar' in request.POST and sku:
+            producto = buscar_producto_por_sku(sku)
+            if producto:
+                form = ProductoForm(instance=producto)
+            else:
+                form = ProductoForm()
+            return render(request, self.template_name, {'form': form})
+
+        # actualiza
+        elif 'crear_actualizar' in request.POST:
+            producto = buscar_producto_por_sku(sku)
+
+            if producto:
+                form = ProductoForm(request.POST, request.FILES, instance=producto)
+            else:
+                form = ProductoForm(request.POST, request.FILES)
+
+            if form.is_valid():
+                form.save()
+                return redirect(self.success_url)
+
+            return render(request, self.template_name, {'form': form})
+
+        # borra
+        elif 'borrar' in request.POST and sku:
+            producto = buscar_producto_por_sku(sku)
+            
+            if producto:
+                producto.delete()
+                return redirect(self.success_url)
+            
+            else:
+                return render(request, self.template_name, {'form': form})
+            
+        # limpiar
+        elif 'limpiar' in request.POST and sku:
+            producto = buscar_producto_por_sku(sku)
     
-class Product_UpdateView(UpdateView):
-    model = Producto
-    fields = ['NombreProducto', 'StockProducto', 'PrecioProducto', 'DescripcionProducto', 'TipoAnimal']
-    template_name = 'catalogo/product_form.html'
-    success_url = reverse_lazy('catalog')
+            if producto:
+                return render(request, self.template_name, {'form': form})
+            else:
+                return render(request, self.template_name, {'form': form})
 
-class Product_DeleteView(DeleteView):
-    model = Producto
-    template_name = 'catalogo/product_confirm_delete.html'
-    success_url = reverse_lazy('catalog')
+        # En caso de error, volvemos a renderizar el formulario
+        return render(request, self.template_name, {'form': form})

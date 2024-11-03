@@ -107,7 +107,7 @@
         <div class="col-md-4 mb-4">
             <div class="card product-card">
                 <!--Es chistoso porque no se si es la imagen la que deforma la carta o si yo lo programe como el pico-->
-                <img class="card-img-top" src="{% if producto.ImagenProducto %}{{ producto.ImagenProducto.url }}{% else %}https://via.placeholder.com/300x400{% endif %}" alt="{{ producto.NombreProducto }}">
+                <img class="card-img-top" src="{% if producto.ImagenProducto %}{{ producto.ImagenProducto.url }}{% else %}https://dummyimage.com/400x400/000/ffffff.png{% endif %}" alt="{{ producto.NombreProducto }}">
                 <div class="card-body">
                     <h5 class="card-title">{{ producto.NombreProducto }}</h5>
                     <p class="card-text">{{ producto.DescripcionProducto }}</p>
