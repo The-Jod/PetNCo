@@ -21,76 +21,93 @@
 
 
 <body>
-
-    <div class="row">
-        <div class="col-3 filter-position">
-            <!--Filtro de comunas-->
-            <label for="sortComunas" class="form-label">Ingresa tu comuna:</label>
-            <select id="sortComunas" class="form-select">
-                <option value="todas">Todas las comunas</option>
-                <option value="maipu">Maipú</option>
-                <option value="pudahuel">Pudahuel</option>
-                <option value="loprado">Lo Prado</option>
-                <option value="cerrillos">Cerrillos</option>
-                <option value="cerronavia">Cerro Navia</option>
-                <option value="estacioncentral">Estación Central</option>
-            </select>
-            <!--Filtro de citas-->
-            <label for="sortTipoCita" class="form-label">Ingresa tu tipo de cita:</label>
-            <select id="sortTipoCita" class="form-select">
-                <option value="">Todas las citas</option>
-                <option value="adomicilio">A domicilio</option>
-                <option value="onsite">On-Site</option>
-            </select>
-            <!--Filtro de mascotas-->
-            <label for="sortMascota" class="form-label">Ingresa tu mascota:</label>
-            <select id="sortMascota" class="form-select">
-                <option value="">Todas las mascotas</option>
-                <option value="perro">Perro</option>
-                <option value="gato">Gato</option>
-            </select>
-            <button class="filter-button">Aplicar filtros</button>
-
-            <!--Las cartas para mostrar al veterinario son un dummy, se volverá a codificar cuando tengamos datos para mostrar :p-->
-        </div>
-        <div class="col-9">
-            <div class="col-4 profile-card">
-                <img src="{% static 'img/probando12.png' %}" alt="Veterinario" class="profile-image">
-                <div class="profile-info">
-                    <h4>Arturo Pineda</h4>
-                    <p>Especialista en caninos</p>
-                    <div class="rating">
-                        <span>⭐ 4.5 / 5</span>
-                        <small>en 23 reseñas</small>
-                    </div>
-                    <p class="description">
-                        Profesional con 10 años de experiencia al cuidado y atención de animales, especializado en
-                        conocimientos sobre perros.
-                    </p>
-                    <p><strong>Opera en:</strong> Maipú, Pudahuel, Lo Prado</p>
-                    <div class="profile-buttons">
-                        <button class="btn view-profile">Ver perfil</button>
-                        <button class="btn schedule-appointment">Agendar una cita</button>
-                    </div>
-                </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-3 filter-position">
+                <!--Filtro de comunas-->
+                <label for="sortComunas" class="form-label">Ingresa tu comuna:</label>
+                <select id="sortComunas" class="form-select">
+                    <option value="todas">Todas las comunas</option>
+                    <option value="maipu">Maipú</option>
+                    <option value="pudahuel">Pudahuel</option>
+                    <option value="loprado">Lo Prado</option>
+                    <option value="cerrillos">Cerrillos</option>
+                    <option value="cerronavia">Cerro Navia</option>
+                    <option value="estacioncentral">Estación Central</option>
+                </select>
+                <!--Filtro de citas-->
+                <label for="sortTipoCita" class="form-label">Ingresa tu tipo de cita:</label>
+                <select id="sortTipoCita" class="form-select">
+                    <option value="">Todas las citas</option>
+                    <option value="adomicilio">A domicilio</option>
+                    <option value="onsite">On-Site</option>
+                </select>
+                <!--Filtro de mascotas-->
+                <label for="sortMascota" class="form-label">Ingresa tu mascota:</label>
+                <select id="sortMascota" class="form-select">
+                    <option value="">Todas las mascotas</option>
+                    <option value="perro">Perro</option>
+                    <option value="gato">Gato</option>
+                </select>
+                <button class="filter-button">Aplicar filtros</button>
             </div>
-            <div class="col-4 profile-card">
-                <img src="{% static 'img/probando123.jpg' %}" alt="Veterinario" class="profile-image">
-                <div class="profile-info">
-                    <h4>Arturo Pineda</h4>
-                    <p>Especialista en caninos</p>
-                    <div class="rating">
-                        <span>⭐ 4.5 / 5</span>
-                        <small>en 23 reseñas</small>
+
+
+            <div class="col-9">
+                <div class="row" id="product-list">
+                    <!-- Tarjeta de Veterinario -->
+                    <div class="col-6 profile-card">
+                        <div class="picture-align">
+                            <img src="{% static 'img/probando12.png' %}" alt="Veterinario" class="profile-image">
+                            <div class="profile-info">
+
+                                <h4>Arturo Pineda</h4>
+                                <p>Especialista en caninos</p>
+                                <div class="rating">
+                                    <span>⭐ 4.5 / 5</span>
+                                    <p>en 23 reseñas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="description">
+                                Profesional con 10 años de experiencia al cuidado y atención de animales, especializado
+                                en conocimientos sobre perros.
+                            </p>
+                            <p><strong>Opera en:</strong> Maipú, Pudahuel, Lo Prado</p>
+                            <div class="profile-buttons">
+                                <button class="btn view-profile">Ver perfil</button>
+                                <button class="btn schedule-appointment">Agendar una cita</button>
+                            </div>
+                        </div>
                     </div>
-                    <p class="description">
-                        Profesional con 10 años de experiencia al cuidado y atención de animales, especializado en
-                        conocimientos sobre perros.
-                    </p>
-                    <p><strong>Opera en:</strong> Maipú, Pudahuel, Lo Prado</p>
-                    <div class="profile-buttons">
-                        <button class="btn view-profile">Ver perfil</button>
-                        <button class="btn schedule-appointment">Agendar una cita</button>
+                    <!--Fin de tarjeta-->
+
+
+                    <div class="col-6 profile-card">
+                        <div class="picture-align">
+                            <img src="{% static 'img/probando123.jpg' %}" alt="Veterinario" class="profile-image">
+                            <div class="profile-info">
+
+                                <h4>Fernanda Correa</h4>
+                                <p>Especialista en felinos</p>
+                                <div class="rating">
+                                    <span>⭐ 4.5 / 5</span>
+                                    <p>en 23 reseñas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="description">
+                                Profesional titulada en el año 2020. Veterinaria totalmente comprometida con los ideales
+                                de ayudar a los gatitos
+                            </p>
+                            <p><strong>Opera en:</strong> Maipú, Cerrillos, Pudahuel</p>
+                            <div class="profile-buttons">
+                                <button class="btn view-profile">Ver perfil</button>
+                                <button class="btn schedule-appointment">Agendar una cita</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

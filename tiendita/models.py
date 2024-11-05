@@ -6,11 +6,31 @@ class Producto(models.Model):
     NombreProducto = models.CharField(max_length=128)
     StockProducto = models.IntegerField()
     PrecioProducto = models.FloatField()
+    PrecioOferta = models.FloatField()
+    EstaOferta = models.BooleanField(default=False)
     DescripcionProducto = models.CharField(max_length=500)
-    TipoAnimal = models.CharField(max_length=50)  # Cambio a CharField
 
+    # No se imaginan lo duro que fue averiguar esta wea
+    CATEGORIAS = [
+        (0.1, 'Alimentos'),
+        (0.2, 'Accesorios'),
+        (0.3, 'Juguetes'),
+        (0.4, 'Camas y rascadores')
+    ]
+    TIPO_ANIMAL = [
+        (0.1, 'Gato'),
+        (0.2, 'Perro'),
+        (0.3, 'Ave'),
+        (0.4, 'Hamster')
+    ]
+
+    CategoriaProducto = models.FloatField(choices=CATEGORIAS)
+    TipoAnimal = models.FloatField(choices=TIPO_ANIMAL)
+    ImagenProducto = models.ImageField(upload_to='productos/', null=True, blank=True)
+    
     def __str__(self):
         return self.NombreProducto
+
     
 class Orden(models.Model):
     CodigoUnicoOrden = models.IntegerField(primary_key=True)
