@@ -1,61 +1,52 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
 body {
-    font-family: 'Inter', sans-serif;
+   font-family: 'Inter', sans-serif;
 }
-
-
-
-
-
-
-
-
-
 
 .filter-position {
    padding-left: 4%;
 }
 
-.filter-position label{
+.filter-position label {
    font-weight: bolder;
 }
 
-.filter-position label{
-    margin-top: 30px;
-    margin-bottom: 10px;
+.filter-position label {
+   margin-top: 30px;
+   margin-bottom: 10px;
 }
 
 .filter-position option {
-    font-weight: 100;
- }
+   font-weight: 100;
+}
 
- .filter-position select {
-    font-weight: 100;
-    width: 100%;
- }
- 
- .filter-button {
-    margin-top: 30px;
-    width: 100%;
-    border-radius: 12px;
-    border-width: 1px;
-    transition-duration: 0.4s;
- }
-  
-  .filter-button:hover {
-    background-color: #081A49;
-    color: white;
-  }
+.filter-position select {
+   font-weight: 100;
+   width: 100%;
+}
 
+.filter-button {
+   margin-top: 30px;
+   width: 100%;
+   border-radius: 12px;
+   border-width: 1px;
+   transition-duration: 0.4s;
+}
 
+.filter-button:hover {
+   background-color: #081A49;
+   color: white;
+}
 
 
 
 
 
 
-  .profile-card {
+
+
+.profile-card {
    border: 2px solid #ddd;
    border-radius: 30px;
    padding: 1px;
@@ -87,7 +78,7 @@ body {
    margin-left: 30px;
    font-size: 18px;
    font-weight: 600;
-   
+
 }
 
 .profile-info p {
@@ -130,5 +121,3 @@ body {
    background-color: #fff;
    color: #000;
 }
-
-

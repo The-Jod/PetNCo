@@ -1,15 +1,13 @@
 {% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
 {% load static %} <!-- Renderiza archivos staticos-->
-
-
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
 {% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+
 {% endblock %}
 {% block extra_scripts %}
 <script src="{% static 'js/navbar.js' %}"></script>
-
 {% endblock %}
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
@@ -18,12 +16,13 @@
 
     <form method="POST" enctype="multipart/form-data" class="border p-4 bg-light shadow-sm rounded">
         {% csrf_token %}
-        
+
         <div class="row">
             <div class="col mb-5">
                 <label for="SKUProducto" class="form-label">SKU del Producto</label>
 
-                <button type="submit" name="buscar" class="btn btn-info" style="margin-bottom: 1%; margin-left: 1%;" formnovalidate>
+                <button type="submit" name="buscar" class="btn btn-info" style="margin-bottom: 1%; margin-left: 1%;"
+                    formnovalidate>
                     <i class="bi bi-search"></i> Buscar
                 </button>
 
@@ -37,7 +36,7 @@
 
                 <label for="PrecioProducto" class="form-label">Precio</label>
                 {{ form.PrecioProducto }}
-                
+
                 <label for="PrecioOferta" class="form-label">Precio en Oferta</label>
                 {{ form.EstaOferta }}
                 {{ form.PrecioOferta }}
@@ -46,19 +45,20 @@
                 {{ form.CategoriaProducto }}
 
                 <label for="TipoAnimal" class="form-label">Tipo Animal</label>
-                
-                {{ form.TipoAnimal }}                
+
+                {{ form.TipoAnimal }}
 
                 <label for="DescripcionProducto" class="form-label">Descripcion Producto</label>
-                {{ form.DescripcionProducto }} 
-                
+                {{ form.DescripcionProducto }}
+
             </div>
         </div>
 
         <!-- Botone -->
         <div class="d-flex justify-content-between mt-4">
 
-            <button type="submit" name="borrar" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?')">
+            <button type="submit" name="borrar" class="btn btn-danger"
+                onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?')">
                 <i class="bi bi-trash"></i> Borrar Producto
             </button>
 
@@ -67,9 +67,9 @@
                 <i class="bi bi-save"></i> Guardar Producto
             </button>
 
-            
 
-        </div>        
+
+        </div>
     </form>
 </div>
 
