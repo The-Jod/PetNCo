@@ -27,23 +27,6 @@ class NavigationHandler {
     handleScroll() {
         const currentScroll = window.pageYOffset;
 
-        // Manejo de la transparencia y color de fondo
-        if (currentScroll > 50) {
-            this.navbar.classList.add('navbar-scrolled');
-
-            // Efecto parallax suave
-            const opacity = Math.min((currentScroll - 50) / 100, 0.98);
-            this.navbar.style.background = `linear-gradient(135deg, 
-                rgba(74, 144, 226, ${opacity}), 
-                rgba(142, 68, 173, ${opacity})
-            )`;
-            this.navbar.style.backdropFilter = `blur(${Math.min(currentScroll / 10, 10)}px)`;
-        } else {
-            this.navbar.classList.remove('navbar-scrolled');
-            this.navbar.style.background = 'transparent';
-            this.navbar.style.backdropFilter = 'none';
-        }
-
         // Ocultar/mostrar navbar al hacer scroll
         if (currentScroll > this.lastScroll && currentScroll > 100) {
             // Scrolling down
@@ -88,19 +71,14 @@ class NavigationHandler {
         const links = document.querySelectorAll('.nav-link');
 
         links.forEach(link => {
-            // Efecto hover mejorado
-            link.addEventListener('mouseenter', (e) => {
-                const icon = e.currentTarget.querySelector('.nav-icon');
-                if (icon) {
-                    icon.style.transform = 'translateY(-3px) scale(1.2)';
-                }
-            });
+
 
             link.addEventListener('mouseleave', (e) => {
                 const icon = e.currentTarget.querySelector('.nav-icon');
                 if (icon) {
                     icon.style.transform = 'translateY(0) scale(1)';
                 }
+                link.style.background = 'transparent'; // Vuelve a fondo transparente
             });
 
             // Efecto click
@@ -123,6 +101,7 @@ class NavigationHandler {
 document.addEventListener('DOMContentLoaded', () => {
     const navigation = new NavigationHandler();
 });
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // Animación de elementos al hacer scroll

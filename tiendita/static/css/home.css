@@ -30,36 +30,213 @@
     --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Reset y Estilos Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--dark);
+    overflow-x: hidden;
+}
 
+.hero-section {
+    position: relative;
+    overflow: hidden;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+}
 
+#heroCarousel {
+    position: relative;
+    height: 100vh;
+    min-height: 600px;
+}
 
-/* CSS para el navbar */
-#mainNav {
-    position: static;
-    /* Fijo en la parte superior */
+.carousel-item {
+    height: 100vh;
+    min-height: 600px;
+    background-color: #000;
+}
+
+.carousel-item img {
+    object-fit: cover;
+    height: 100%;
     width: 100%;
-    /* Ocupa todo el ancho */
-    z-index: 1000;
-    /* Asegúrate de que esté por encima de otros elementos */
-    margin-bottom: 35px;
+    opacity: 0.8;
+    transition: transform 6s ease-in-out;
+}
 
+.carousel-item.active img {
+    transform: scale(1.1);
+}
 
+.carousel-caption {
+    bottom: 50%;
+    transform: translateY(50%);
+    padding: 0 20px;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.carousel-caption h1 {
+    font-size: 4.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.5s ease-out 0.3s;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.carousel-caption h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.5s ease-out 0.5s;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.carousel-item.active .carousel-caption h1,
+.carousel-item.active .carousel-caption h2 {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.carousel-caption .btn {
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.5s ease-out 0.7s;
+    background: linear-gradient(45deg, #4285f4, #34a853);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-item.active .carousel-caption .btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.carousel-caption .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(45deg, #34a853, #4285f4);
+}
+
+.carousel-indicators {
+    bottom: 40px;
+}
+
+.carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 8px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    transition: all 0.5s ease;
+}
+
+.carousel-indicators button.active {
+    width: 30px;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 10%;
+    opacity: 0;
+    transition: all 0.5s ease;
+}
+
+.hero-section:hover .carousel-control-prev,
+.hero-section:hover .carousel-control-next {
+    opacity: 0.8;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    background-size: 50%;
+}
+
+@media (max-width: 992px) {
+    .carousel-caption h1 {
+        font-size: 3.5rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    #heroCarousel {
+        height: 80vh;
+    }
+
+    .carousel-item {
+        height: 80vh;
+    }
+
+    .carousel-caption {
+        padding: 0 15px;
+    }
+
+    .carousel-caption h1 {
+        font-size: 2.5rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1.4rem;
+    }
+
+    .carousel-caption .btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .carousel-caption h1 {
+        font-size: 2rem;
+    }
+
+    .carousel-caption h2 {
+        font-size: 1.2rem;
+    }
 }
 
 /* Navbar Styles */
-
-
 .navbar {
-
     position: fixed;
     top: 0;
     width: 100%;
     z-index: 1000;
     padding: 1rem 2rem;
     transition: var(--transition-normal);
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    /* Fondo sólido constante */
+}
+
+.navbar-scrolled {
+    box-shadow: var(--shadow-md);
 }
 
 .navbar-brand {
@@ -71,6 +248,10 @@
 .nav-logo {
     height: 50px;
     transition: var(--transition-normal);
+}
+
+.navbar-scrolled .nav-logo {
+    height: 45px;
 }
 
 .brand-text {
@@ -135,8 +316,6 @@
     width: 20px;
     height: 20px;
     display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 /* Estilos generales del footer */

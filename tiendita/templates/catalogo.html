@@ -1,11 +1,10 @@
 {% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
 {% load static %} <!-- Renderiza archivos staticos-->
-
-
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
 {% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+
 {% endblock %}
 {% block extra_scripts %}
 <script src="{% static 'js/navbar.js' %}"></script>
@@ -25,39 +24,37 @@
         document.getElementById('modalProductOriginalPrice').textContent = `$${productData.originalPrice}`;
     }
 </script>
-
 {% endblock %}
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
 
 
 
+
 <div class="container-fluid">
-    <!-- Promociones en la parte superior -->
-
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card promotion-card">
-                <div class="card-body">
-                    <h5 class="card-title">10% de descuento</h5>
-                    <p class="card-text">para tu primera compra en alimentos de marca PX Formula</p>
-                    <img src="dog-food.jpg" alt="Dog Food" class="img-fluid rounded">
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card promotion-card">
-                <div class="card-body">
-                    <h5 class="card-title">Envío gratis</h5>
-                    <p class="card-text">Para compras con un monto superior a $70.000</p>
-                    <img src="free-shipping.jpg" alt="Free Shipping" class="img-fluid rounded">
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Contenido principal: Filtros a la izquierda y lista de productos a la derecha -->
     <div class="row">
+        <!-- Promociones en la parte superior -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card promotion-card">
+                    <div class="card-body">
+                        <h5 class="card-title">10% de descuento</h5>
+                        <p class="card-text">para tu primera compra en alimentos de marca PX Formula</p>
+                        <img src="dog-food.jpg" alt="Dog Food" class="img-fluid rounded">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card promotion-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Envío gratis</h5>
+                        <p class="card-text">Para compras con un monto superior a $70.000</p>
+                        <img src="free-shipping.jpg" alt="Free Shipping" class="img-fluid rounded">
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="container mt-4">
             <form class="d-flex">
                 <input class="form-control me-2" type="search" placeholder="Buscar productos" aria-label="Search"
@@ -65,7 +62,6 @@
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </form>
         </div>
-
         <!-- Filtros -->
         <div class="col-md-3">
             <div class="card">
@@ -97,7 +93,6 @@
                         <input class="form-check-input" type="checkbox" id="category4">
                         <label class="form-check-label" for="category4">Camas y rascadores</label>
                     </div>
-
                 </div>
                 <div class="card-body">
                     <h6>Tipo De Mascota</h6>
@@ -122,8 +117,6 @@
                 </div>
             </div>
         </div>
-
-
         <!-- Lista de productos -->
         <div class="col-md-9">
             <div class="row" id="product-list">
@@ -284,9 +277,7 @@
                 <!-- Agrega más productos aquí -->
             </div>
         </div>
-
     </div>
-
     <!-- Modal de detalles del producto -->
     <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -296,10 +287,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-
                         <img class="img-fluid" src="{% static 'images/ecommerce/03.jpg' %}" alt="Producto">
-
-
                         <h4>Nombre del Producto</h4>
                         <p>Descripción detallada del producto.</p>
                         <div class="product-price">$45.00 <del>$52.00</del></div>
@@ -315,7 +303,6 @@
                                 <a class="btn btn-primary" href="#">Ver Detalles</a>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
