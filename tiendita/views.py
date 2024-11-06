@@ -30,7 +30,55 @@ def pago_view(request):
     return render(request,'checkout.html')
 
 def carrito_view(request):
-    return render(request,'carrito.html')
+    cart_items = [
+        {
+            'id': 1,
+            'name': 'Dog Collar',
+            'description': 'Adjustable nylon dog collar',
+            'image': 'https://via.placeholder.com/150',
+            'price': 12.99,
+            'quantity': 2
+        },
+        {
+            'id': 2,
+            'name': 'Cat Toys',
+            'description': 'Set of 3 interactive cat toys',
+            'image': 'https://via.placeholder.com/150',
+            'price': 9.99,
+            'quantity': 1
+        },
+        {
+            'id': 3,
+            'name': 'Pet Shampoo',
+            'description': 'Natural pet shampoo, 16 oz',
+            'image': 'https://via.placeholder.com/150',
+            'price': 7.50,
+            'quantity': 1
+        },
+        {
+            'id': 4,
+            'name': 'Dog Bed',
+            'description': 'Orthopedic memory foam dog bed',
+            'image': 'https://via.placeholder.com/150',
+            'price': 39.99,
+            'quantity': 1
+        }
+    ]
+
+    subtotal = sum(item['price'] * item['quantity'] for item in cart_items)
+    shipping = 5.00
+    tax = subtotal * 0.1
+    total = subtotal + shipping + tax
+
+    context = {
+        'cart_items': cart_items,
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'tax': tax,
+        'total': total
+    }
+
+    return render(request, 'carrito.html', context)
 
 # No se imaginan el dolor que fue cranearme esta wea, a la proxima la GPTEO
 def catalogo_view(request):
