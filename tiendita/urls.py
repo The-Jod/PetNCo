@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from . import views
-from .views import  Product_ListView, Product_CreateView, Product_UpdateView, Product_DeleteView
+from .views import  Product_ListView, Product_CreateView
 
 """
 URL configuration for Petnco project.
@@ -37,6 +37,4 @@ urlpatterns = [
     path('carrito/',views.carrito_view,name='carrito'),
     path('productos/', views.catalogo_view, name='productos'),  
     path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
-    path('productos/<int:pk>/edit/', Product_UpdateView.as_view(), name='product_edit'),  
-    path('productos/<int:pk>/delete/', Product_DeleteView.as_view(), name='product_delete'),  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

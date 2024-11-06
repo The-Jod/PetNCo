@@ -1,19 +1,348 @@
-{% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
-{% load static %} <!-- Renderiza archivos staticos-->
+{% extends "base.html" %}
+{% load static %}
 
+{% block title %}Carrito de Compras - Vet & Pet Center{% endblock %}
 
-<!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
-{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<style>
+    .saved-for-later {
+        opacity: 0.7;
+    }
+
+    .progress-indicator {
+        height: 4px;
+        background: #eee;
+        margin-bottom: 20px;
+    }
+
+    .progress-indicator .step {
+        width: 33.33%;
+        height: 100%;
+        background: #007bff;
+        transition: width 0.3s;
+    }
+
+    .stock-status {
+        font-size: 0.8em;
+        color: #28a745;
+    }
+
+    .product-category-tag {
+        font-size: 0.75em;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-right: 5px;
+    }
+
+    .dog-tag {
+        background: #e3f2fd;
+        color: #0d47a1;
+    }
+
+    .cat-tag {
+        background: #f3e5f5;
+        color: #4a148c;
+    }
+</style>
 {% endblock %}
-{% block extra_scripts %}
-<script src="{% static 'js/navbar.js' %}"></script>
 
-{% endblock %}
-{% block content %}<!-- Deja pasar el contenido de esta vista -->
+{% block content %}
+<div class="container py-5">
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+        <div class="step" id="cart-progress"></div>
+    </div>
 
+    <div class="row">
+        <!-- Cart Items - Left Side -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Carrito de Compras</h1>
+                <button class="btn btn-outline-danger" id="clear-cart">
+                    <i data-feather="trash"></i> Vaciar Carrito
+                </button>
+            </div>
 
+            {% if cart_items %}
+            <div class="mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Código de descuento" id="coupon-code">
+                    <button class="btn btn-outline-secondary" type="button" id="apply-coupon">Aplicar</button>
+                </div>
+            </div>
 
+            {% for item in cart_items %}
+            <div class="category-card mb-3">
+                <div class="card-body">
+                    <div class="row cart-item" data-id="{{ item.id }}">
+                        <div class="col-md-2 col-4">
+                            <img src="{{ item.image.url|default:'placeholder.jpg' }}" alt="{{ item.name }}"
+                                class="img-fluid cart-item-image">
+                        </div>
+                        <div class="col-md-4 col-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <h5 class="product-name mb-0">{{ item.name }}</h5>
+                                <span
+                                    class="product-category-tag {% if item.category == 'dog' %}dog-tag{% else %}cat-tag{% endif %}">
+                                    {{ item.category }}
+                                </span>
+                            </div>
+                            <p class="text-muted">{{ item.description }}</p>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rating me-2">
+                                    {% for i in "12345" %}
+                                    <i data-feather="star"
+                                        class="{% if forloop.counter <= item.rating %}text-warning{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                                <small>({{ item.review_count }} reseñas)</small>
+                            </div>
+                            <p class="stock-status">
+                                {% if item.stock > 10 %}
+                                <i data-feather="check-circle"></i> En stock
+                                {% elif item.stock > 0 %}
+                                <i data-feather="alert-circle"></i> ¡Quedan solo {{ item.stock }} unidades!
+                                {% else %}
+                                <i data-feather="x-circle"></i> Agotado
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-2 col-4">
+                            <div class="input-group quantity-input">
+                                <button class="btn btn-outline-secondary decrease-qty" type="button">-</button>
+                                <input type="number" class="form-control text-center item-quantity"
+                                    value="{{ item.quantity }}" min="1" max="{{ item.stock }}">
+                                <button class="btn btn-outline-secondary increase-qty" type="button">+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-4">
+                            <span class="item-price">${{ item.price }}</span>
+                            {% if item.original_price %}
+                            <small class="text-muted text-decoration-line-through d-block">
+                                ${{ item.original_price }}
+                            </small>
+                            <span class="text-success">
 
-{% endblock %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 col-4">
+                            <div class="btn-group-vertical">
+                                <button class="btn btn-danger btn-sm remove-item mb-2">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm save-for-later">
+                                    <i data-feather="heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-4">
+                    <i data-feather="shopping-cart" class="mb-3 text-muted" style="width: 48px; height: 48px;"></i>
+                    <h5>Carrito Vacío</h5>
+                    <p class="text-muted">¡Agrega productos para comenzar!</p>
+                    <a href="{% url 'products' %}" class="btn btn-primary mt-3">Continuar Comprando</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Cart Summary - Right Side -->
+        <div class="col-md-3">
+            <div class="card position-sticky" style="top: 2rem;">
+                <div class="card-body">
+                    <h4 class="mb-3">Total a Pagar</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span id="subtotal">${{ subtotal|floatformat:2 }}</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Método de envío:</small>
+                        <select class="form-select form-select-sm" id="shipping-method">
+                            <option value="standard" data-price="5.00">Estándar (3-5 días) - $5.00</option>
+                            <option value="express" data-price="15.00">Express (1-2 días) - $15.00</option>
+                            <option value="pickup" data-price="0">Recoger en tienda - Gratis</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Envío</span>
+                        <span id="shipping">${{ shipping|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Impuestos</span>
+                        <span id="tax">${{ tax|floatformat:2 }}</span>
+                    </div>
+                    {% if discount %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Descuento</span>
+                        <span id="discount">-${{ discount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <strong>Total</strong>
+                        <strong id="total">${{ total|floatformat:2 }}</strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Métodos de pago aceptados:</small>
+                        <div class="payment-methods">
+                            <i data-feather="credit-card" class="me-2"></i>
+                            <i data-feather="smartphone" class="me-2"></i>
+                            <i data-feather="dollar-sign"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="gift-option">
+                        <label class="form-check-label" for="gift-option">
+                            Enviar como regalo
+                        </label>
+                    </div>
+
+                    <a href="{% url 'checkout' %}" class="btn btn-primary w-100 mb-2" id="checkout-btn">
+                        Proceder al pago
+                    </a>
+                    <small class="text-muted d-block text-center">
+                        <i data-feather="lock" class="me-1"></i>
+                        Pago seguro garantizado
+                    </small>
+                </div>
+            </div>
+        </div>
+        </ ```html </div>
+    </div>
+
+    {% endblock %}
+
+    {% block extra_scripts %}
+    <script src="{% static 'js/navbar.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- falta mejorar este script que es para  el carrito de compras -->
+
+    <script>
+        $(document).ready(function () {
+            // Inicializar iconos
+            feather.replace();
+
+            // Autoguardado del carrito
+            let cartTimeout;
+            function autoSaveCart() {
+                clearTimeout(cartTimeout);
+                cartTimeout = setTimeout(function () {
+                    // Guardar estado del carrito
+                    const cartState = {
+                        items: [],
+                        total: $('#total').text()
+                    };
+                    $('.cart-item').each(function () {
+                        cartState.items.push({
+                            id: $(this).data('id'),
+                            quantity: $(this).find('.item-quantity').val()
+                        });
+                    });
+                    localStorage.setItem('savedCart', JSON.stringify(cartState));
+                }, 1000);
+            }
+
+            // Función para actualizar el carrito
+            function updateCartItem(itemId, quantity) {
+                $.ajax({
+                    url: '#', // Cambia '#' por la URL correcta de tu endpoint para actualizar el carrito
+                    method: 'POST',
+                    data: {
+                        'item_id': itemId,
+                        'quantity': quantity,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        $('#subtotal').text(`$${parseFloat(response.subtotal).toFixed(2)}`);
+                        $('#tax').text(`$${parseFloat(response.tax).toFixed(2)}`);
+                        $('#total').text(`$${parseFloat(response.total).toFixed(2)}`);
+                        autoSaveCart();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error updating cart item:', error);
+                        alert('Error al actualizar el artículo en el carrito. Por favor, inténtalo de nuevo.');
+                    }
+                });
+            }
+
+            // Aumentar cantidad
+            $('.increase-qty').click(function () {
+                const itemRow = $(this).closest('.cart-item');
+                const quantityInput = itemRow.find('.item-quantity');
+                let quantity = parseInt(quantityInput.val());
+                const maxQuantity = parseInt(quantityInput.attr('max'));
+
+                // Asegúrate de que la cantidad no exceda el máximo
+                if (quantity < maxQuantity) {
+                    quantity++;
+                    quantityInput.val(quantity);
+                    updateCartItem(itemRow.data('id'), quantity);
+                }
+            });
+
+            // Disminuir cantidad
+            $('.decrease-qty').click(function () {
+                const itemRow = $(this).closest('.cart-item');
+                const quantityInput = itemRow.find('.item-quantity');
+                let quantity = parseInt(quantityInput.val());
+
+                // Asegúrate de que la cantidad no sea menor que 1
+                if (quantity > 1) {
+                    quantity--;
+                    quantityInput.val(quantity);
+                    updateCartItem(itemRow.data('id'), quantity);
+                }
+            });
+
+            // Guardar para después
+            $('.save-for-later').click(function () {
+                const itemRow = $(this).closest('.cart-item');
+                itemRow.addClass('saved-for-later');
+                // Implementar lógica de guardado si es necesario
+            });
+
+            // Aplicar cupón
+            $('#apply-coupon').click(function () {
+                const code = $('#coupon-code').val();
+                $.ajax({
+                    url: '#', // Cambia '#' por la URL correcta para aplicar el cupón
+                    method: 'POST',
+                    data: {
+                        'code': code,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        if (response.valid) {
+                            alert('Cupón aplicado con éxito!');
+                            location.reload();
+                        } else {
+                            alert('Cupón inválido');
+                        }
+                    }
+                });
+            });
+
+            // Cambio de método de envío
+            $('#shipping-method').change(function () {
+                const shippingPrice = $(this).find(':selected').data('price');
+                $('#shipping').text(`$${shippingPrice.toFixed(2)}`);
+                // Actualizar total si es necesario
+                updateCartTotals();
+            });
+        });
+    </script>
+    {% endblock %}

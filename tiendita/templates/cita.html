@@ -1,43 +1,56 @@
 {% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
 {% load static %} <!-- Renderiza archivos staticos-->
-
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
-{% block title %}Agenda tu Cita{%endblock%}
-
-{% block content %}<!-- Deja pasar el contenido de esta vista -->
+{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
 <link rel="stylesheet" href="{% static 'css/citas.css' %}">
 
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+{% endblock %}
+{% block content %}<!-- Deja pasar el contenido de esta vista -->
+
+
+
+
 <body>
-   <div class="container-fluid">
-    <div class="row">
-        <div class="col-3 filter-position">
-             <!--Filtro de comunas-->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-3 filter-position">
+                <!--Filtro de comunas-->
                 <label for="sortComunas" class="form-label">Ingresa tu comuna:</label>
-            <select id="sortComunas" class="form-select">
-                <option value="todas">Todas las comunas</option>
-                <option value="maipu">Maipú</option>
-                <option value="pudahuel">Pudahuel</option>
-                <option value="loprado">Lo Prado</option>
-                <option value="cerrillos">Cerrillos</option>
-                <option value="cerronavia">Cerro Navia</option>
-                <option value="estacioncentral">Estación Central</option>
-            </select>
-            <!--Filtro de citas-->
+                <select id="sortComunas" class="form-select">
+                    <option value="todas">Todas las comunas</option>
+                    <option value="maipu">Maipú</option>
+                    <option value="pudahuel">Pudahuel</option>
+                    <option value="loprado">Lo Prado</option>
+                    <option value="cerrillos">Cerrillos</option>
+                    <option value="cerronavia">Cerro Navia</option>
+                    <option value="estacioncentral">Estación Central</option>
+                </select>
+                <!--Filtro de citas-->
                 <label for="sortTipoCita" class="form-label">Ingresa tu tipo de cita:</label>
-            <select id="sortTipoCita" class="form-select">
-                <option value="">Todas las citas</option>
-                <option value="adomicilio">A domicilio</option>
-                <option value="onsite">On-Site</option>
-            </select>
-            <!--Filtro de mascotas-->
-            <label for="sortMascota" class="form-label">Ingresa tu mascota:</label>
-            <select id="sortMascota" class="form-select">
-                <option value="">Todas las mascotas</option>
-                <option value="perro">Perro</option>
-                <option value="gato">Gato</option>
-            </select>
-            <button class="filter-button">Aplicar filtros</button>
-        </div>
+                <select id="sortTipoCita" class="form-select">
+                    <option value="">Todas las citas</option>
+                    <option value="adomicilio">A domicilio</option>
+                    <option value="onsite">On-Site</option>
+                </select>
+                <!--Filtro de mascotas-->
+                <label for="sortMascota" class="form-label">Ingresa tu mascota:</label>
+                <select id="sortMascota" class="form-select">
+                    <option value="">Todas las mascotas</option>
+                    <option value="perro">Perro</option>
+                    <option value="gato">Gato</option>
+                </select>
+                <button class="filter-button">Aplicar filtros</button>
+            </div>
 
 
         <div class="col-9">
@@ -45,7 +58,7 @@
                 <!-- Tarjeta de Veterinario -->
                     <div class="profile-card">
                         <div class="picture-align">
-                        <img src="{% static 'img/probando12.png' %}" alt="Veterinario" class="profile-image">
+                            <img src="{% static 'img/probando12.png' %}" alt="Veterinario" class="profile-image">
                             <div class="profile-info">
                                 
                                     <h4>Arturo Pineda</h4>
@@ -95,11 +108,11 @@
                                 </div>  
                             </div>
                 </div>
-            </div>     
+            </div>
         </div>
     </div>
 
-   
+
 
 
 

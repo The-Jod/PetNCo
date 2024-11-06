@@ -5,10 +5,10 @@
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
 {% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 {% block extra_scripts %}
-<script src="{% static 'js/navbar.js' %}"></script>
+<script src="{% static 'js/home.js' %}"></script>
 
 {% endblock %}
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
@@ -81,7 +81,7 @@
                     <p class="category-description">Encuentra la mejor ropa y accesorios para tu mascota</p>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6" > 
+            <div class="col-md-3 col-sm-6">
                 <div class="category-card">
                     <img src="{% static 'img/CategoriaComida.png' %}" class="category-icon" alt="Alimentos">
                     <h3 class="category-title">Alimentos</h3>
