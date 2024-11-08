@@ -43,5 +43,20 @@ class ProductoForm(forms.ModelForm):
 
             'TipoAnimal': forms.Select(attrs={'class': 'form-select'}), 
             
-            'ImagenProducto': forms.FileInput(attrs={'class': 'form-control'}),
+            'ImagenProducto': forms.ClearableFileInput(attrs={'class': 'form-control',}),
+
         }
+
+        def __init__(self, *args, **kwargs):
+            super(ProductoForm, self).__init__(*args, **kwargs)
+
+        # Busca la imagen de producto, Fue un parto lograr que funcionara, xfavor no le muevan.
+            if self.instance and self.instance.pk:
+                self.fields['ImagenProducto'].widget = forms.FileInput(attrs={
+                    'class': 'form-control',
+                })
+            else:
+                self.fields['ImagenProducto'].widget = forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+            })
+        
