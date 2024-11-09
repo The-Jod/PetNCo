@@ -3,7 +3,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.urls import include, path, reverse_lazy
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from .models import Producto
 from .forms import ProductoForm
@@ -80,7 +80,7 @@ def carrito_view(request):
 
     return render(request, 'carrito.html', context)
 
-# No se imaginan el dolor que fue cranearme esta wea, a la proxima la GPTEO
+#Catalogo 
 def catalogo_view(request):
     productos = Producto.objects.all()
 
@@ -134,13 +134,28 @@ class Product_ListView(ListView):
     template_name = 'catalogo/product_list.html'
     context_object_name = 'productos'
 
-#As shrimple as that....
 def buscar_producto_por_sku(sku):
     try:
         return Producto.objects.get(SKUProducto=sku)
     except Producto.DoesNotExist:
         return None
 
+def producto_detalle_modal(request, sku):
+    producto = get_object_or_404(Producto, SKUProducto=sku)
+
+    producto_data = {
+        'nombre': producto.NombreProducto,
+        'descripcion': producto.DescripcionProducto,
+        'precio': producto.PrecioProducto,
+        'precio_oferta': producto.PrecioOferta if producto.EstaOferta else None,
+        'imagen_url': producto.ImagenProducto.url if producto.ImagenProducto else '',
+        'stock': producto.StockProducto,
+        'esta_en_oferta': producto.EstaOferta,
+        'categoria': producto.get_CategoriaProducto_display(),
+        'tipo_animal': producto.get_TipoAnimal_display(),
+    }
+
+    return JsonResponse(producto_data)
 
 #CRUD de Producto
 class Product_CreateView(CreateView):

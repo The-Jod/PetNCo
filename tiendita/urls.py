@@ -37,4 +37,5 @@ urlpatterns = [
     path('carrito/',views.carrito_view,name='carrito'),
     path('productos/', views.catalogo_view, name='productos'),  
     path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
+    path('productos/<int:sku>/', views.producto_detalle_modal, name='producto-modal'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
