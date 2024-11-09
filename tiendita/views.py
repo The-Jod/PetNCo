@@ -82,7 +82,6 @@ def carrito_view(request):
 
 # No se imaginan el dolor que fue cranearme esta wea, a la proxima la GPTEO
 def catalogo_view(request):
-    # Obtiene todos los productos
     productos = Producto.objects.all()
 
     # Filtro de búsqueda por nombre de producto
@@ -113,12 +112,12 @@ def catalogo_view(request):
 
     productos = productos.filter(PrecioProducto__gte=min_price, PrecioProducto__lte=max_price)
 
-    # Filtro de categorías (Hay que implementar esta wea pero polla idea como)
+    # Filtro de categorías (Ya la implemente)
     categorias = request.GET.getlist('categorias')
     if categorias:
         productos = productos.filter(DescripcionProducto__icontains=categorias[0])
 
-    # Filtro de tipo de animal (float)
+    # Filtro de tipo de animal
     tipo_animal = request.GET.getlist('tipo_animal')
     if tipo_animal:
         productos = productos.filter(TipoAnimal__in=tipo_animal)
@@ -142,6 +141,8 @@ def buscar_producto_por_sku(sku):
     except Producto.DoesNotExist:
         return None
 
+
+#CRUD de Producto
 class Product_CreateView(CreateView):
     model = Producto
     form_class = ProductoForm

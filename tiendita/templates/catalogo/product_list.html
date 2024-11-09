@@ -110,19 +110,30 @@
                 {% for producto in productos %}
                 <div class="col-md-4 mb-4">
                     <div class="card product-card">
-                        <!--Es chistoso porque no se si es la imagen la que deforma la carta o si yo lo programe como el pico-->
-                        <img class="card-img-top"
-                            src="{% if producto.ImagenProducto %}{{ producto.ImagenProducto.url }}{% else %}https://dummyimage.com/400x400/000/ffffff.png{% endif %}"
-                            alt="{{ producto.NombreProducto }}">
+                        <!-- Imagen del producto -->
+                        <img class="card-img-top" src="{% if producto.ImagenProducto %}{{ producto.ImagenProducto.url }}{% else %}https://dummyimage.com/400x400/000/ffffff.png{% endif %}" alt="{{ producto.NombreProducto }}">
                         <div class="card-body">
                             <h5 class="card-title">{{ producto.NombreProducto }}</h5>
                             <p class="card-text">{{ producto.DescripcionProducto }}</p>
                             <ul>
-                                <span class="original-price text-decoration-line-through">$ 
-                                    {{ producto.PrecioProductoOriginal }} </span>
+                                <span class="original-price text-decoration-line-through">${{ producto.PrecioProductoOriginal }}</span>
                                 <span class="text-success fw-bold">${{ producto.PrecioProducto }}</span>
                             </ul>
-                            <button class="btn btn-primary mt-2">Ver Producto</button>
+
+                            <!-- Botón para ver el producto -->
+                            <button class="btn btn-primary mt-2" 
+                                    onclick="showProductDetails(this)" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#productModal" 
+                                    data-product='{
+                                        "name": "{{ producto.NombreProducto }}",
+                                        "description": "{{ producto.DescripcionProducto }}",
+                                        "price": "{{ producto.PrecioProducto }}",
+                                        "originalPrice": "{{ producto.PrecioProductoOriginal }}",
+                                        "image": "{% if producto.ImagenProducto %}{{ producto.ImagenProducto.url }}{% else %}{% static "img/ProductPlaceholder.png" %}{% endif %}"
+                                    }'>
+                                Ver Producto
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -130,30 +141,36 @@
             </div>
         </div>
 
-
         <!-- Modal de detalles del producto -->
         <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
+                        <h5 class="modal-title" id="productModalLabel"></h5>
                         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row">
-                            <img class="img-fluid" src="{% static 'images/ecommerce/03.jpg' %}" alt="Producto">
-                            <h4>Nombre del Producto</h4>
-                            <p>Descripción detallada del producto.</p>
-                            <div class="product-price">$45.00 <del>$52.00</del></div>
-                            <div class="product-qnty">
-                                <h6>Cantidad</h6>
-                                <div class="input-group">
-                                    <button class="btn btn-primary" type="button"><i class="fa fa-minus"></i></button>
-                                    <input type="number" class="form-control text-center" value="1">
-                                    <button class="btn btn-primary" type="button"><i class="fa fa-plus"></i></button>
+                            <div class="col-md-6">
+                                <img id="modalProductImage" class="img-fluid" src="" alt="Producto">
+                            </div>
+                            <div class="col-md-6">
+                                <h4 id="modalProductDescription"></h4>
+                                <div class="product-price">
+                                    <span id="modalProductPrice"></span>
+                                    <del id="modalProductOriginalPrice"></del>
                                 </div>
-                                <div class="mt-3">
-                                    <a class="btn btn-primary me-3" href="#">Añadir al Carrito</a>
-                                    <a class="btn btn-primary" href="#">Ver Detalles</a>
+                                <div class="product-qnty">
+                                    <h6>Cantidad</h6>
+                                    <div class="input-group">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-minus"></i></button>
+                                        <input type="number" class="form-control text-center" value="1">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-plus"></i></button>
+                                    </div>
+                                    <div class="mt-3">
+                                        <a class="btn btn-primary me-3" href="#">Añadir al Carrito</a>
+                                        <a class="btn btn-primary" href="#">Ver Detalles</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -163,5 +180,6 @@
         </div>
     </div>
 </div>
+
 
 {%endblock%}

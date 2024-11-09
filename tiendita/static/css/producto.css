@@ -117,6 +117,11 @@ div {
     /* Espaciado dentro de la tarjeta */
 }
 
+.card-img-top {
+    height: auto;
+    max-width: 200px;
+}
+
 /* Media queries para responsive */
 @media (max-width: 768px) {
     .product-grid {
