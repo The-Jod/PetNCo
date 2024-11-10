@@ -153,6 +153,8 @@ def producto_detalle_modal(request, sku):
         'esta_en_oferta': producto.EstaOferta,
         'categoria': producto.get_CategoriaProducto_display(),
         'tipo_animal': producto.get_TipoAnimal_display(),
+        'stock': producto.SKUProducto,
+        
     }
 
     return JsonResponse(producto_data)

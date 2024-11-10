@@ -135,6 +135,8 @@
                 {% endfor %}
             </div>
         </div>
+
+
 <!-- Modal de Bootstrap para mostrar los detalles del producto -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -170,6 +172,7 @@ document.querySelectorAll('.open-modal-btn').forEach(button => {
             .then(data => {
                 // Llenar el modal con los datos recibidos
                 const modalContent = `
+                    <p>Sku: ${sku} </p>
                     <img src="${data.imagen_url}" alt="${data.nombre}" class="img-fluid mb-3">
                     <h2>${data.nombre}</h2>
                     <p>${data.descripcion}</p>
