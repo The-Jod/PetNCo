@@ -13,14 +13,20 @@
 		<input type="checkbox" id="chk" aria-hidden="true">
 
 			<div class="signup">
-				<form>
-					<label for="chk" aria-hidden="true">Registrate</label>
-					<input type="text" name="txt" placeholder="Nombre completo" required="">
-					<input type="email" name="email" placeholder="Correo electrónico" required="">
-          <input type="number" name="tele" placeholder="Numero de teléfono" required="">
-					<input type="password" name="pswd" placeholder="Contraseña" required="">
-					<button>Registrate</button>
-				</form>
+                <label for="chk" aria-hidden="true">Registrarse</label>
+                <form method="POST">
+                    {% csrf_token %}
+                    <label for="NombreProducto" class="form-label">RUT</label>
+                    {{ form.username }}
+
+                    <label for="NombreProducto" class="form-label">Contraseña</label>
+                    {{ form.password1 }}
+
+                    <label for="NombreProducto" class="form-label">Confirmar Contraseña</label>
+                    {{ form.password2 }}
+
+                    <button type="submit">Registrarse</button>
+                </form>
 			</div>
 
 			<div class="login">
@@ -34,3 +40,5 @@
 	</div>    
 </body>
 </html>
+
+

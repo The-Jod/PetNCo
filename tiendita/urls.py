@@ -32,7 +32,7 @@ Including another URLconf
 urlpatterns = [
     path('',views.home_view, name='home'),
     path('registro_citas',views.vetdate_view, name='registro'),
-    path('login',views.login_view, name='login'),
+    path('login',views.registro_view, name='login'),
     path('pago/',views.pago_view,name='checkout'),
     path('carrito/',views.carrito_view,name='carrito'),
     path('productos/', views.catalogo_view, name='productos'),  

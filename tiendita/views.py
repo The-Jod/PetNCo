@@ -6,13 +6,21 @@ from django.urls import include, path, reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from .models import Producto
-from .forms import ProductoForm
+from .forms import ProductoForm, UsuarioRegistroForm
 
 
 # Aqui van las famosas vistas, no confundir
 
-def reg_view(request):
-    return render(request, 'lateregistration/registro.html')
+def registro_view(request):
+    if request.method == 'POST':
+        form = UsuarioRegistroForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '¡Tu cuenta ha sido creada exitosamente!')
+            return redirect('home') 
+    else:
+        form = UsuarioRegistroForm()
+    return render(request, 'usuario/late_registration.html', {'form': form})
 
 def login_view(request):
     return render(request, 'login.html')
@@ -153,7 +161,6 @@ def producto_detalle_modal(request, sku):
         'esta_en_oferta': producto.EstaOferta,
         'categoria': producto.get_CategoriaProducto_display(),
         'tipo_animal': producto.get_TipoAnimal_display(),
-        'stock': producto.SKUProducto,
         
     }
 

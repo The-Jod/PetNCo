@@ -1,5 +1,7 @@
 from django import forms
-from .models import Producto
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from .models import Producto, UsuarioProfile
 
 
 class ProductoForm(forms.ModelForm):
@@ -60,3 +62,28 @@ class ProductoForm(forms.ModelForm):
                 'class': 'form-control',
             })
         
+class UsuarioRegistroForm(UserCreationForm):
+    # Añadimos el campo de RutUsuario al formulario
+    RutUsuario = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'RUT'})
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'password1', 'password2']  # Solo los campos necesarios de User
+
+    def save(self, commit=True):
+        # Guardamos el usuario del modelo User
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+        
+        # Creamos y guardamos el perfil del usuario (UsuarioProfile)
+        usuario_profile = UsuarioProfile(
+            user=user,
+            RutUsuario=self.cleaned_data['RutUsuario']
+        )
+        if commit:
+            usuario_profile.save()
+
+        return user
