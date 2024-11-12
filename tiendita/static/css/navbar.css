@@ -42,8 +42,6 @@
     /* Ocupa todo el ancho */
     z-index: 1000;
     /* Asegúrate de que esté por encima de otros elementos */
-    margin-bottom: 35px;
-
 
 }
 
@@ -208,6 +206,63 @@
     color: #333;
     /* Efecto hover */
 }
+
+
+.form-card {
+    background-color: #27AE60;
+    background-color: var(--light);
+    /* Fondo suave, neutro */
+    border-radius: 8px;
+    /* Bordes redondeados */
+    padding: 2rem;
+    /* Espaciado interno */
+    box-shadow: var(--shadow-md);
+    /* Sombra moderada */
+
+
+}
+
+.form-card-control {
+    background-color: var(--white);
+    /* Fondo blanco para los campos de entrada */
+    border-color: var(--primary);
+    /* Borde con color primario */
+    border-radius: 4px;
+    /* Bordes redondeados */
+}
+
+.form-card-control:focus {
+    border-color: var(--accent);
+    /* Borde resaltado al enfocar */
+    box-shadow: 0 0 0 0.25rem rgba(64, 161, 19, 0.25);
+    /* Sombra suave al enfocar */
+}
+
+/* Botón de envío */
+.btn-primary {
+    background-color: var(--primary);
+    /* Fondo de botón con color primario */
+    border-color: var(--primary);
+    /* Borde del botón */
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    transition: background-color 300ms ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary);
+    /* Cambio de color en hover */
+    border-color: var(--secondary);
+    /* Cambio de borde en hover */
+}
+
+/* Etiquetas */
+.form-card-label {
+    color: var(--dark);
+    /* Color oscuro para las etiquetas */
+}
+
+.form-card:hover {}
 
 /* Estilos de tarjetas */
 .card {

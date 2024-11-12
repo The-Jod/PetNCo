@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django_bootstrap_icons',
 #    'django.contrib.admin',
     'bootstrap5',    
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

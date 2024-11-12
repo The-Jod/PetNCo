@@ -9,6 +9,9 @@ from django.core.paginator import Paginator
 from .models import Producto, CustomUser
 from .forms import ProductoForm, RegistroUsuarioForm, CustomLoginForm
 
+from .models import Producto
+from .forms import ProductoForm
+from django.db.models import Q
 
 
 # Aqui van las famosas vistas, no confundir
@@ -100,7 +103,9 @@ def carrito_view(request):
     return render(request, 'carrito.html', context)
 
 #Catalogo 
+
 def catalogo_view(request):
+    # Carga inicial de todos los productos
     productos = Producto.objects.all()
 
     # Filtro de búsqueda por nombre de producto
@@ -108,41 +113,47 @@ def catalogo_view(request):
     if query:
         productos = productos.filter(NombreProducto__icontains=query)
 
-     # Filtro de rango de precio
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
+    # Filtro de rango de precio
+    min_price = request.GET.get('min_price', 0)
+    max_price = request.GET.get('max_price', 1000000)
 
-    # Verificar si min_price y max_price son válidos
-    if min_price:
-        try:
-            min_price = float(min_price)
-        except ValueError:
-            min_price = 0  # Constante en caso de error
-    else:
-        min_price = 0
+    # Validación de precios
+    try:
+        min_price = float(min_price)
+    except ValueError:
+        min_price = 0  # Valor por defecto si es inválido
 
-    if max_price:
-        try:
-            max_price = float(max_price)
-        except ValueError:
-            max_price = 1000000  # Constante en caso de error
-    else:
-        max_price = 1000000
+    try:
+        max_price = float(max_price)
+    except ValueError:
+        max_price = 1000000  # Valor por defecto si es inválido
 
+    # Aplicación del filtro de precios
     productos = productos.filter(PrecioProducto__gte=min_price, PrecioProducto__lte=max_price)
 
-    # Filtro de categorías (Ya la implemente)
+    # Filtro de categorías
     categorias = request.GET.getlist('categorias')
     if categorias:
-        productos = productos.filter(DescripcionProducto__icontains=categorias[0])
+        productos = productos.filter(CategoriaProducto__in=categorias)
 
     # Filtro de tipo de animal
     tipo_animal = request.GET.getlist('tipo_animal')
     if tipo_animal:
         productos = productos.filter(TipoAnimal__in=tipo_animal)
 
+    # Filtro para mostrar solo productos en oferta
+    productos_oferta = productos.filter(EstaOferta=True)
+
+    # Mensaje si no hay productos en oferta
+    mensaje_oferta = None
+    if not productos_oferta.exists():
+        mensaje_oferta = "No hay productos en oferta actualmente."
+
+    # Contexto para pasar los productos filtrados al template
     context = {
         'productos': productos,
+        'productos_oferta': productos_oferta,
+        'mensaje_oferta': mensaje_oferta,
     }
 
     return render(request, 'catalogo/product_list.html', context)
@@ -165,8 +176,8 @@ def producto_detalle_modal(request, sku):
     producto_data = {
         'nombre': producto.NombreProducto,
         'descripcion': producto.DescripcionProducto,
-        'precio': producto.PrecioProducto,
-        'precio_oferta': producto.PrecioOferta if producto.EstaOferta else None,
+        'precio': f"${producto.PrecioProducto:,.0f}",
+        'precio_oferta': f"${producto.PrecioOferta:,.0f}" if producto.EstaOferta else None,
         'imagen_url': producto.ImagenProducto.url if producto.ImagenProducto else '',
         'stock': producto.StockProducto,
         'esta_en_oferta': producto.EstaOferta,
@@ -177,6 +188,8 @@ def producto_detalle_modal(request, sku):
 
     return JsonResponse(producto_data)
 
+
+#CRUD de Producto
 #CRUD de Producto
 class Product_CreateView(CreateView):
     model = Producto
@@ -184,53 +197,70 @@ class Product_CreateView(CreateView):
     template_name = 'catalogo/product_form.html'
     success_url = reverse_lazy('productos')
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['form'] = kwargs.get('form', self.get_form())
+        # Añadimos la lista de SKUs para validación en el frontend
+        context['productos_skus'] = self.model.objects.values_list('SKUProducto', flat=True)
+        return context
+
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         sku = request.POST.get('SKUProducto')
+        context = self.get_context_data(form=form)
 
         # busca
         if 'buscar' in request.POST and sku:
             producto = buscar_producto_por_sku(sku)
             if producto:
-                form = ProductoForm(instance=producto)
+                # Formatear los precios para mejor visualización
+                producto.PrecioProducto = f"${producto.PrecioProducto:,.0f}"
+                if producto.EstaOferta:
+                    producto.PrecioOferta = f"${producto.PrecioOferta:,.0f}"
+                form = self.form_class(instance=producto)
             else:
-                form = ProductoForm()
-            return render(request, self.template_name, {'form': form})
+                form = self.form_class()
+            context['form'] = form
+            return render(request, self.template_name, context)
 
-        # actualiza
+        # actualiza o crea
         elif 'crear_actualizar' in request.POST:
             producto = buscar_producto_por_sku(sku)
+            
+            # Validación de SKU existente solo para creación
+            if not producto and self.model.objects.filter(SKUProducto=sku).exists():
+                form.add_error('SKUProducto', 'Este SKU ya existe. Por favor, elige otro.')
+                context['form'] = form
+                return render(request, self.template_name, context)
 
             if producto:
-                form = ProductoForm(request.POST, request.FILES, instance=producto)
+                form = self.form_class(request.POST, request.FILES, instance=producto)
             else:
-                form = ProductoForm(request.POST, request.FILES)
+                form = self.form_class(request.POST, request.FILES)
 
             if form.is_valid():
                 form.save()
+                messages.success(request, 'Producto guardado exitosamente.')
                 return redirect(self.success_url)
-
-            return render(request, self.template_name, {'form': form})
+            
+            context['form'] = form
+            return render(request, self.template_name, context)
 
         # borra
         elif 'borrar' in request.POST and sku:
             producto = buscar_producto_por_sku(sku)
-            
             if producto:
                 producto.delete()
+                messages.success(request, 'Producto eliminado exitosamente.')
                 return redirect(self.success_url)
-            
             else:
-                return render(request, self.template_name, {'form': form})
+                messages.error(request, 'No se encontró el producto.')
+            return render(request, self.template_name, context)
             
         # limpiar
-        elif 'limpiar' in request.POST and sku:
-            producto = buscar_producto_por_sku(sku)
-    
-            if producto:
-                return render(request, self.template_name, {'form': form})
-            else:
-                return render(request, self.template_name, {'form': form})
+        elif 'limpiar' in request.POST:
+            context['form'] = self.form_class()
+            return render(request, self.template_name, context)
 
         # En caso de error, volvemos a renderizar el formulario
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, context)

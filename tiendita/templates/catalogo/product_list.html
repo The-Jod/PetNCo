@@ -1,9 +1,156 @@
 {% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
+{% load humanize %}
 {% load static %} <!-- Renderiza archivos staticos-->
 <!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
 {% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
 <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<style>
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        /* Cambiado a 100% para ser responsivo */
+        height: 60vh;
+        /* Mantener altura relativa */
+        max-width: 1200px;
+        /* Ancho máximo para pantallas grandes */
+        margin: 0 auto;
+        /* Centrar el contenedor */
+        border-radius: 20px;
+        padding: 0 20px;
+        /* Espaciado lateral */
+        margin-top: -30px;
+        /* Ajusta este valor según necesites mover el carrusel hacia arriba */
+
+        border-radius: 25px;
+    }
+
+    #heroCarousel {
+        position: relative;
+        height: 100%;
+        border-radius: 20px;
+    }
+
+    .carousel.slide {
+        border-radius: 50px;
+    }
+
+    .carousel-item {
+        height: 100%;
+        border-radius: 20px;
+        background-color: #44669252;
+    }
+
+    .carousel-item img {
+        object-fit: cover;
+        height: 100%;
+        width: 100%;
+        opacity: 0.8;
+        transition: transform 6s ease-in-out;
+    }
+
+    .carousel-item.active img {
+        transform: scale(1.1);
+    }
+
+    .carousel-caption {
+        top: 40%;
+        /* Cambia a top para centrar verticalmente */
+        transform: translateY(-50%);
+        /* Ajusta para subir más */
+        padding: 0 20px;
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .carousel-caption h1 {
+        font-size: 4.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.5s ease-out 0.3s;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .carousel-caption h2 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.5s ease-out 0.5s;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .carousel-item.active .carousel-caption h1,
+    .carousel-item.active .carousel-caption h2 {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .carousel-caption .btn {
+        padding: 15px 40px;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        opacity: 0;
+    }
+
+
+
+    /* Media Queries para Responsividad */
+    @media (max-width: 1200px) {
+        .carousel-caption h1 {
+            font-size: 3.5rem;
+            /* Tamaño más pequeño en pantallas medianas */
+        }
+
+        .carousel-caption h2 {
+            font-size: 1.5rem;
+            /* Tamaño más pequeño en pantallas medianas */
+        }
+    }
+
+    @media (max-width: 768px) {
+        .carousel-caption h1 {
+            font-size: 2.5rem;
+            /* Tamaño aún más pequeño en pantallas pequeñas */
+        }
+
+        .carousel-caption h2 {
+            font-size: 1.2rem;
+            /* Tamaño aún más pequeño en pantallas pequeñas */
+        }
+
+        .carousel-caption .btn {
+            padding: 10px 20px;
+            /* Ajustar padding para botones en pantallas pequeñas */
+            font-size: 1rem;
+            /* Tamaño de fuente más pequeño para botones */
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-section {
+            height: 50vh;
+            /* Ajustar altura para pantallas muy pequeñas */
+        }
+
+        .carousel-caption h1 {
+            font-size: 2rem;
+            /* Tamaño más pequeño en pantallas extra pequeñas */
+        }
+
+        .carousel-caption h2 {
+            font-size: 1rem;
+            /* Tamaño más pequeño en pantallas extra pequeñas */
+        }
+    }
+</style>
 {% endblock %}
 {% block extra_scripts %}
 <script src="{% static 'js/navbar.js' %}"></script>
@@ -11,169 +158,262 @@
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
 <div class="container-fluid">
-    <!-- Promociones en la parte superior -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card promotion-card">
-                <div class="card-body">
-                    <h5 class="card-title">10% de descuento</h5>
-                    <p class="card-text">para tu primera compra en alimentos de marca PX Formula</p>
-                    <img src="dog-food.jpg" alt="Dog Food" class="img-fluid rounded">
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card promotion-card">
-                <div class="card-body">
-                    <h5 class="card-title">Envío gratis</h5>
-                    <p class="card-text">Para compras con un monto superior a $70.000</p>
-                    <img src="free-shipping.jpg" alt="Free Shipping" class="img-fluid rounded">
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Contenido principal: Filtros a la izquierda y lista de productos a la derecha -->
-    <div class="row" style="padding-left: 1.5%; padding-right: 1.5%;">
-        <div class="container mt-4">
-            <form class="d-flex" method="get" action="{% url 'productos' %}">
-
-                <!-- Campo de búsqueda -->
-                <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos"
-                    aria-label="Search" style="border-radius: 30px;">
-                <button class="btn btn-primary" type="submit">Buscar</button>
-        </div>
-
-        <!-- Filtros-->
-        <div class="col-md-3" style="padding-top: 1.5%;">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Filtros</h5>
-                </div>
-                <div class="card-body">
-
-                    <!-- Rango de precio -->
-                    <h6>Rango de Precio</h6>
-                    <label for="min_price">Precio mínimo:</label>
-                    <input class="form-range" type="number" name="min_price" min="0" max="1000000" step="1">
-                    <label for="max_price">Precio máximo:</label>
-                    <input class="form-range" type="number" name="max_price" min="0" max="1000000" step="1">
-
-                    <!-- Categorías -->
-                    <h6>Categorías</h6>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="categorias" value="Alimentos">
-                        Alimentos<br>
-                        <input class="form-check-input" type="checkbox" name="categorias" value="Accesorios">
-                        Accesorios<br>
-                        <input class="form-check-input" type="checkbox" name="categorias" value="Juguetes"> Juguetes<br>
-                        <input class="form-check-input" type="checkbox" name="categorias" value="Camas y rascadores">
-                        Camas y rascadores<br>
-                    </div>
-
-                    <!-- Tipo de Animal -->
-                    <h6>Tipo de Animal</h6>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.1"> Gato<br>
-                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.2"> Perro<br>
-                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.3"> Ave<br>
-                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.4"> Hamster<br>
-                    </div>
-                    <!-- Botón de búsqueda -->
-                    <button class="btn btn-secondary" type="submit">Filtrar</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lista de productos -->
-        <div class="container">
-            <div class="row">
-                {% for producto in productos %}
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        <!-- Imagen del producto -->
-                        {% if producto.ImagenProducto %}
-                            <img src="{{ producto.ImagenProducto.url }}" class="card-img-top" alt="{{ producto.NombreProducto }}">
-                        {% else %}
-                            <img src="{% static 'img/ProductPlaceholder.png' %}" class="card-img-top" alt="Imagen no disponible">
-                        {% endif %}
-        
-                        <!-- Cuerpo de la card -->
-                        <div class="card-body">
-                            <h5 class="card-title">{{ producto.NombreProducto }}</h5>
-                            <p class="card-text">Precio: ${{ producto.PrecioProducto }}</p>
-                            {% if producto.EstaOferta %}
-                            <p class="text-danger">Oferta: ${{ producto.PrecioOferta }}</p>
+    <!-- Contenedor principal con márgenes y padding -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="hero-section">
+                    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% if productos_oferta %}
+                            {% for producto in productos_oferta %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ producto.ImagenProducto.url }}" class="d-block w-100"
+                                    alt="{{ producto.NombreProducto }}">
+                                <div class="carousel-caption d-none d-md-block">
+                                    <h1>{{ producto.NombreProducto }}</h1>
+                                    <h2>Precio Original: ${{ producto.PrecioProducto|floatformat:0|intcomma }}</h2>
+                                    <h2 style="color: red;">Descuento:
+                                        {{producto.porcentaje_descuento|floatformat:0|intcomma }}%</h2>
+                                    <h2>Precio de Oferta: ${{ producto.PrecioOferta|floatformat:0|intcomma }}</h2>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="carousel-item active">
+                                <img src="ruta/a/imagen_placeholder.jpg" class="d-block w-100">
+                                <div class="carousel-caption d-none d-md-block">
+                                    <h1>No hay productos en oferta actualmente.</h1>
+                                </div>
+                            </div>
                             {% endif %}
                         </div>
-        
-                        <!-- Footer de la card -->
-                        <div class="card-footer text-center">
-                            <button class="btn btn-primary open-modal-btn" data-sku="{{ producto.SKUProducto }}">Ver detalles</button>
-                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Siguiente</span>
+                        </button>
                     </div>
                 </div>
-                {% endfor %}
-            </div>
-        </div>
+                <!-- Contenido principal: Filtros a la izquierda y lista de productos a la derecha -->
+                <div class="row" style="padding-left: 1.5%; padding-right: 1.5%;">
+                    <div class="container mt-4">
+                        <form class="d-flex" method="get" action="{% url 'productos' %}">
+                            <!-- Campo de búsqueda -->
+                            <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos"
+                                aria-label="Search" style="border-radius: 30px;">
+                            <button class="btn btn-primary" type="submit">Buscar</button>
+                    </div>
+                    <!-- Filtros-->
+                    <div class="col-md-3" style="padding-top: 1.5%;">
+                        <div class="shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-filter me-2"></i>
+                                    Filtros
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="get" action="{% url 'productos' %}">
+                                    <!-- Rango de precio -->
+                                    <div class="mb-4">
+                                        <h6 class="border-bottom pb-2">Rango de Precio</h6>
+                                        <div class="mb-3">
+                                            <label for="min_price" class="form-label">Precio mínimo:</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" name="min_price" min="0"
+                                                    max="1000000" step="1">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="max_price" class="form-label">Precio máximo:</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" name="max_price" min="0"
+                                                    max="1000000" step="1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Categorías -->
+                                    <div class="mb-4">
+                                        <h6 class="border-bottom pb-2">Categorías</h6>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="categorias"
+                                                value="0.1">Alimentos<br>
+                                            <input class="form-check-input" type="checkbox" name="categorias"
+                                                value="0.2">Accesorios<br>
+                                            <input class="form-check-input" type="checkbox" name="categorias"
+                                                value="0.3">Juguetes<br>
+                                            <input class="form-check-input" type="checkbox" name="categorias"
+                                                value="0.4">Camas
+                                            y
+                                            rascadores<br>
+                                        </div>
+                                    </div>
+                                    <!-- Tipo de Animal -->
+                                    <div class="mb-4">
+                                        <h6 class="border-bottom pb-2">Tipo de Animal</h6>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
+                                                value="0.1">
+                                            Gato<br>
+                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
+                                                value="0.2">
+                                            Perro<br>
+                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
+                                                value="0.3">
+                                            Ave<br>
+                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
+                                                value="0.4">
+                                            Hamster<br>
+                                        </div>
+                                    </div>
+                                    <!-- Botones de acción -->
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary" type="submit">
+                                            <i class="fas fa-search me-2"></i>Aplicar filtros
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Lista de productos -->
+                    <div class="col-md-9">
+                        <div class="row">
+                            {% for producto in productos %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100" style="border-color: {{producto.get_color_categoria }}">
+                                    <!-- Badges de categoría y tipo de animal -->
+                                    <div class="position-absolute" style="top: 10px; right: 10px;">
+                                        <span class="badge"
+                                            style="background-color: {{ producto.get_color_categoria }}">
+                                            {{producto.get_categoria_display }}
+                                        </span>
+                                    </div>
 
+                                    <!-- Imagen del producto -->
+                                    <div class="position-relative">
+                                        {% if producto.ImagenProducto %}
+                                        <img src="{{ producto.ImagenProducto.url }}" class="card-img-top"
+                                            alt="{{ producto.NombreProducto }}"
+                                            style="height: 200px; object-fit: cover;">
+                                        {% else %}
+                                        <img src="{% static 'img/ProductPlaceholder.png' %}" class="card-img-top"
+                                            alt="Imagen no disponible" style="height: 200px; object-fit: cover;">
+                                        {% endif %}
 
-<!-- Modal de Bootstrap para mostrar los detalles del producto -->
-<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+                                        {% if producto.EstaOferta %}
+                                        <div class="position-absolute" style="top: 40px; right: -10px;">
+                                            <div class="badge bg-danger p-2">
+                                                -{{ producto.porcentaje_descuento |floatformat:0|intcomma }}%
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <!-- Cuerpo de la card -->
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ producto.NombreProducto }}</h5>
+                                        <div class="price-section">
+                                            {% if producto.EstaOferta %}
+                                            <p class="mb-0">
+                                                <span class="text-muted text-decoration-line-through">
+                                                    ${{ producto.PrecioProducto|floatformat:0|intcomma }}
+                                                </span>
+                                                <span class="text-danger fs-5 ms-2">
+                                                    ${{ producto.PrecioOferta|floatformat:0|intcomma }}
+                                                </span>
+                                            </p>
+                                            {% else %}
+                                            <p class="card-text fs-5">
+                                                ${{ producto.PrecioProducto|floatformat:0|intcomma }}
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <!-- Footer de la card -->
+                                    <div class="card-footer text-center border-0 bg-transparent">
+                                        <div class="d-flex justify-content-between gap-2 px-2">
+                                            <button class="btn btn-primary open-modal-btn"
+                                                data-sku="{{ producto.SKUProducto }}">Ver detalles</button>
+                                            <button class="btn btn-secondary cart-btn"
+                                                style="background-color: rgba(9, 70, 9, 0.473);">
+                                                <i class="fas fa-shopping-cart"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Modal de Bootstrap para mostrar los detalles del producto -->
+                    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <!-- Encabezado del modal -->
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="productModalLabel">Detalles del producto</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
 
-            
+                                <!-- Cuerpo del modal donde se cargan dinámicamente los detalles -->
+                                <div class="modal-body" id="modal-product-details">
+                                    <!-- Los detalles del producto se cargarán aquí dinámicamente -->
+                                </div>
 
-            <div class="modal-header">
-                <h5 class="modal-title" id="productModalLabel">Detalles del producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+                                <!-- Footer del modal -->
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="modal-body" id="modal-product-details">
-                <!-- Los detalles del producto se cargarán aquí dinámicamente -->
-            </div>
+                    <script>
+                        // Me voy a matar weon, te juro que me voy a matar
+                        document.querySelectorAll('.open-modal-btn').forEach(button => {
+                            button.addEventListener('click', function () {
+                                const sku = this.dataset.sku;
 
+                                // Hacer la petición al backend para obtener los detalles del producto
+                                fetch(`/productos/${sku}/`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        // Llenar el modal con los datos recibidos
+                                        const modalContent = `
+                                            <p>Sku: ${sku} </p>
+                                            <img src="${data.imagen_url}" alt="${data.nombre}" class="img-fluid mb-3">
+                                            <h2>${data.nombre}</h2>
+                                            <p>${data.descripcion}</p>
+                                            <p>Precio: ${data.precio}</p>
+                                            ${data.esta_en_oferta ? `<p class="text-danger">Oferta: ${data.precio_oferta}</p>` : ''}
+                                            <p>Stock disponible: ${data.stock}</p>
+                                            <p>Categoría: ${data.categoria}</p>
+                                            <p>Para: ${data.tipo_animal}</p>
+                                        `;
+                                        document.getElementById('modal-product-details').innerHTML = modalContent;
 
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                        // Usar Bootstrap para mostrar el modal
+                                        var productModal = new bootstrap.Modal(document.getElementById('productModal'));
+                                        productModal.show();
+                                    })
+                                    .catch(error => console.error('Error al obtener los detalles del producto:', error));
+                            });
+                        });
+                    </script>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-// Me voy a matar weon, te juro que me voy a matar
-document.querySelectorAll('.open-modal-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const sku = this.dataset.sku;
-
-        // Hacer la petición al backend para obtener los detalles del producto
-        fetch(`/productos/${sku}/`)
-            .then(response => response.json())
-            .then(data => {
-                // Llenar el modal con los datos recibidos
-                const modalContent = `
-                    <p>Sku: ${sku} </p>
-                    <img src="${data.imagen_url}" alt="${data.nombre}" class="img-fluid mb-3">
-                    <h2>${data.nombre}</h2>
-                    <p>${data.descripcion}</p>
-                    <p>Precio: $${data.precio}</p>
-                    ${data.esta_en_oferta ? `<p class="text-danger">Oferta: $${data.precio_oferta}</p>` : ''}
-                    <p>Stock disponible: ${data.stock}</p>
-                    <p>Categoría: ${data.categoria}</p>
-                    <p>Para: ${data.tipo_animal}</p>
-                `;
-                document.getElementById('modal-product-details').innerHTML = modalContent;
-                var productModal = new bootstrap.Modal(document.getElementById('productModal'));
-                productModal.show();
-            })
-            .catch(error => console.error('Error al obtener los detalles del producto:', error));
-    });
-});
-
-</script>
-
-
 {%endblock%}
