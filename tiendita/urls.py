@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from . import views
-from .views import  Product_ListView, Product_CreateView
+from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView
 
 """
 URL configuration for Petnco project.
@@ -32,7 +32,7 @@ Including another URLconf
 urlpatterns = [
     path('',views.home_view, name='home'),
     path('registro_citas',views.vetdate_view, name='registro'),
-    path('login',views.registro_view, name='login'),
+    path('login',RegistroUsuarioView.as_view(), name='login'),
     path('pago/',views.pago_view,name='checkout'),
     path('carrito/',views.carrito_view,name='carrito'),
     path('productos/', views.catalogo_view, name='productos'),  

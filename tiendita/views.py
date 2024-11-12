@@ -1,26 +1,31 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import CreateView, UpdateView, DeleteView, ListView
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView, FormView
 from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.urls import include, path, reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
-from .models import Producto
-from .forms import ProductoForm, UsuarioRegistroForm
+from .models import Producto, CustomUser
+from .forms import ProductoForm, RegistroUsuarioForm
+
 
 
 # Aqui van las famosas vistas, no confundir
 
-def registro_view(request):
-    if request.method == 'POST':
-        form = UsuarioRegistroForm(request.POST)
+class RegistroUsuarioView(FormView):
+    template_name = 'usuario/late_registration.html'
+    form_class = RegistroUsuarioForm
+    success_url = reverse_lazy('home')  # Asegúrate que esta URL exista y esté correcta
+
+    def form_valid(self, form):
         if form.is_valid():
+            print("Formulario válido")
             form.save()
-            messages.success(request, '¡Tu cuenta ha sido creada exitosamente!')
-            return redirect('home') 
-    else:
-        form = UsuarioRegistroForm()
-    return render(request, 'usuario/late_registration.html', {'form': form})
+            messages.success(self.request, '¡Tu cuenta ha sido creada exitosamente!')
+        else:
+            print("Formulario no es válido")
+            messages.error(self.request, 'Por favor, revisa los datos.')
+        return super().form_valid(form)
 
 def login_view(request):
     return render(request, 'login.html')

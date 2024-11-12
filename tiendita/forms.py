@@ -1,7 +1,6 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-from .models import Producto, UsuarioProfile
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from .models import Producto, CustomUser
 
 
 class ProductoForm(forms.ModelForm):
@@ -61,29 +60,36 @@ class ProductoForm(forms.ModelForm):
                 self.fields['ImagenProducto'].widget = forms.ClearableFileInput(attrs={
                 'class': 'form-control',
             })
-        
-class UsuarioRegistroForm(UserCreationForm):
-    # Añadimos el campo de RutUsuario al formulario
-    RutUsuario = forms.IntegerField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'RUT'})
-    )
 
+
+class RegistroUsuarioForm(UserCreationForm):
     class Meta:
-        model = User
-        fields = ['username', 'password1', 'password2']  # Solo los campos necesarios de User
+        model = CustomUser
+        fields = ['RutUsuario', 'EmailUsuario', 'password1', 'password2']  # Incluye solo los campos que necesitas
+        widgets = {
+            'RutUsuario': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Si termina en K, Reemplazalo por 11'}),
+            'EmailUsuario': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Correo Electrónico'}),
+        }
+        labels = {
+            'RutUsuario' : ('RUT. Sin punto ni guion'),
+            'EmailUsuario' : ('Correo Electronico'),  
+        }
+        error_messages = {
+            'RutUsuario': {
+                'invalid': "El RUT es invalido.",
+                'unique' : "El RUT ya está registrado.",
+                'required': "Por favor, ingresa tu RUT."
+            },
+            'EmailUsuario': {
+                'invalid': "Por favor, ingresa un correo electrónico válido.",
+                'required': "El correo electrónico es obligatorio."
+            },
+            'password2': {
+                'password_mismatch': "Las contraseñas no coinciden.",
+            },
+        }
+    
 
-    def save(self, commit=True):
-        # Guardamos el usuario del modelo User
-        user = super().save(commit=False)
-        if commit:
-            user.save()
-        
-        # Creamos y guardamos el perfil del usuario (UsuarioProfile)
-        usuario_profile = UsuarioProfile(
-            user=user,
-            RutUsuario=self.cleaned_data['RutUsuario']
-        )
-        if commit:
-            usuario_profile.save()
-
-        return user
+class LoginForm(forms.Form):
+    RutUsuario = forms.IntegerField(label="RUT Usuario")
+    password = forms.CharField(widget=forms.PasswordInput)
