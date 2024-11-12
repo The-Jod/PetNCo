@@ -395,6 +395,8 @@ body {
     /* Optimización de rendimiento */
 }
 
+
+
 .card:hover {
     transform: scale(1.05);
 }

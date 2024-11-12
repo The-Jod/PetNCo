@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
-<div class="container-fluid" >
+<div class="container-fluid">
     <div class="col-md-">
         <h2 class="mb-2">Gestionar Producto</h2>
 
@@ -20,13 +20,13 @@
 
             <div class="row">
 
-                    
 
-                    <div class="mb-6">
 
-                        <label for="SKUProducto" class="form-label">SKU del Producto</label>
-                    
-                        <button type="submit" name="buscar" class="btn btn-info" style="margin-bottom: 1%; margin-left: 1%;"
+                <div class="mb-6">
+
+                    <label for="SKUProducto" class="form-label">SKU del Producto</label>
+
+                    <button type="submit" name="buscar" class="btn btn-info" style="margin-bottom: 1%; margin-left: 1%;"
                         formnovalidate>
                         <i class="bi bi-search"></i> Buscar
 
@@ -35,7 +35,7 @@
                     {{ form.SKUProducto }}
 
 
-                    </div>
+                </div>
 
                 <div class="col mb-6">
 
@@ -61,22 +61,24 @@
                     <label for="DescripcionProducto" class="form-label">Descripcion Producto</label>
                     {{ form.DescripcionProducto }}
 
-                    
+
 
                 </div>
 
-                <div class="col-md-6" >
+                <div class="col-md-6">
                     {% if form.instance.ImagenProducto %}
-                        <div>
-                            <label for="ImagenProducto" style="margin-top: 3%;">Imagen actual:</label><br>
-                            <img id="imgPreview" src="{{ form.instance.ImagenProducto.url }}" alt="Imagen actual" style="width: auto; height: auto; ">
-                        </div>
+                    <div>
+                        <label for="ImagenProducto" style="margin-top: 3%;">Imagen actual:</label><br>
+                        <img id="imgPreview" src="{{ form.instance.ImagenProducto.url }}" alt="Imagen actual"
+                            style="width: auto; height: auto; ">
+                    </div>
                     {% else %}
-                        <img id="imgPreview" src="{% static 'img/ProductPlaceholder.png' %}" alt="Previsualización" style="width: auto; height: auto; margin-top: 4%; margin-bottom: 3%;"> <br>
+                    <img id="imgPreview" src="{% static 'img/ProductPlaceholder.png' %}" alt="Previsualización"
+                        style="width: auto; height: auto; margin-top: 4%; margin-bottom: 3%;"> <br>
                     {% endif %}
-                    
-                    {{ form.ImagenProducto }}    
-                        
+
+                    {{ form.ImagenProducto }}
+
                 </div>
             </div>
 
@@ -93,7 +95,7 @@
                     <i class="bi bi-save"></i> Guardar Producto
                 </button>
 
-            </div>           
+            </div>
         </form>
     </div>
 </div>

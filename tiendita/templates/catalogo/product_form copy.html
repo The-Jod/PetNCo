@@ -1,0 +1,71 @@
+<!-- Filtros-->
+<div class="col-md-3" style="padding-top: 1.5%;">
+    <div class="shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>
+                Filtros
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'productos' %}">
+                <!-- Rango de precio -->
+                <div class="mb-4">
+                    <h6 class="border-bottom pb-2">Rango de Precio</h6>
+                    <div class="mb-3">
+                        <label for="min_price" class="form-label">Precio mínimo:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" name="min_price" min="0" max="1000000" step="1">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="max_price" class="form-label">Precio máximo:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" name="max_price" min="0" max="1000000" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categorías -->
+                <div class="mb-4">
+                    <h6 class="border-bottom pb-2">Categorías</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="categorias" value="0.1">Alimentos<br>
+                        <input class="form-check-input" type="checkbox" name="categorias" value="0.2">Accesorios<br>
+                        <input class="form-check-input" type="checkbox" name="categorias" value="0.3">Juguetes<br>
+                        <input class="form-check-input" type="checkbox" name="categorias" value="0.4">Camas
+                        y
+                        rascadores<br>
+                    </div>
+                </div>
+
+                <!-- Tipo de Animal -->
+                <div class="mb-4">
+                    <h6 class="border-bottom pb-2">Tipo de Animal</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.1">
+                        Gato<br>
+                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.2">
+                        Perro<br>
+                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.3">
+                        Ave<br>
+                        <input class="form-check-input" type="checkbox" name="tipo_animal" value="0.4">
+                        Hamster<br>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search me-2"></i>Aplicar filtros
+                    </button>
+                    <button class="btn btn-outline-secondary" type="reset">
+                        <i class="fas fa-undo me-2"></i>Limpiar filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django_bootstrap_icons',
     'tiendita',
     'bootstrap5',    
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
