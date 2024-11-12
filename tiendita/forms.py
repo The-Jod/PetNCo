@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate
 from .models import Producto, CustomUser
 
 
@@ -90,6 +91,40 @@ class RegistroUsuarioForm(UserCreationForm):
         }
     
 
-class LoginForm(forms.Form):
-    RutUsuario = forms.IntegerField(label="RUT Usuario")
-    password = forms.CharField(widget=forms.PasswordInput)
+class CustomLoginForm(AuthenticationForm):
+    username = forms.IntegerField(
+        label="RUT Usuario",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT'}),
+        error_messages = {
+            'RutUsuario': {
+                'invalid': "El RUT es invalido.",
+                'required': "Por favor, ingresa tu RUT."
+            }
+        }
+    )
+    password = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'}),
+        error_messages = {
+            'Contraseña': {
+                'invalid': "El Rut o la Contraseña no coinciden.",
+                'required': "Ingresa la contraseña."
+            }
+        }
+    )
+
+    def confirm_login_allowed(self, user):
+        if not user.is_active:
+            raise forms.ValidationError("Esta cuenta está inactiva.", code='inactive')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        rut = cleaned_data.get('username')
+        password = cleaned_data.get('password')
+
+        if rut and password:
+            user = authenticate(username=rut, password=password)
+            if user is None:
+                raise forms.ValidationError("Las credenciales no son válidas.")
+        
+        return cleaned_data

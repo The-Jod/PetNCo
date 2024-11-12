@@ -5,33 +5,31 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
 	{% load static %} 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <link rel="stylesheet" href="{% static 'css/login.css' %}">
 
 <body>
     <div class="main">  	
 		<input type="checkbox" id="chk" aria-hidden="true">
-
         <div class="signup">
+            <div class="row">
+                <a  aria-hidden="true"  href="{% url 'home' %}">
+                    <i class="fa fa-paw" ></i>
+                </a>     
+                <h5 for="chk" aria-hidden="true" class="form-title">Iniciar sesión</h5>
+            </div>
             
-            <form method="POST">
-                <div class="row">
-                    <a  aria-hidden="true"  href="{% url 'home' %}">
-                        <i class="fa fa-paw" style="size: 50px;"></i>
-                    </a>
-                    
-                    <h5 for="chk" aria-hidden="true" class="form-title">Registrarse</h5>
-                </div>
+            <form method="post" action="{% url 'loginuser' %}">
 
                 {% csrf_token %}
                 {{ form.as_p }}
-                <button type="submit" name="registrarse">Registrarse</button>
+                <button type="submit" class="btn btn-primary">Iniciar sesión</button>
             </form>
+            
         </div>
         <div class="row">
-            <label>Ya tienes cuenta?.   </label>
-            <a href="{% url 'loginuser' %}">Inicia Sesion</a>
+            <label>No tienes cuenta?.   </label>
+            <a href="{% url 'registeruser' %}">Registrate</a>
         </div>
         <br>
 

@@ -2,9 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth import views as auth_views
+from django.contrib.auth import views as auth_views 
+from django.contrib.auth.views import LogoutView
 from . import views
-from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView
+from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView, CustomLoginView
 
 """
 URL configuration for Petnco project.
@@ -32,7 +33,9 @@ Including another URLconf
 urlpatterns = [
     path('',views.home_view, name='home'),
     path('registro_citas',views.vetdate_view, name='registro'),
-    path('login',RegistroUsuarioView.as_view(), name='login'),
+    path('late_registration',RegistroUsuarioView.as_view(), name='registeruser'),
+    path('late_login',CustomLoginView.as_view(), name='loginuser'),
+    path('late_logout', LogoutView.as_view(next_page='loginuser'), name='logout'),
     path('pago/',views.pago_view,name='checkout'),
     path('carrito/',views.carrito_view,name='carrito'),
     path('productos/', views.catalogo_view, name='productos'),  

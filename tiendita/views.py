@@ -1,12 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, FormView
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.urls import include, path, reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from .models import Producto, CustomUser
-from .forms import ProductoForm, RegistroUsuarioForm
+from .forms import ProductoForm, RegistroUsuarioForm, CustomLoginForm
 
 
 
@@ -15,7 +16,7 @@ from .forms import ProductoForm, RegistroUsuarioForm
 class RegistroUsuarioView(FormView):
     template_name = 'usuario/late_registration.html'
     form_class = RegistroUsuarioForm
-    success_url = reverse_lazy('home')  # Asegúrate que esta URL exista y esté correcta
+    success_url = reverse_lazy('home') 
 
     def form_valid(self, form):
         if form.is_valid():
@@ -27,8 +28,13 @@ class RegistroUsuarioView(FormView):
             messages.error(self.request, 'Por favor, revisa los datos.')
         return super().form_valid(form)
 
-def login_view(request):
-    return render(request, 'login.html')
+class CustomLoginView(LoginView):
+    template_name = 'usuario/late_login.html'
+    authentication_form = CustomLoginForm  # Usa el formulario personalizado
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        return reverse_lazy('home')  # Redirige a la página de inicio después del login
 
 def home_view(request):
     return render(request, 'home.html')
