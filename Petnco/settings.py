@@ -33,6 +33,11 @@ AUTH_USER_MODEL = 'tiendita.CustomUser'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://petnco.onrender.com',
+    # Puedes agregar más dominios si es necesario
+]
+
 # Application definition
 
 INSTALLED_APPS = [
