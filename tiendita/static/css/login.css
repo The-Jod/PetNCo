@@ -9,11 +9,11 @@ body{
 	background: linear-gradient(to bottom, #4A90E2, #8E44AD);
 }
 .main{
-	width: 350px;
-	height: 500px;
+	width: auto;
+	height: auto;
 	background:  #7244c9;
 	overflow: hidden;
-	border-radius: 70px;
+	border-radius: 20px;
 	box-shadow: 5px 20px 50px #000;
 }
 #chk{
@@ -24,7 +24,7 @@ body{
 	width:100%;
 	height: 100%;
 }
-label{
+.form-title{
 	color: #fff;
 	font-size: 2.3em;
 	justify-content: center;
@@ -59,15 +59,15 @@ button{
 	margin-top: 30px;
 	outline: none;
 	border: none;
-	border-radius: 5px;
 	transition: .2s ease-in;
 	cursor: pointer;
+	
 }
 button:hover{
 	background: #3a2168;
 }
 .login{
-	height: 460px;
+	height: 900%;
 	background: #eee;
 	border-radius: 60% / 10%;
 	transform: translateY(-180px);
@@ -79,7 +79,7 @@ button:hover{
 }
 
 #chk:checked ~ .login{
-	transform: translateY(-500px);
+	transform: translateY(-700px);
 }
 #chk:checked ~ .login label{
 	transform: scale(1);
@@ -87,4 +87,34 @@ button:hover{
 }
 #chk:checked ~ .signup label{
 	transform: scale(.6);
+}
+
+
+form {
+    background-color: #FFFFFF;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: auto;
+    margin: auto;
+}
+
+label {
+    font-size: 14px;
+    color: #333333;
+    font-weight: bold;
+}
+
+input:focus {
+    border-color: #4A90E2;
+    outline: none;
+}
+
+
+button:hover {
+    background-color: #357ABD;
+}
+
+.errorlist {
+    color: #FF0000;
+    font-size: 12px;
 }

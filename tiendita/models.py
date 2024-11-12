@@ -1,4 +1,36 @@
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+
+# Manager personalizado para manejar la creación de usuarios
+class CustomUserManager(BaseUserManager):
+    def create_user(self, RutUsuario, password=None, **extra_fields):
+        if not RutUsuario:
+            raise ValueError('El RUT es obligatorio')
+
+        user = self.model(RutUsuario=RutUsuario, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+
+# Modelo personalizado de Usuario
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    RutUsuario = models.IntegerField(unique=True)  # Reemplazamos username por RUT
+    NombreUsuario = models.CharField(max_length=80, null=True, blank=True)
+    EmailUsuario = models.EmailField(max_length=128, )
+    DomicilioUsuario = models.CharField(max_length=200, null=True, blank=True)
+    TipoAnimal = models.FloatField(blank=True,null=True)
+    
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = 'RutUsuario'  # Este será el campo de inicio de sesión
+    REQUIRED_FIELDS = ['EmailUsuario']  # Otros campos requeridos además de la contraseña
+
+    def __str__(self):
+        return str(self.RutUsuario)
 
 # Create your models here.
 from django.db import models
@@ -69,18 +101,7 @@ class Orden(models.Model):
 
     def __str__(self):
         return f"Orden {self.CodigoUnicoOrden} - {self.NombreProducto}"
-    
-class Usuario(models.Model):
-    RutUsuario = models.IntegerField(primary_key=True)
-    NombreUsuario = models.CharField(max_length=80)
-    PasswordUsuario = models.CharField(max_length=20)
-    EmailUsuario = models.CharField(max_length=128)
-    DomicilioUsuario = models.CharField(max_length=128)
-    TipoAnimal = models.FloatField()
 
-    def __str__(self):
-        return self.NombreUsuario
-    
 class Veterinaria(models.Model):
     CodigoVeterinaria = models.IntegerField(primary_key=True)
     NombreVeterinaria = models.CharField(max_length=100)
@@ -90,7 +111,6 @@ class Veterinaria(models.Model):
     CalificacionVeterinaria = models.FloatField()
     DisponibilidadVeterinaria = models.CharField(max_length=1) 
     TipoAnimal = models.FloatField()
-    RutUsuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.NombreVeterinaria

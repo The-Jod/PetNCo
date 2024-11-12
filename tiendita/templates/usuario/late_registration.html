@@ -12,25 +12,29 @@
     <div class="main">  	
 		<input type="checkbox" id="chk" aria-hidden="true">
 
-			<div class="signup">
-				<form>
-					<label for="chk" aria-hidden="true">Registrate</label>
-					<input type="text" name="txt" placeholder="Nombre completo" required="">
-					<input type="email" name="email" placeholder="Correo electrónico" required="">
-          <input type="number" name="tele" placeholder="Numero de teléfono" required="">
-					<input type="password" name="pswd" placeholder="Contraseña" required="">
-					<button>Registrate</button>
-				</form>
-			</div>
+        <div class="signup">
+            
+            <form method="POST" action="{% url 'login' %}">
+                <label for="chk" aria-hidden="true" class="form-title">Registrarse</label>
+                {% csrf_token %}
+                {{ form.as_p }}
+        
+                <button type="submit" name="registrarse">Registrarse</button>
+            </form>
+        </div>
 
-			<div class="login">
+<!--		<div class="login">
 				<form>
-					<label for="chk" aria-hidden="true">Iniciar sesión</label>
+					<label for="chk" aria-hidden="true" class="form-title">Iniciar sesión</label>
 					<input type="email" name="email" placeholder="Correo electrónico" required="">
 					<input type="password" name="pswd" placeholder="Contraseña" required="">
 					<button>Iniciar sesión</button>
 				</form>
+                
 			</div>
+-->
 	</div>    
 </body>
 </html>
+
+

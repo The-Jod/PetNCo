@@ -28,6 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['petnco.onrender.com', 'localhost','127.0.0.1']
 
+AUTH_USER_MODEL = 'tiendita.CustomUser'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -35,14 +36,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'tiendita',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_bootstrap_icons',
-    'tiendita',
+    'django.contrib.admin',
     'bootstrap5',    
     'django.contrib.humanize',
 ]
@@ -118,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'UTC'
 

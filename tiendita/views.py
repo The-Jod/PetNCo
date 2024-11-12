@@ -1,10 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import CreateView, UpdateView, DeleteView, ListView
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView, FormView
 from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.urls import include, path, reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
+from .models import Producto, CustomUser
+from .forms import ProductoForm, RegistroUsuarioForm
+
 from .models import Producto
 from .forms import ProductoForm
 from django.db.models import Q
@@ -12,8 +15,20 @@ from django.db.models import Q
 
 # Aqui van las famosas vistas, no confundir
 
-def reg_view(request):
-    return render(request, 'lateregistration/registro.html')
+class RegistroUsuarioView(FormView):
+    template_name = 'usuario/late_registration.html'
+    form_class = RegistroUsuarioForm
+    success_url = reverse_lazy('home')  # Asegúrate que esta URL exista y esté correcta
+
+    def form_valid(self, form):
+        if form.is_valid():
+            print("Formulario válido")
+            form.save()
+            messages.success(self.request, '¡Tu cuenta ha sido creada exitosamente!')
+        else:
+            print("Formulario no es válido")
+            messages.error(self.request, 'Por favor, revisa los datos.')
+        return super().form_valid(form)
 
 def login_view(request):
     return render(request, 'login.html')
@@ -162,6 +177,7 @@ def producto_detalle_modal(request, sku):
         'esta_en_oferta': producto.EstaOferta,
         'categoria': producto.get_CategoriaProducto_display(),
         'tipo_animal': producto.get_TipoAnimal_display(),
+        
     }
 
     return JsonResponse(producto_data)
