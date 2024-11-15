@@ -204,10 +204,9 @@
                 <div class="row" style="padding-left: 1.5%; padding-right: 1.5%;">
                     <div class="container mt-4">
                         <form class="d-flex" method="get" action="{% url 'productos' %}">
-                            <!-- Campo de búsqueda -->
-                            <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos"
-                                aria-label="Search" style="border-radius: 30px;">
+                            <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos" aria-label="Search" style="border-radius: 30px;">
                             <button class="btn btn-primary" type="submit">Buscar</button>
+                        </form>
                     </div>
                     <!-- Filtros-->
                     <div class="col-md-3" style="padding-top: 1.5%;">
@@ -287,70 +286,80 @@
                     <!-- Lista de productos -->
                     <div class="col-md-9">
                         <div class="row">
-                            {% for producto in productos %}
-                            <div class="col-md-4 mb-4">
-                                <div class="card h-100" style="border-color: {{producto.get_color_categoria }}">
-                                    <!-- Badges de categoría y tipo de animal -->
-                                    <div class="position-absolute" style="top: 10px; right: 10px;">
-                                        <span class="badge"
-                                            style="background-color: {{ producto.get_color_categoria }}">
-                                            {{producto.get_categoria_display }}
-                                        </span>
-                                    </div>
-
-                                    <!-- Imagen del producto -->
-                                    <div class="position-relative">
-                                        {% if producto.ImagenProducto %}
-                                        <img src="{{ producto.ImagenProducto.url }}" class="card-img-top"
-                                            alt="{{ producto.NombreProducto }}"
-                                            style="height: 200px; object-fit: cover;">
-                                        {% else %}
-                                        <img src="{% static 'img/ProductPlaceholder.png' %}" class="card-img-top"
-                                            alt="Imagen no disponible" style="height: 200px; object-fit: cover;">
-                                        {% endif %}
-
-                                        {% if producto.EstaOferta %}
-                                        <div class="position-absolute" style="top: 40px; right: -10px;">
-                                            <div class="badge bg-danger p-2">
-                                                -{{ producto.porcentaje_descuento |floatformat:0|intcomma }}%
-                                            </div>
+                            {% if productos %}
+                                {% for producto in productos %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card h-100" style="border-color: {{ producto.get_color_categoria }}">
+                                        <!-- Badges de categoría y tipo de animal -->
+                                        <div class="position-absolute" style="top: 10px; right: 10px;">
+                                            <span class="badge"
+                                                style="background-color: {{ producto.get_color_categoria }}">
+                                                {{producto.get_categoria_display }}
+                                            </span>
                                         </div>
-                                        {% endif %}
-                                    </div>
-                                    <!-- Cuerpo de la card -->
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ producto.NombreProducto }}</h5>
-                                        <div class="price-section">
-                                            {% if producto.EstaOferta %}
-                                            <p class="mb-0">
-                                                <span class="text-muted text-decoration-line-through">
-                                                    ${{ producto.PrecioProducto|floatformat:0|intcomma }}
-                                                </span>
-                                                <span class="text-danger fs-5 ms-2">
-                                                    ${{ producto.PrecioOferta|floatformat:0|intcomma }}
-                                                </span>
-                                            </p>
+
+                                        <!-- Imagen del producto -->
+                                        <div class="position-relative">
+                                            {% if producto.ImagenProducto %}
+                                            <img src="{{ producto.ImagenProducto.url }}" 
+                                                 class="card-img-top"
+                                                 alt="{{ producto.NombreProducto }}"
+                                                 style="height: 200px; width: 200px; object-fit: contain; margin: 0 auto; display: block;">
                                             {% else %}
-                                            <p class="card-text fs-5">
-                                                ${{ producto.PrecioProducto|floatformat:0|intcomma }}
-                                            </p>
+                                            <img src="{{ producto.ImagenProducto.url|default:'/static/img/ProductPlaceholder.png' }}" 
+                                                 class="card-img-top" 
+                                                 alt="{{ producto.NombreProducto }}"
+                                                 style="height: 200px; width: 200px; object-fit: contain; margin: 0 auto; display: block;">
+                                            {% endif %}
+
+                                            {% if producto.EstaOferta %}
+                                            <div class="position-absolute" style="top: 40px; right: -10px;">
+                                                <div class="badge bg-danger p-2">
+                                                    -{{ producto.porcentaje_descuento |floatformat:0|intcomma }}%
+                                                </div>
+                                            </div>
                                             {% endif %}
                                         </div>
-                                    </div>
-                                    <!-- Footer de la card -->
-                                    <div class="card-footer text-center border-0 bg-transparent">
-                                        <div class="d-flex justify-content-between gap-2 px-2">
-                                            <button class="btn btn-primary open-modal-btn"
-                                                data-sku="{{ producto.SKUProducto }}">Ver detalles</button>
-                                            <button class="btn btn-secondary cart-btn"
-                                                style="background-color: rgba(9, 70, 9, 0.473);">
-                                                <i class="fas fa-shopping-cart"></i>
-                                            </button>
+                                        <!-- Cuerpo de la card -->
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ producto.NombreProducto }}</h5>
+                                            <div class="price-section">
+                                                {% if producto.EstaOferta %}
+                                                <p class="mb-0">
+                                                    <span class="text-muted text-decoration-line-through">
+                                                        ${{ producto.PrecioProducto|floatformat:0|intcomma }}
+                                                    </span>
+                                                    <span class="text-danger fs-5 ms-2">
+                                                        ${{ producto.PrecioOferta|floatformat:0|intcomma }}
+                                                    </span>
+                                                </p>
+                                                {% else %}
+                                                <p class="card-text fs-5">
+                                                    ${{ producto.PrecioProducto|floatformat:0|intcomma }}
+                                                </p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <!-- Footer de la card -->
+                                        <div class="card-footer text-center border-0 bg-transparent">
+                                            <div class="d-flex justify-content-center px-2">
+                                                <button class="btn btn-primary open-modal-btn"
+                                                    data-sku="{{ producto.SKUProducto }}"
+                                                    aria-label="Ver detalles de {{ producto.NombreProducto }}">
+                                                    Ver detalles
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            {% endfor %}
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-box-open fa-3x mb-3"></i>
+                                    <h4>No se encontraron productos</h4>
+                                    <p>Intenta con otros filtros de búsqueda</p>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     <!-- Modal de Bootstrap para mostrar los detalles del producto -->
@@ -371,10 +380,13 @@
                                 </div>
 
                                 <!-- Footer del modal -->
+
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary"
                                         data-bs-dismiss="modal">Cerrar</button>
                                 </div>
+
+                                
                             </div>
                         </div>
                     </div>
@@ -383,33 +395,95 @@
                         // Me voy a matar weon, te juro que me voy a matar
                         document.querySelectorAll('.open-modal-btn').forEach(button => {
                             button.addEventListener('click', function () {
+                                const modalBody = document.getElementById('modal-product-details');
+                                modalBody.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div></div>';
+                                
+                                // Mostrar el modal inmediatamente
+                                var productModal = new bootstrap.Modal(document.getElementById('productModal'));
+                                productModal.show();
+                                
+                                // Luego cargar los datos
                                 const sku = this.dataset.sku;
-
-                                // Hacer la petición al backend para obtener los detalles del producto
                                 fetch(`/productos/${sku}/`)
                                     .then(response => response.json())
                                     .then(data => {
                                         // Llenar el modal con los datos recibidos
                                         const modalContent = `
-                                            <p>Sku: ${sku} </p>
-                                            <img src="${data.imagen_url}" alt="${data.nombre}" class="img-fluid mb-3">
-                                            <h2>${data.nombre}</h2>
-                                            <p>${data.descripcion}</p>
-                                            <p>Precio: ${data.precio}</p>
-                                            ${data.esta_en_oferta ? `<p class="text-danger">Oferta: ${data.precio_oferta}</p>` : ''}
-                                            <p>Stock disponible: ${data.stock}</p>
-                                            <p>Categoría: ${data.categoria}</p>
-                                            <p>Para: ${data.tipo_animal}</p>
+                                            <div class="text-center mb-4">
+                                                <img src="${data.imagen_url}" 
+                                                     alt="${data.nombre}" 
+                                                     class="img-fluid mb-3" 
+                                                     style="max-height: 200px; max-width: 200px; object-fit: contain;">
+                                            </div>
+                                            <div class="product-details">
+                                                <h4 class="mb-3">${data.nombre}</h4>
+                                                <p class="text-muted">${data.descripcion}</p>
+                                                
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span class="fw-bold">SKU:</span>
+                                                    <span>${sku}</span>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span class="fw-bold">Precio:</span>
+                                                    <span class="fs-5">${data.precio}</span>
+                                                </div>
+                                                
+                                                ${data.esta_en_oferta ? `
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span class="fw-bold text-danger">Precio Oferta:</span>
+                                                    <span class="fs-5 text-danger">${data.precio_oferta}</span>
+                                                </div>
+                                                ` : ''}
+                                                
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span class="fw-bold">Stock disponible:</span>
+                                                    <span>${data.stock} unidades</span>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span class="fw-bold">Categoría:</span>
+                                                    <span>${data.categoria}</span>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                                    <span class="fw-bold">Para:</span>
+                                                    <span>${data.tipo_animal}</span>
+                                                </div>
+
+                                                <form method="POST" action="/agregar/${sku}/" class="mt-4">
+                                                    <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                                                    <button type="submit" class="btn btn-success w-100">
+                                                        <i class="fas fa-shopping-cart me-2"></i>
+                                                        Agregar al carrito
+                                                    </button>
+                                                </form>
+                                            </div>
                                         `;
                                         document.getElementById('modal-product-details').innerHTML = modalContent;
-
-                                        // Usar Bootstrap para mostrar el modal
-                                        var productModal = new bootstrap.Modal(document.getElementById('productModal'));
-                                        productModal.show();
                                     })
-                                    .catch(error => console.error('Error al obtener los detalles del producto:', error));
+                                    .catch(error => {
+                                        modalBody.innerHTML = '<div class="alert alert-danger">Error al cargar los detalles del producto</div>';
+                                        console.error('Error:', error);
+                                    });
                             });
                         });
+                        // Función para obtener el token CSRF desde las cookies
+                        function getCookie(name) {
+                            let cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                const cookies = document.cookie.split(';');
+                                for (let i = 0; i < cookies.length; i++) {
+                                    const cookie = cookies[i].trim();
+                        // Verifica si esta cookie comienza con el nombre dado
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                        }
+                    }
+                }
+            return cookieValue;
+        }
                     </script>
                 </div>
             </div>

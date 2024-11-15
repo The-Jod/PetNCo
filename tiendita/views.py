@@ -8,14 +8,127 @@ from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from .models import Producto, CustomUser
 from .forms import ProductoForm, RegistroUsuarioForm, CustomLoginForm
-
-from .models import Producto
-from .forms import ProductoForm
-from django.db.models import Q
-
+from decimal import Decimal
 
 # Aqui van las famosas vistas, no confundir
+def home_view(request):
+    return render(request, 'home.html')
 
+def vetdate_view(request):
+    return render(request, 'cita.html')
+
+def storefront_view(request):
+    return render(request, 'catalogo.html')
+
+def pago_view(request):
+    return render(request,'checkout.html')
+
+#------------Carrito 
+def agregar_al_carrito(request, sku):
+    producto = get_object_or_404(Producto, SKUProducto=sku)
+    carrito = request.session.get('carrito', {})
+    
+    # Verificar stock antes de agregar
+    cantidad_actual = carrito.get(str(sku), {}).get('cantidad', 0)
+    if cantidad_actual + 1 > producto.StockProducto:
+        messages.warning(request, 'No hay suficiente stock disponible')
+        return redirect('carrito')
+    
+    if str(producto.SKUProducto) in carrito:
+        carrito[str(producto.SKUProducto)]['cantidad'] += 1
+    else:
+        precio = float(producto.PrecioOferta if producto.EstaOferta else producto.PrecioProducto)
+        carrito[str(producto.SKUProducto)] = {
+            'nombre': producto.NombreProducto,
+            'precio': precio,
+            'cantidad': 1,
+            'descripcion': producto.DescripcionProducto,
+            'imagen': producto.ImagenProducto.url if producto.ImagenProducto else None,
+        }
+
+    request.session['carrito'] = carrito
+    request.session.modified = True
+    return redirect('carrito')
+
+# Ver el carrito
+def carrito_view(request):
+    carrito = request.session.get('carrito', {})
+    
+    # Obtener información completa de los productos en el carrito
+    for sku, item in carrito.items():
+        producto = Producto.objects.get(SKUProducto=sku)
+        carrito[sku].update({
+            'imagen': producto.ImagenProducto.url if producto.ImagenProducto else None,
+            'descripcion': producto.DescripcionProducto,
+            'stock': producto.StockProducto,
+            'precio': float(producto.PrecioOferta if producto.EstaOferta else producto.PrecioProducto)
+        })
+    
+    # Cálculos del carrito
+    subtotal = sum(float(item['precio']) * item['cantidad'] for item in carrito.values())
+    shipping = 0 if subtotal >= 20000 else 3990
+    total = subtotal + shipping
+
+    context = {
+        'carrito': carrito,
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'total': total,
+    }
+
+    return render(request, 'carrito.html', context)
+
+def actualizar_cantidad(request):
+    if request.method == 'POST':
+        sku = request.POST.get('item_id')
+        cantidad = int(request.POST.get('quantity'))
+        
+        carrito = request.session.get('carrito', {})
+        if sku in carrito:
+            # Verificar stock disponible
+            producto = Producto.objects.get(SKUProducto=sku)
+            cantidad = min(cantidad, producto.StockProducto)  # Limitar a stock disponible
+            
+            carrito[sku]['cantidad'] = cantidad
+            request.session['carrito'] = carrito
+            request.session.modified = True
+            
+            # Recalcular totales
+            subtotal = sum(float(item['precio']) * item['cantidad'] for item in carrito.values())
+            shipping = 0 if subtotal >= 20000 else 3990
+            total = subtotal + shipping
+            
+            return JsonResponse({
+                'status': 'ok',
+                'subtotal': subtotal,
+                'shipping': shipping,
+                'total': total,
+                'quantity': cantidad  # Devolver la cantidad ajustada
+            })
+    
+    return JsonResponse({'status': 'error'}, status=400)
+
+# Eliminar un producto del carrito
+def eliminar_del_carrito(request, sku):
+    carrito = request.session.get('carrito', {})
+
+    if str(sku) in carrito:
+        del carrito[str(sku)]
+        request.session['carrito'] = carrito
+
+    return redirect('carrito')
+
+# Limpiar el carrito
+def limpiar_carrito(request):
+    if request.method == 'POST':
+        # Limpiar el carrito en la sesión
+        request.session['carrito'] = {}
+        request.session.modified = True
+        messages.success(request, 'El carrito ha sido vaciado exitosamente')
+    return redirect('carrito')
+#------------Fin Carrito 
+
+#------------Usuarios 
 class RegistroUsuarioView(FormView):
     template_name = 'usuario/late_registration.html'
     form_class = RegistroUsuarioForm
@@ -38,72 +151,10 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         return reverse_lazy('home')  # Redirige a la página de inicio después del login
+#-----------Fin de usuarios 
 
-def home_view(request):
-    return render(request, 'home.html')
 
-def vetdate_view(request):
-    return render(request, 'cita.html')
-
-def storefront_view(request):
-    return render(request, 'catalogo.html')
-
-def pago_view(request):
-    return render(request,'checkout.html')
-
-def carrito_view(request):
-    cart_items = [
-        {
-            'id': 1,
-            'name': 'Dog Collar',
-            'description': 'Adjustable nylon dog collar',
-            'image': 'https://via.placeholder.com/150',
-            'price': 12.99,
-            'quantity': 2
-        },
-        {
-            'id': 2,
-            'name': 'Cat Toys',
-            'description': 'Set of 3 interactive cat toys',
-            'image': 'https://via.placeholder.com/150',
-            'price': 9.99,
-            'quantity': 1
-        },
-        {
-            'id': 3,
-            'name': 'Pet Shampoo',
-            'description': 'Natural pet shampoo, 16 oz',
-            'image': 'https://via.placeholder.com/150',
-            'price': 7.50,
-            'quantity': 1
-        },
-        {
-            'id': 4,
-            'name': 'Dog Bed',
-            'description': 'Orthopedic memory foam dog bed',
-            'image': 'https://via.placeholder.com/150',
-            'price': 39.99,
-            'quantity': 1
-        }
-    ]
-
-    subtotal = sum(item['price'] * item['quantity'] for item in cart_items)
-    shipping = 5.00
-    tax = subtotal * 0.1
-    total = subtotal + shipping + tax
-
-    context = {
-        'cart_items': cart_items,
-        'subtotal': subtotal,
-        'shipping': shipping,
-        'tax': tax,
-        'total': total
-    }
-
-    return render(request, 'carrito.html', context)
-
-#Catalogo 
-
+#----------------Catalogo 
 def catalogo_view(request):
     # Carga inicial de todos los productos
     productos = Producto.objects.all()
@@ -187,10 +238,9 @@ def producto_detalle_modal(request, sku):
     }
 
     return JsonResponse(producto_data)
+#----------------Fin Catalogo 
 
-
-#CRUD de Producto
-#CRUD de Producto
+#----------------CRUD de Producto
 class Product_CreateView(CreateView):
     model = Producto
     form_class = ProductoForm
@@ -264,3 +314,14 @@ class Product_CreateView(CreateView):
 
         # En caso de error, volvemos a renderizar el formulario
         return render(request, self.template_name, context)
+#----------------CRUD de Producto
+
+def checkout_view(request):
+    carrito = request.session.get('carrito', {})
+    
+    if not carrito:
+        messages.warning(request, 'No puedes proceder al pago con un carrito vacío')
+        return redirect('carrito')
+        
+    # ... resto del código del checkout ...
+

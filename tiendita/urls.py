@@ -7,6 +7,7 @@ from django.contrib.auth.views import LogoutView
 from . import views
 from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView, CustomLoginView
 
+
 """
 URL configuration for Petnco project.
 
@@ -37,8 +38,12 @@ urlpatterns = [
     path('late_login',CustomLoginView.as_view(), name='loginuser'),
     path('late_logout', LogoutView.as_view(next_page='loginuser'), name='logout'),
     path('pago/',views.pago_view,name='checkout'),
-    path('carrito/',views.carrito_view,name='carrito'),
     path('productos/', views.catalogo_view, name='productos'),  
     path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
     path('productos/<int:sku>/', views.producto_detalle_modal, name='producto-modal'),
+    path('carrito/', views.carrito_view, name='carrito'),
+    path('agregar/<int:sku>/', views.agregar_al_carrito, name='agregar_al_carrito'),
+    path('eliminar/<int:sku>/', views.eliminar_del_carrito, name='eliminar_del_carrito'),
+    path('limpiar/', views.limpiar_carrito, name='limpiar_carrito'),
+    path('carrito/actualizar-cantidad/', views.actualizar_cantidad, name='actualizar_cantidad'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

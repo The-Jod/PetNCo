@@ -260,9 +260,7 @@
 .form-card-label {
     color: var(--dark);
     /* Color oscuro para las etiquetas */
-}
-
-.form-card:hover {}
+}s
 
 /* Estilos de tarjetas */
 .card {
