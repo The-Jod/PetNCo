@@ -301,12 +301,15 @@
                                         <!-- Imagen del producto -->
                                         <div class="position-relative">
                                             {% if producto.ImagenProducto %}
-                                            <img src="{{ producto.ImagenProducto.url }}" 
-                                                 class="card-img-top"
-                                                 alt="{{ producto.NombreProducto }}"
-                                                 style="height: 200px; width: 200px; object-fit: contain; margin: 0 auto; display: block;">
+                                            <picture>
+                                                <source srcset="{{ producto.ImagenProducto.url }}" type="image/webp">
+                                                <img src="{{ producto.ImagenProducto.url }}" 
+                                                     class="card-img-top"
+                                                     alt="{{ producto.NombreProducto }}"
+                                                     style="height: 200px; width: 200px; object-fit: contain; margin: 0 auto; display: block;">
+                                            </picture>
                                             {% else %}
-                                            <img src="{{ producto.ImagenProducto.url|default:'/static/img/ProductPlaceholder.png' }}" 
+                                            <img src="{% static 'img/ProductPlaceholder.png' %}" 
                                                  class="card-img-top" 
                                                  alt="{{ producto.NombreProducto }}"
                                                  style="height: 200px; width: 200px; object-fit: contain; margin: 0 auto; display: block;">

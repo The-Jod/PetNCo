@@ -129,6 +129,9 @@ button:hover {
 }
 
 .errorlist {
-    color: #FF0000;
+    color: #ff3e3e;
     font-size: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 5px 0;
 }

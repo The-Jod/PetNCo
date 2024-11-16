@@ -3,12 +3,25 @@ from django.views.generic import CreateView, UpdateView, DeleteView, ListView, F
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
-from django.urls import include, path, reverse_lazy
+from django.urls import include, path, reverse_lazy, reverse
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
-from .models import Producto, CustomUser
+from .models import Producto, CustomUser, Orden, OrdenItem
 from .forms import ProductoForm, RegistroUsuarioForm, CustomLoginForm
 from decimal import Decimal
+from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions
+from transbank.error.transbank_error import TransbankError
+from django.conf import settings
+import uuid
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+import json
+from django.views.decorators.http import require_POST
+import random
+import logging
+from django.utils.html import strip_tags
+
+logger = logging.getLogger(__name__)
 
 # Aqui van las famosas vistas, no confundir
 def home_view(request):
@@ -18,15 +31,21 @@ def vetdate_view(request):
     return render(request, 'cita.html')
 
 def storefront_view(request):
-    return render(request, 'catalogo.html')
+    return render(request, 'pago/catalogo.html')
 
 def pago_view(request):
-    return render(request,'checkout.html')
+    return render(request,'pago/checkout.html')
 
 #------------Carrito 
 def agregar_al_carrito(request, sku):
     producto = get_object_or_404(Producto, SKUProducto=sku)
-    carrito = request.session.get('carrito', {})
+    
+    # Obtener carrito actual de las cookies
+    carrito = request.COOKIES.get('carrito', '{}')
+    try:
+        carrito = json.loads(carrito)
+    except json.JSONDecodeError:
+        carrito = {}
     
     # Verificar stock antes de agregar
     cantidad_actual = carrito.get(str(sku), {}).get('cantidad', 0)
@@ -46,13 +65,19 @@ def agregar_al_carrito(request, sku):
             'imagen': producto.ImagenProducto.url if producto.ImagenProducto else None,
         }
 
-    request.session['carrito'] = carrito
-    request.session.modified = True
-    return redirect('carrito')
+    # Crear la respuesta y establecer la cookie
+    response = redirect('carrito')
+    response.set_cookie('carrito', json.dumps(carrito))
+    return response
 
 # Ver el carrito
 def carrito_view(request):
-    carrito = request.session.get('carrito', {})
+    # Obtener carrito desde cookies
+    carrito = request.COOKIES.get('carrito', '{}')
+    try:
+        carrito = json.loads(carrito)
+    except json.JSONDecodeError:
+        carrito = {}
     
     # Obtener información completa de los productos en el carrito
     for sku, item in carrito.items():
@@ -76,55 +101,73 @@ def carrito_view(request):
         'total': total,
     }
 
-    return render(request, 'carrito.html', context)
+    return render(request, 'pago/carrito.html', context)
 
 def actualizar_cantidad(request):
     if request.method == 'POST':
         sku = request.POST.get('item_id')
         cantidad = int(request.POST.get('quantity'))
         
-        carrito = request.session.get('carrito', {})
-        if sku in carrito:
+        # Obtener carrito desde cookies
+        carrito_str = request.COOKIES.get('carrito', '{}')
+        try:
+            carrito = json.loads(carrito_str)
+        except json.JSONDecodeError:
+            carrito = {}
+        
+        if str(sku) in carrito:
             # Verificar stock disponible
             producto = Producto.objects.get(SKUProducto=sku)
             cantidad = min(cantidad, producto.StockProducto)  # Limitar a stock disponible
             
-            carrito[sku]['cantidad'] = cantidad
-            request.session['carrito'] = carrito
-            request.session.modified = True
+            # Actualizar cantidad
+            carrito[str(sku)]['cantidad'] = cantidad
             
             # Recalcular totales
-            subtotal = sum(float(item['precio']) * item['cantidad'] for item in carrito.values())
+            subtotal = sum(float(item['precio']) * int(item['cantidad']) 
+                         for item in carrito.values())
             shipping = 0 if subtotal >= 20000 else 3990
             total = subtotal + shipping
             
-            return JsonResponse({
+            # Crear respuesta JSON
+            response = JsonResponse({
                 'status': 'ok',
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'total': total,
-                'quantity': cantidad  # Devolver la cantidad ajustada
+                'quantity': cantidad
             })
+            
+            # Actualizar cookie
+            response.set_cookie('carrito', json.dumps(carrito))
+            return response
     
     return JsonResponse({'status': 'error'}, status=400)
 
 # Eliminar un producto del carrito
 def eliminar_del_carrito(request, sku):
-    carrito = request.session.get('carrito', {})
+    # Obtener carrito desde cookies
+    carrito_str = request.COOKIES.get('carrito', '{}')
+    try:
+        carrito = json.loads(carrito_str)
+    except json.JSONDecodeError:
+        carrito = {}
 
     if str(sku) in carrito:
         del carrito[str(sku)]
-        request.session['carrito'] = carrito
+        response = redirect('carrito')
+        response.set_cookie('carrito', json.dumps(carrito))
+        return response
 
     return redirect('carrito')
 
 # Limpiar el carrito
 def limpiar_carrito(request):
     if request.method == 'POST':
-        # Limpiar el carrito en la sesión
-        request.session['carrito'] = {}
-        request.session.modified = True
+        response = redirect('carrito')
+        response.delete_cookie('carrito')
         messages.success(request, 'El carrito ha sido vaciado exitosamente')
+        return response
     return redirect('carrito')
 #------------Fin Carrito 
 
@@ -317,11 +360,379 @@ class Product_CreateView(CreateView):
 #----------------CRUD de Producto
 
 def checkout_view(request):
-    carrito = request.session.get('carrito', {})
-    
-    if not carrito:
-        messages.warning(request, 'No puedes proceder al pago con un carrito vacío')
-        return redirect('carrito')
+    """
+    Vista para el proceso de checkout.
+    Obtiene el carrito desde las cookies y muestra el resumen del pedido.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    logger.handlers = []
+
+    try:
+        # 1. Obtener el carrito de las cookies
+        carrito_str = request.COOKIES.get('carrito', '{}')
+        logger.debug(f"Cookie carrito raw: {carrito_str}")
+
+        # 2. Decodificar el JSON
+        import json
+        carrito_data = json.loads(carrito_str)
+        logger.debug(f"Carrito decodificado: {carrito_data}")
+
+        # 3. Procesar el carrito (ahora usando el formato correcto)
+        carrito_procesado = {}
         
-    # ... resto del código del checkout ...
+        for key, item in carrito_data.items():
+            # Los datos ya vienen en el formato correcto
+            carrito_procesado[key] = {
+                'nombre': item['nombre'],
+                'precio': float(item['precio']),
+                'cantidad': int(item['cantidad']),
+                'descripcion': item.get('descripcion', ''),
+                'imagen': item.get('imagen', '')
+            }
+            logger.debug(f"Item procesado - Key: {key}, Datos: {carrito_procesado[key]}")
+
+        # 4. Calcular totales
+        subtotal = sum(
+            item['precio'] * item['cantidad'] 
+            for item in carrito_procesado.values()
+        )
+        shipping = 0 if subtotal >= 20000 else 3990
+        total = subtotal + shipping
+
+        logger.debug(f"Totales calculados - Subtotal: {subtotal}, Shipping: {shipping}, Total: {total}")
+
+        # 5. Preparar contexto
+        context = {
+            'carrito': carrito_procesado,
+            'subtotal': subtotal,
+            'shipping': shipping,
+            'total': total,
+            'debug': True,
+            'carrito_raw': carrito_str
+        }
+
+        logger.debug(f"Contexto final: {context}")
+
+        # 6. Renderizar template
+        return render(request, 'pago/checkout.html', context)
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Error decodificando JSON: {str(e)}")
+        messages.error(request, 'Error al procesar el carrito')
+        return redirect('carrito')
+    except Exception as e:
+        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
+        messages.error(request, 'Error al procesar el carrito')
+        return redirect('carrito')
+
+def enviar_correo_confirmacion(orden):
+    """Envía un correo de confirmación al cliente"""
+    context = {
+        'orden': orden,
+        'logo_url': 'https://tutienda.com/static/img/logo.png',  # Actualiza con tu URL
+        'seguimiento_url': f'https://tutienda.com/seguimiento/{orden.id}/',  # Actualiza con tu URL
+    }
+    
+    # Renderizar el template HTML
+    html_message = render_to_string('emails/confirmacion_orden.html', context)
+    plain_message = strip_tags(html_message)
+    
+    try:
+        send_mail(
+            subject=f'Confirmación de Orden #{orden.id} - Tu Tienda',
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[orden.EmailCliente],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error enviando correo de confirmación: {str(e)}")
+        return False
+
+# Modificar la vista de webpay_return para incluir el envío del correo
+def webpay_return(request):
+    token = request.GET.get('token_ws')
+    
+    try:
+        response = Transaction.commit(token=token)
+        
+        if response.status == 'AUTHORIZED':
+            orden = Orden.objects.get(TokenWebpay=token)
+            orden.EstadoPago = 'COMPLETADO'
+            orden.save()
+            
+            # Enviar correo de confirmación
+            enviar_correo_confirmacion(orden)
+            
+            # Limpiar carrito
+            request.session['carrito'] = {}
+            
+            messages.success(request, '¡Pago realizado con éxito!')
+            return redirect('orden_confirmada', orden_id=orden.CodigoUnicoOrden)
+        else:
+            messages.error(request, 'El pago no fue autorizado')
+            return redirect('checkout')
+            
+    except TransbankError as e:
+        messages.error(request, 'Error al procesar el pago: ' + str(e))
+        return redirect('checkout')
+
+def orden_confirmada(request, orden_id):
+    try:
+        orden = Orden.objects.get(CodigoUnicoOrden=orden_id)
+        
+        # Verificar que la orden pertenece al usuario actual
+        if orden.RutUsuario != request.user.RutUsuario:
+            messages.error(request, 'No tienes permiso para ver esta orden')
+            return redirect('home')
+        
+        context = {
+            'orden': orden,
+            'fecha': orden.FechaOrden.strftime('%d/%m/%Y %H:%M'),
+            'total': f"${orden.MontoTotal:,.0f}",
+        }
+        
+        return render(request, 'pago/orden_confirmada.html', context)
+        
+    except Orden.DoesNotExist:
+        messages.error(request, 'Orden no encontrada')
+        return redirect('home')
+
+def procesar_pago_view(request):
+    if request.method != 'POST':
+        logger.info("Método no es POST")
+        return redirect('checkout')
+    
+    try:
+        logger.info("Iniciando proceso de pago")
+        
+        # Validar datos del formulario
+        campos_requeridos = ['nombre', 'apellido', 'email', 'telefono', 'direccion']
+        for campo in campos_requeridos:
+            if not request.POST.get(campo):
+                logger.error(f"Campo requerido faltante: {campo}")
+                messages.error(request, f'El campo {campo} es requerido')
+                return redirect('checkout')
+        
+        # Obtener datos del formulario
+        datos_envio = {
+            'nombre': request.POST.get('nombre'),
+            'apellido': request.POST.get('apellido'),
+            'email': request.POST.get('email'),
+            'telefono': request.POST.get('telefono'),
+            'direccion': request.POST.get('direccion'),
+        }
+        
+        logger.info(f"Datos de envío recibidos: {datos_envio}")
+        
+        # Obtener carrito
+        carrito_str = request.COOKIES.get('carrito', '{}')
+        carrito = json.loads(carrito_str)
+        
+        if not carrito:
+            logger.error("Carrito vacío")
+            messages.error(request, 'No hay productos en el carrito')
+            return redirect('carrito')
+        
+        # Calcular totales
+        subtotal = sum(float(item['precio']) * int(item['cantidad']) for item in carrito.values())
+        shipping = 0 if subtotal >= 20000 else 3990
+        total = subtotal + shipping
+        
+        logger.info(f"Total calculado: {total}")
+        
+        # Crear la orden
+        try:
+            orden = Orden.objects.create(
+                NombreCliente=datos_envio['nombre'],
+                ApellidoCliente=datos_envio['apellido'],
+                EmailCliente=datos_envio['email'],
+                TelefonoCliente=datos_envio['telefono'],
+                DireccionCliente=datos_envio['direccion'],
+                TotalOrden=total,
+                CostoEnvio=shipping,
+                EstadoOrden='pendiente'
+            )
+            logger.info(f"Orden creada con ID: {orden.id}")
+            
+            # Crear items de la orden
+            for key, item in carrito.items():
+                OrdenItem.objects.create(
+                    orden=orden,
+                    SKUProducto_id=key,
+                    NombreProducto=item['nombre'],
+                    PrecioProducto=item['precio'],
+                    CantidadProducto=item['cantidad']
+                )
+        except Exception as e:
+            logger.error(f"Error creando orden: {str(e)}")
+            raise
+        
+        try:
+            # Configurar WebPay
+            tx = Transaction()
+            
+            # Crear sesión de pago
+            buy_order = str(orden.id)
+            session_id = str(random.randrange(1000000, 99999999))
+            amount = int(total)
+            return_url = request.build_absolute_uri(reverse('webpay_retorno'))
+            
+            logger.info(f"Intentando crear transacción WebPay: orden={buy_order}, monto={amount}")
+            
+            response = tx.create(
+                buy_order=buy_order,
+                session_id=session_id,
+                amount=amount,
+                return_url=return_url
+            )
+            
+            logger.info(f"Respuesta de WebPay: {response}")
+            
+            # Guardar token en la orden
+            orden.TokenWebpay = response['token']
+            orden.save()
+            
+            # Guardar datos en sesión
+            request.session['orden_id'] = orden.id
+            
+            # Redireccionar a WebPay
+            webpay_url = response['url'] + '?token_ws=' + response['token']
+            logger.info(f"Redirigiendo a WebPay: {webpay_url}")
+            return redirect(webpay_url)
+            
+        except TransbankError as e:
+            logger.error(f"Error de Transbank: {str(e)}")
+            messages.error(request, 'Error al conectar con el servicio de pago')
+            return redirect('checkout')
+            
+    except Exception as e:
+        logger.error(f"Error procesando pago: {str(e)}")
+        messages.error(request, 'Error al procesar el pago')
+        return redirect('checkout')
+
+def orden_confirmada_view(request):
+    orden_id = request.session.get('orden_id')
+    if not orden_id:
+        return redirect('checkout')
+    
+    try:
+        orden = Orden.objects.get(id=orden_id)
+        subtotal = orden.TotalOrden - orden.CostoEnvio
+        
+        # Obtener el estado del envío de correo de la sesión
+        correo_enviado = request.session.get('correo_enviado', False)
+        
+        context = {
+            'orden': orden,
+            'subtotal': subtotal,
+            'correo_enviado': correo_enviado
+        }
+        
+        return render(request, 'pago/orden_confirmada.html', context)
+        
+    except Orden.DoesNotExist:
+        messages.error(request, 'Orden no encontrada')
+        return redirect('checkout')
+
+@require_POST
+def limpiar_sesion_view(request):
+    """
+    Esta vista ya no limpiará todos los datos, solo los temporales
+    que no necesitemos mantener después de la compra
+    """
+    # Mantener datos importantes
+    datos_importantes = {
+        'orden_id': request.session.get('orden_id'),
+        'datos_envio': request.session.get('datos_envio'),
+        'total_pedido': request.session.get('total_pedido')
+    }
+    
+    # Limpiar solo datos temporales si los hubiera
+    request.session.clear()
+    
+    # Restaurar datos importantes
+    for key, value in datos_importantes.items():
+        if value is not None:
+            request.session[key] = value
+    
+    return JsonResponse({'status': 'ok'})
+
+def webpay_retorno_view(request):
+    token = request.GET.get('token_ws')
+    
+    if not token:
+        messages.error(request, 'No se recibió token de WebPay')
+        return redirect('checkout')
+    
+    try:
+        tx = Transaction()
+        response = tx.commit(token)
+        
+        try:
+            orden = Orden.objects.get(TokenWebpay=token)
+        except Orden.DoesNotExist:
+            messages.error(request, 'Orden no encontrada')
+            return redirect('checkout')
+        
+        if response['response_code'] == 0:  # Pago exitoso
+            # Actualizar orden
+            orden.EstadoOrden = 'pagado'
+            orden.save()
+            
+            # Enviar correo de confirmación
+            try:
+                # Preparar contexto para el email
+                context = {
+                    'orden': orden,
+                    'items': orden.items.all(),
+                    'subtotal': orden.TotalOrden - orden.CostoEnvio,
+                }
+                
+                # Renderizar el template HTML
+                html_message = render_to_string('emails/confirmacion_orden.html', context)
+                plain_message = strip_tags(html_message)
+                
+                # Enviar el correo
+                send_mail(
+                    subject=f'Confirmación de Orden #{orden.id} - PetShop',
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[orden.EmailCliente],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                
+                logger.info(f"Correo de confirmación enviado para orden #{orden.id}")
+                correo_enviado = True
+                
+            except Exception as e:
+                logger.error(f"Error enviando correo de confirmación: {str(e)}")
+                correo_enviado = False
+            
+            # Limpiar carrito y redireccionar
+            response = redirect('orden_confirmada')
+            response.delete_cookie('carrito')
+            
+            # Guardar el estado del envío de correo en la sesión
+            request.session['correo_enviado'] = correo_enviado
+            
+            messages.success(request, '¡Pago procesado exitosamente!')
+            return response
+            
+        else:
+            # Pago rechazado
+            orden.EstadoOrden = 'cancelado'
+            orden.save()
+            messages.error(request, 'El pago fue rechazado por WebPay')
+            return redirect('checkout')
+            
+    except Exception as e:
+        logger.error(f"Error en retorno WebPay: {str(e)}")
+        messages.error(request, 'Error procesando el pago')
+        return redirect('checkout')
 

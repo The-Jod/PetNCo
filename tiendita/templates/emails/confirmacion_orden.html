@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+        .order-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Gracias por tu compra!</h1>
+            <p>Tu orden #{{ orden.id }} ha sido confirmada</p>
+        </div>
+
+        <div class="order-details">
+            <h2>Detalles de la Orden</h2>
+            
+            {% for item in orden.items.all %}
+            <div class="order-item">
+                <p>
+                    <strong>{{ item.NombreProducto }}</strong><br>
+                    Cantidad: {{ item.CantidadProducto }}<br>
+                    Precio: ${{ item.PrecioProducto|floatformat:0 }}
+                </p>
+            </div>
+            {% endfor %}
+
+            <div class="total">
+                <p>Subtotal: ${{ subtotal|floatformat:0 }}</p>
+                <p>
+                    Envío: 
+                    {% if orden.CostoEnvio == 0 %}
+                        Gratis
+                    {% else %}
+                        ${{ orden.CostoEnvio|floatformat:0 }}
+                    {% endif %}
+                </p>
+                <p><strong>Total: ${{ orden.TotalOrden|floatformat:0 }}</strong></p>
+            </div>
+        </div>
+
+        <div class="shipping-info">
+            <h2>Información de Envío</h2>
+            <p><strong>{{ orden.NombreCliente }} {{ orden.ApellidoCliente }}</strong></p>
+            <p>{{ orden.EmailCliente }}</p>
+            <p>{{ orden.TelefonoCliente }}</p>
+            <p>{{ orden.DireccionCliente }}</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; color: #666;">
+            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+            <p>© {% now "Y" %} PetShop. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html> 

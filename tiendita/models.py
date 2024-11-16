@@ -1,5 +1,12 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from PIL import Image
+import os
+from io import BytesIO
+from django.core.files.base import ContentFile
+from decimal import Decimal
+from django.contrib.auth.models import User
+from django.conf import settings
 
 # Manager personalizado para manejar la creación de usuarios
 class CustomUserManager(BaseUserManager):
@@ -72,6 +79,48 @@ class Producto(models.Model):
     TipoAnimal = models.FloatField(choices=TIPO_ANIMAL)
     ImagenProducto = models.ImageField(upload_to='productos/', null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        # Primero guardamos el modelo para tener el ID
+        super().save(*args, **kwargs)
+        
+        # Si hay una imagen, la procesamos
+        if self.ImagenProducto:
+            try:
+                # Abrir la imagen
+                img = Image.open(self.ImagenProducto.path)
+                
+                # Convertir a RGB si es necesario
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                
+                # Redimensionar si es muy grande (manteniendo proporción)
+                if img.height > 800 or img.width > 800:
+                    output_size = (800, 800)
+                    img.thumbnail(output_size, Image.Resampling.LANCZOS)
+                
+                # Crear el nombre del archivo WebP
+                nombre_base = os.path.splitext(os.path.basename(self.ImagenProducto.name))[0]
+                nuevo_nombre = f"{nombre_base}.webp"
+                
+                # Guardar como WebP
+                buffer = BytesIO()
+                img.save(buffer, 'WebP', quality=85, optimize=True)
+                
+                # Actualizar el campo de imagen
+                self.ImagenProducto.save(
+                    nuevo_nombre,
+                    ContentFile(buffer.getvalue()),
+                    save=False
+                )
+                
+                # Limpiar el buffer
+                buffer.close()
+                
+            except Exception as e:
+                print(f"Error procesando imagen del producto {self.SKUProducto}: {e}")
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.NombreProducto
 
@@ -91,16 +140,66 @@ class Producto(models.Model):
         return self.COLORES_ANIMALES.get(self.TipoAnimal, '#CCCCCC')  # Gris por defecto
     
 class Orden(models.Model):
-    CodigoUnicoOrden = models.IntegerField(primary_key=True)
-    SKUProducto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-    NombreProducto = models.CharField(max_length=128)
-    RutUsuario = models.IntegerField()
-    EmailUsuario = models.CharField(max_length=128)
-    DomicilioUsuario = models.CharField(max_length=128)
-    FechaEstimadaOrden = models.DateField()
+    id = models.AutoField(primary_key=True)
+    
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('pagado', 'Pagado'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+        ('cancelado', 'Cancelado'),
+    ]
 
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ordenes'
+    )
+    NombreCliente = models.CharField(max_length=200, null=True, blank=True)
+    ApellidoCliente = models.CharField(max_length=200, null=True, blank=True)
+    EmailCliente = models.EmailField(null=True, blank=True)
+    TelefonoCliente = models.CharField(max_length=20, null=True, blank=True)
+    DireccionCliente = models.TextField(null=True, blank=True)
+    FechaOrden = models.DateTimeField(auto_now_add=True)
+    EstadoOrden = models.CharField(
+        max_length=20, 
+        choices=ESTADO_CHOICES, 
+        default='pendiente'
+    )
+    TotalOrden = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    CostoEnvio = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    TokenWebpay = models.CharField(max_length=100, blank=True, null=True)
+    
     def __str__(self):
-        return f"Orden {self.CodigoUnicoOrden} - {self.NombreProducto}"
+        return f"Orden #{self.id} - {self.NombreCliente} {self.ApellidoCliente}"
+
+class OrdenItem(models.Model):
+    id = models.AutoField(primary_key=True)
+    orden = models.ForeignKey(Orden, related_name='items', on_delete=models.CASCADE)
+    SKUProducto = models.ForeignKey('Producto', on_delete=models.SET_NULL, null=True)
+    NombreProducto = models.CharField(max_length=200, null=True, blank=True)
+    PrecioProducto = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    CantidadProducto = models.IntegerField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.CantidadProducto}x {self.NombreProducto}"
 
 class Veterinaria(models.Model):
     CodigoVeterinaria = models.IntegerField(primary_key=True)

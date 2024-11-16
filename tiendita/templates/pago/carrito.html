@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Carrito - Vet & Pet Center{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+
+<!-- Realmente era necesario? meter estilos Arriba del HTML? -->
+<style>
+    .saved-for-later {
+        opacity: 0.7;
+    }
+
+    .progress-indicator {
+        height: 4px;
+        background: #eee;
+        margin-bottom: 20px;
+    }
+
+    .progress-indicator .step {
+        width: 33.33%;
+        height: 100%;
+        background: #007bff;
+        transition: width 0.3s;
+    }
+
+    .stock-status {
+        font-size: 0.8em;
+        color: #28a745;
+    }
+
+    .product-category-tag {
+        font-size: 0.75em;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-right: 5px;
+    }
+
+    .dog-tag {
+        background: #e3f2fd;
+        color: #0d47a1;
+    }
+
+    .cat-tag {
+        background: #f3e5f5;
+        color: #4a148c;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Cart Items - Left Side -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Carrito de Compras</h1>
+                <form method="POST" action="{% url 'limpiar_carrito' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Estás seguro de que deseas vaciar el carrito?')">
+                        <i data-feather="trash"></i> Vaciar Carrito
+                    </button>
+                </form>
+            </div>
+
+
+            {% if carrito %}
+            <div class="mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Código de descuento" id="coupon-code">
+                    <button class="btn btn-outline-secondary" type="button" id="apply-coupon">Aplicar</button>
+                </div>
+            </div>
+
+            {% for sku, item in carrito.items %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center cart-item" data-id="{{ sku }}" data-stock="{{ item.stock }}">
+                        <!-- Imagen del producto -->
+                        <div class="col-md-2">
+                            <img src="{{ item.imagen|default:'placeholder.jpg' }}" alt="{{ item.nombre }}"
+                                class="img-fluid rounded" style="max-height: 80px; object-fit: contain;">
+                        </div>
+                        
+                        <!-- Nombre y descripción -->
+                        <div class="col-md-4">
+                            <h6 class="mb-1">{{ item.nombre }}</h6>
+                            <p class="text-muted small mb-0">{{ item.descripcion }}</p>
+                            {% if item.stock > 0 %}
+                            <small class="text-success">
+                                <i data-feather="check-circle" class="icon-small"></i> 
+                                Stock disponible: {{ item.stock }} unidades
+                            </small>
+                            {% else %}
+                            <small class="text-danger">
+                                <i data-feather="x-circle" class="icon-small"></i> 
+                                Agotado
+                            </small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Control de cantidad -->
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm" style="max-width: 120px;">
+                                <button class="btn btn-outline-secondary decrease-qty" type="button" {% if item.cantidad <= 1 %}disabled{% endif %}>-</button>
+                                <input type="text" class="form-control text-center item-quantity"
+                                    value="{{ item.cantidad }}" 
+                                    min="1" 
+                                    max="{{ item.stock }}"
+                                    style="max-width: 50px;">
+                                <button class="btn btn-outline-secondary increase-qty" type="button" {% if item.cantidad >= item.stock %}disabled{% endif %}>+</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Precio -->
+                        <div class="col-md-2">
+                            <span class="fw-bold">${{ item.precio|floatformat:"0" }}</span>
+                        </div>
+                        
+                        <!-- Botón eliminar -->
+                        <div class="col-md-1 text-end">
+                            <form method="POST" action="{% url 'eliminar_del_carrito' sku %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link text-danger p-0">
+                                    <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-4">
+                    <i data-feather="shopping-cart" class="mb-3 text-muted" style="width: 48px; height: 48px;"></i>
+                    <h5>Carrito Vacío</h5>
+                    <p class="text-muted">¡Agrega productos para comenzar!</p>
+                    <a href="{% url 'productos' %}" class="btn btn-primary mt-3">Continuar Comprando</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sumario de compra -->
+        <div class="col-md-3">
+            <div class="card position-sticky" style="top: 2rem;">
+                <div class="card-body">
+                    {% if carrito %}
+                        <h4 class="mb-3">Total a Pagar</h4>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span id="subtotal">${{ subtotal|floatformat:"0" }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío</span>
+                            <span id="shipping">
+                                {% if shipping == 0 %}
+                                    <span class="text-success">¡Gratis!</span>
+                                {% else %}
+                                    ${{ shipping|floatformat:"0" }}
+                                    <div class="small text-muted">
+                                        Faltan ${{ falta_envio_gratis|floatformat:"0" }} para envío gratis
+                                    </div>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total</strong>
+                            <strong id="total">${{ total|floatformat:"0" }}</strong>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block mb-2">Métodos de pago aceptados:</small>
+                            <div class="payment-methods">
+                                <i data-feather="credit-card" class="me-2"></i>
+                                <i data-feather="smartphone" class="me-2"></i>
+                                <i data-feather="dollar-sign"></i>
+                            </div>
+                        </div>
+
+                        <a href="{% url 'checkout' %}" class="btn btn-primary w-100 mb-2">
+                            Proceder al pago
+                        </a>
+                        <small class="text-muted d-block text-center">
+                            <i data-feather="lock" class="me-1"></i>
+                            Pago seguro garantizado
+                        </small>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i data-feather="shopping-cart" class="mb-3 text-muted" style="width: 48px; height: 48px;"></i>
+                            <h5>Tu carrito está vacío</h5>
+                            <p class="text-muted">Agrega productos para ver el resumen de tu compra</p>
+                            <a href="{% url 'productos' %}" class="btn btn-primary mt-2">
+                                Ir a la tienda
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        </ ```html </div>
+    </div>
+
+    {% endblock %}
+
+    {% block extra_scripts %}
+    <script src="{% static 'js/navbar.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- falta mejorar este script que es para  el carrito de compras -->
+
+    <script>
+        $(document).ready(function () {
+            // Inicializar iconos
+            feather.replace();
+
+            // Autoguardado del carrito
+            let cartTimeout;
+            function autoSaveCart() {
+                clearTimeout(cartTimeout);
+                cartTimeout = setTimeout(function () {
+                    // Guardar estado del carrito
+                    const cartState = {
+                        items: [],
+                        total: $('#total').text()
+                    };
+                    $('.cart-item').each(function () {
+                        cartState.items.push({
+                            id: $(this).data('id'),
+                            quantity: $(this).find('.item-quantity').val()
+                        });
+                    });
+                    localStorage.setItem('savedCart', JSON.stringify(cartState));
+                }, 1000);
+            }
+
+            // Función para actualizar el carrito
+            function updateCartItem(itemId, quantity) {
+                $.ajax({
+                    url: '{% url "actualizar_cantidad" %}',
+                    method: 'POST',
+                    data: {
+                        'item_id': itemId,
+                        'quantity': quantity,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        if (response.status === 'ok') {
+                            // Actualizar los precios
+                            $('#subtotal').text(`$${parseInt(response.subtotal).toLocaleString()}`);
+                            
+                            // Actualizar envío
+                            if (response.shipping === 0) {
+                                $('#shipping').html('<span class="text-success">¡Gratis!</span>');
+                            } else {
+                                $('#shipping').text(`$${parseInt(response.shipping).toLocaleString()}`);
+                            }
+                            
+                            $('#total').text(`$${parseInt(response.total).toLocaleString()}`);
+                            autoSaveCart();
+                        } else {
+                            alert('Error al actualizar el carrito');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error updating cart item:', error);
+                        alert('Error al actualizar el artículo en el carrito. Por favor, inténtalo de nuevo.');
+                    }
+                });
+            }
+
+            // Aumentar cantidad
+            $('.increase-qty').click(function () {
+                const itemRow = $(this).closest('.cart-item');
+                const quantityInput = itemRow.find('.item-quantity');
+                const maxStock = parseInt(itemRow.data('stock'));
+                let quantity = parseInt(quantityInput.val() || 1);
+                
+                if (quantity < maxStock) {
+                    quantity++;
+                    quantityInput.val(quantity);
+                    updateCartItem(itemRow.data('id'), quantity);
+                    
+                    // Actualizar estado de los botones
+                    itemRow.find('.decrease-qty').prop('disabled', false);
+                    if (quantity >= maxStock) {
+                        $(this).prop('disabled', true);
+                    }
+                }
+            });
+
+            // Disminuir cantidad
+            $('.decrease-qty').click(function () {
+                const itemRow = $(this).closest('.cart-item');
+                const quantityInput = itemRow.find('.item-quantity');
+                const maxStock = parseInt(itemRow.data('stock'));
+                let quantity = parseInt(quantityInput.val() || 1);
+
+                if (quantity > 1) {
+                    quantity--;
+                    quantityInput.val(quantity);
+                    updateCartItem(itemRow.data('id'), quantity);
+                    
+                    // Actualizar estado de los botones
+                    itemRow.find('.increase-qty').prop('disabled', false);
+                    if (quantity <= 1) {
+                        $(this).prop('disabled', true);
+                    }
+                }
+            });
+
+            // Guardar para después
+            $('.save-for-later').click(function () {
+                const itemRow = $(this).closest('.cart-item');
+                itemRow.addClass('saved-for-later');
+                // Implementar lógica de guardado si es necesario
+            });
+
+            // Aplicar cupón
+            $('#apply-coupon').click(function () {
+                const code = $('#coupon-code').val();
+                $.ajax({
+                    url: '#', // Cambia '#' por la URL correcta para aplicar el cupón
+                    method: 'POST',
+                    data: {
+                        'code': code,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        if (response.valid) {
+                            alert('Cupón aplicado con éxito!');
+                            location.reload();
+                        } else {
+                            alert('Cupón inválido');
+                        }
+                    }
+                });
+            });
+
+            // Cambio de método de envío
+            $('#shipping-method').change(function () {
+                const shippingPrice = $(this).find(':selected').data('price');
+                $('#shipping').text(`$${shippingPrice.toFixed(2)}`);
+                // Actualizar total si es necesario
+                updateCartTotals();
+            });
+        });
+    </script>
+    {% endblock %}
