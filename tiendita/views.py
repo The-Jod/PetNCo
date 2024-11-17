@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied,ValidationError
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, FormView
 from django.contrib.auth import views as auth_views
@@ -7,10 +8,20 @@ from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from .models import Producto, CustomUser
 from .forms import ProductoForm, RegistroUsuarioForm
-
-from .models import Producto
-from .forms import ProductoForm
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+# from django.utils import timezone,send_confirmation_email, send_cancellation_email
+from .models import CitaVeterinaria,Servicio,Veterinario,Veterinaria
+from .forms import CitaVeterinariaForm
+from django.core.serializers import serialize
+import json
+from django.views.decorators.http import require_http_methods
+from datetime import datetime, timedelta,date
+
+from django.utils import timezone
+
+
+
 
 
 # Aqui van las famosas vistas, no confundir
@@ -183,7 +194,8 @@ def producto_detalle_modal(request, sku):
     return JsonResponse(producto_data)
 
 
-#CRUD de Producto
+
+
 #CRUD de Producto
 class Product_CreateView(CreateView):
     model = Producto
@@ -258,3 +270,258 @@ class Product_CreateView(CreateView):
 
         # En caso de error, volvemos a renderizar el formulario
         return render(request, self.template_name, context)
+    
+    
+   
+@login_required
+def lista_citas(request):
+    # Filtros desde URL
+    estado = request.GET.get('estado')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    veterinaria = request.GET.get('veterinaria')
+
+    # Query base
+    citas = CitaVeterinaria.objects.select_related(
+        'veterinaria', 'veterinario'
+    ).filter(usuario=request.user)
+
+    # Aplicar filtros
+    if estado:
+        citas = citas.filter(estado=estado)
+    if fecha_desde:
+        citas = citas.filter(fecha__gte=fecha_desde)
+    if fecha_hasta:
+        citas = citas.filter(fecha__lte=fecha_hasta)
+    if veterinaria:
+        citas = citas.filter(veterinaria_id=veterinaria)
+
+    # Ordenar
+    citas = citas.order_by('-fecha', '-hora')
+
+    # Paginación
+    paginator = Paginator(citas, 10)
+    page = request.GET.get('page')
+    citas_paginadas = paginator.get_page(page)
+
+    # Datos para filtros
+    veterinarias = Veterinaria.objects.filter(DisponibilidadVeterinaria='S')
+
+    context = {
+        'citas': citas_paginadas,
+        'veterinarias': veterinarias,
+        'estados': CitaVeterinaria.ESTADO_CHOICES,
+        'filtros': {
+            'estado': estado,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'veterinaria': veterinaria
+        }
+    }
+    return render(request, 'veterinaria/citas.html', context)
+
+@login_required
+@require_http_methods(["POST"])
+def crear_cita(request):
+    form = CitaVeterinariaForm(request.POST)
+    
+    # if form.is_valid():
+    #     try:
+    #         cita = form.save(commit=False)
+    #         cita.usuario = request.user
+    #         cita.save()
+
+    #         # # Enviar correo de confirmación
+    #         # try:
+    #         #     send_confirmation_email(cita)
+    #         # except Exception as e:
+    #         #     # Loguear el error pero no afectar la creación de la cita
+    #         #     print(f"Error enviando correo: {str(e)}")
+
+    #         # return JsonResponse({
+    #         #     'success': True,
+    #         #     'message': 'Cita creada exitosamente',
+    #         #     'cita_id': cita.id
+    #         # })
+    #     except ValidationError as e:
+    #         return JsonResponse({
+    #             'success': False,
+    #             'errors': {'__all__': [str(e)]}
+    #         })
+    
+    # return JsonResponse({
+    #     'success': False,
+    #     'errors': form.errors
+    # })
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def editar_cita(request, pk):
+    cita = get_object_or_404(CitaVeterinaria, pk=pk, usuario=request.user)
+    
+    if cita.estado not in ['PENDIENTE', 'CONFIRMADA']:
+        return JsonResponse({
+            'success': False,
+            'error': 'No se puede editar una cita que ya está cancelada'
+        })
+
+    if request.method == "GET":
+        return JsonResponse({
+            'id': cita.id,
+            'servicio': cita.servicio,
+            'veterinaria': cita.veterinaria.id,
+            'veterinario': cita.veterinario.id,
+            'fecha': cita.fecha.isoformat(),
+            'hora': cita.hora.strftime('%H:%M'),
+            'notas': cita.notas or ''
+        })
+
+    form = CitaVeterinariaForm(request.POST, instance=cita)
+    if form.is_valid():
+        cita = form.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Cita actualizada exitosamente'
+        })
+    
+    return JsonResponse({
+        'success': False,
+        'errors': form.errors
+    })
+
+@login_required
+@require_http_methods(["POST"])
+def cancelar_cita(request, pk):
+    cita = get_object_or_404(CitaVeterinaria, pk=pk, usuario=request.user)
+    
+    if cita.estado not in ['PENDIENTE', 'CONFIRMADA']:
+        return JsonResponse({
+            'success': False,
+            'error': 'Esta cita ya no puede ser cancelada'
+        })
+
+    # try:
+    #     cita.estado = 'CANCELADA'
+    #     cita.save()
+
+    #     # Enviar correo de cancelación
+    #     try:
+    #         send_cancellation_email(cita) 
+    #     except Exception as e:
+    #         print(f"Error enviando correo de cancelación: {str(e)}")
+
+    #     return JsonResponse({
+    #         'success': True,
+    #         'message': 'Cita cancelada exitosamente'
+    #     })
+    # except Exception as e:
+    #     return JsonResponse({
+    #         'success': False,
+    #         'error': str(e)
+    #     })
+
+@login_required
+def obtener_veterinarios(request):
+    veterinaria_id = request.GET.get('veterinaria_id')
+    if not veterinaria_id:
+        return JsonResponse({'veterinarios': []})
+
+    veterinarios = Veterinario.objects.filter(
+        veterinaria_id=veterinaria_id,
+        usuario__is_active=True
+    ).values('id', 'usuario__NombreUsuario', 'especialidad')
+
+    return JsonResponse({'veterinarios': list(veterinarios)})
+
+
+
+
+@login_required
+def api_citas_calendario(request):
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+    
+    # Convertir fechas de string a datetime
+    start_date = datetime.fromisoformat(start.replace('Z', '+00:00'))
+    end_date = datetime.fromisoformat(end.replace('Z', '+00:00'))
+    
+    # Obtener citas dentro del rango
+    citas = CitaVeterinaria.objects.filter(
+        usuario=request.user,
+        fecha__range=[start_date.date(), end_date.date()]
+    ).select_related('veterinaria', 'veterinario')
+    
+    # Mapeo de colores según estado
+    color_map = {
+        'PENDIENTE': '#ffc107',  # Amarillo
+        'CONFIRMADA': '#28a745',  # Verde
+        'CANCELADA': '#dc3545',   # Rojo
+    }
+    
+    # Formatear citas para FullCalendar
+    events = []
+    for cita in citas:
+        start_time = datetime.combine(cita.fecha, cita.hora)
+        end_time = start_time + timedelta(minutes=30)  # Duración estimada
+        
+        events.append({
+            'id': cita.id,
+            'title': f"{cita.servicio} - {cita.veterinario}",
+            'start': start_time.isoformat(),
+            'end': end_time.isoformat(),
+            'color': color_map.get(cita.estado, '#ffc107'),
+            'extendedProps': {
+                'estado': cita.estado,
+                'veterinaria': cita.veterinaria.NombreVeterinaria,
+                'veterinario': str(cita.veterinario),
+                'notas': cita.notas or ''
+            }
+        })
+    
+    return JsonResponse(events, safe=False)
+
+@login_required
+def api_horarios_disponibles(request):
+    fecha = request.GET.get('fecha')
+    veterinario_id = request.GET.get('veterinario_id')
+    
+    if not all([fecha, veterinario_id]):
+        return JsonResponse({
+            'success': False,
+            'error': 'Parámetros incompletos'
+        })
+    
+    try:
+        veterinario = Veterinario.objects.get(id=veterinario_id)
+        fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
+        
+        # Obtener horario de la veterinaria
+        inicio = veterinario.veterinaria.HorarioInicioVeterinaria
+        fin = veterinario.veterinaria.HorarioCierreVeterinaria
+        
+        # Obtener citas existentes
+        citas_existentes = CitaVeterinaria.objects.filter(
+            veterinario=veterinario,
+            fecha=fecha_obj,
+            estado__in=['PENDIENTE', 'CONFIRMADA']
+        ).values_list('hora', flat=True)
+        
+        # Generar horarios disponibles (intervalos de 30 minutos)
+        horarios_disponibles = []
+        hora_actual = inicio
+        while hora_actual <= fin:
+            if hora_actual not in citas_existentes:
+                horarios_disponibles.append(hora_actual.strftime('%H:%M'))
+            hora_actual = (datetime.combine(date.today(), hora_actual) + 
+                         timedelta(minutes=30)).time()
+        
+        return JsonResponse({
+            'success': True,
+            'horarios': horarios_disponibles
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

@@ -1,10 +1,16 @@
+# Standard library imports
+
+from datetime import datetime, timedelta, date
+
+# Django imports
 from django import forms
-from django.core.validators import RegexValidator
-from .models import Producto
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Producto, CustomUser
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.utils import timezone
 
-
+# Local application imports
+from .models import Producto, CustomUser , CitaVeterinaria, Servicio, Veterinario, Veterinaria
 class ProductoForm(forms.ModelForm):
     # Validador para SKU numérico
     SKUProducto = forms.CharField(
@@ -236,3 +242,81 @@ class RegistroUsuarioForm(UserCreationForm):
 class LoginForm(forms.Form):
     RutUsuario = forms.IntegerField(label="RUT Usuario")
     password = forms.CharField(widget=forms.PasswordInput)
+    
+class CitaVeterinariaForm(forms.ModelForm):
+   class Meta:
+    model = CitaVeterinaria
+    fields = ['servicio', 'veterinaria', 'veterinario', 'fecha', 'hora', 'notas']
+    widgets = {
+        'servicio': forms.Select(attrs={'class': 'form-select', 'id': 'id_servicio'}),
+        'veterinaria': forms.Select(attrs={'class': 'form-select', 'id': 'id_veterinaria'}),
+        'veterinario': forms.Select(attrs={'class': 'form-select', 'id': 'id_veterinario'}),
+        'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'min': date.today().isoformat()}),
+        'hora': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+        'notas': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Agregue notas o comentarios importantes sobre la cita...'})
+    }
+
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Filtrar veterinarios según la veterinaria seleccionada
+        if self.instance and self.instance.veterinaria:
+            self.fields['veterinario'].queryset = Veterinario.objects.filter(
+                veterinaria=self.instance.veterinaria
+            )
+        else:
+            self.fields['veterinario'].queryset = Veterinario.objects.none()
+
+        # Agregar clases de Bootstrap y placeholders
+        for field in self.fields:
+            if not isinstance(self.fields[field].widget, (forms.CheckboxInput, forms.RadioSelect)):
+                self.fields[field].widget.attrs['class'] = 'form-control'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha = cleaned_data.get('fecha')
+        hora = cleaned_data.get('hora')
+        veterinario = cleaned_data.get('veterinario')
+        veterinaria = cleaned_data.get('veterinaria')
+
+        if fecha and hora and veterinario and veterinaria:
+            # Verificar fecha pasada
+            if fecha < date.today():
+                raise ValidationError('No se pueden agendar citas en fechas pasadas.')
+
+            # Verificar horario de atención
+            hora_cita = datetime.strptime(hora.strftime('%H:%M'), '%H:%M').time()
+            if (hora_cita < veterinaria.HorarioInicioVeterinaria or 
+                hora_cita > veterinaria.HorarioCierreVeterinaria):
+                raise ValidationError(
+                    f'El horario de atención es de {veterinaria.HorarioInicioVeterinaria} a {veterinaria.HorarioCierreVeterinaria}'
+                )
+
+            # Verificar disponibilidad del veterinario
+            if not self.veterinario_disponible(veterinario, fecha, hora):
+                raise ValidationError('El veterinario no está disponible en el horario seleccionado.')
+
+            # Verificar disponibilidad de la veterinaria
+            if veterinaria.DisponibilidadVeterinaria == 'N':
+                raise ValidationError('La veterinaria no está disponible en este momento.')
+
+        return cleaned_data
+
+    def veterinario_disponible(self, veterinario, fecha, hora):
+        # Excluir la cita actual en caso de edición
+        citas_existentes = CitaVeterinaria.objects.filter(
+            veterinario=veterinario,
+            fecha=fecha,
+            hora=hora,
+            estado__in=['PENDIENTE', 'CONFIRMADA']
+        )
+        
+        if self.instance.pk:
+            citas_existentes = citas_existentes.exclude(pk=self.instance.pk)
+            
+        return not citas_existentes.exists()
+    
+    
+    

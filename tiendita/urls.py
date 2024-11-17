@@ -38,4 +38,19 @@ urlpatterns = [
     path('productos/', views.catalogo_view, name='productos'),  
     path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
     path('productos/<int:sku>/', views.producto_detalle_modal, name='producto-modal'),
+       # Vista principal que contiene todos los modales
+    path('citas/', views.lista_citas, name='lista_citas'),
+    
+    # Endpoints para AJAX
+    path('api/citas/crear/', views.crear_cita, name='crear_cita'),
+    path('api/citas/<int:pk>/', views.crear_cita, name='obtener_cita'),
+    path('api/citas/<int:pk>/editar/', views.editar_cita, name='editar_cita'),
+    path('api/citas/<int:pk>/cancelar/', views.cancelar_cita, name='cancelar_cita'),
+    
+    path('api/calendario/', views.api_citas_calendario, name='api_calendario'),
+    path('api/horarios-disponibles/', views.api_horarios_disponibles, name='api_horarios_disponibles'),
+    path('api/veterinarios/', views.obtener_veterinarios, name='api_veterinarios'),
+
+    
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

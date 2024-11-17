@@ -1,11 +1,10 @@
 {% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
-{% load static %} <!-- Renderiza archivos staticos-->
-<!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
-{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
+{% load static %} <!-- Renderiza archivos estáticos-->
+
+{% block title %}Página de Inicio - Vet & Pet Center{% endblock %}
 {% block extra_styles %}
 <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
 <link rel="stylesheet" href="{% static 'css/citas.css' %}">
-
 {% endblock %}
 {% block extra_scripts %}
 <script src="{% static 'js/navbar.js' %}"></script>
@@ -14,106 +13,339 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 
+<link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
 {% endblock %}
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
-
-
-
-<body>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-3 filter-position">
-                <!--Filtro de comunas-->
-                <label for="sortComunas" class="form-label">Ingresa tu comuna:</label>
-                <select id="sortComunas" class="form-select">
-                    <option value="todas">Todas las comunas</option>
-                    <option value="maipu">Maipú</option>
-                    <option value="pudahuel">Pudahuel</option>
-                    <option value="loprado">Lo Prado</option>
-                    <option value="cerrillos">Cerrillos</option>
-                    <option value="cerronavia">Cerro Navia</option>
-                    <option value="estacioncentral">Estación Central</option>
-                </select>
-                <!--Filtro de citas-->
-                <label for="sortTipoCita" class="form-label">Ingresa tu tipo de cita:</label>
-                <select id="sortTipoCita" class="form-select">
-                    <option value="">Todas las citas</option>
-                    <option value="adomicilio">A domicilio</option>
-                    <option value="onsite">On-Site</option>
-                </select>
-                <!--Filtro de mascotas-->
-                <label for="sortMascota" class="form-label">Ingresa tu mascota:</label>
-                <select id="sortMascota" class="form-select">
-                    <option value="">Todas las mascotas</option>
-                    <option value="perro">Perro</option>
-                    <option value="gato">Gato</option>
-                </select>
-                <button class="filter-button">Aplicar filtros</button>
+<div class="container-fluid">
+    <div class="row my-4">
+        <!-- Sidebar with filters -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Filtros</h5>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm">
+                        <div class="mb-3">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select class="form-select" id="estado" name="estado">
+                                <option value="">Todos</option>
+                                <option value="PENDIENTE">Pendiente</option>
+                                <option value="CONFIRMADA">Confirmada</option>
+                                <option value="CANCELADA">Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha_desde" class="form-label">Desde</label>
+                            <input type="date" class="form-control" id="fecha_desde" name="fecha_desde">
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha_hasta" class="form-label">Hasta</label>
+                            <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
+                        </div>
+                        <div class="mb-3">
+                            <label for="veterinaria" class="form-label">Veterinaria</label>
+                            <select class="form-select" id="veterinaria" name="veterinaria">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Aplicar Filtros</button>
+                    </form>
+                </div>
             </div>
 
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Nueva Cita</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#citaModal">
+                        <i class="fas fa-plus-circle me-2"></i>Agendar Cita
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        <div class="col-9">
-            <div class="row" id="product-list">
-                <!-- Tarjeta de Veterinario -->
-                    <div class="profile-card">
-                        <div class="picture-align">
-                            <img src="{% static 'img/probando12.png' %}" alt="Veterinario" class="profile-image">
-                            <div class="profile-info">
-                                
-                                    <h4>Arturo Pineda</h4>
-                                    <p>Especialista en caninos</p>
-                                    <div class="rating">
-                                        <span>⭐ 4.5 / 5</span>
-                                        <p>en 23 reseñas</p>
-                                    </div>
-                                </div>
-                            </div>
-                                <div class="card-body">
-                                    <p class="description">
-                                        Profesional con 10 años de experiencia al cuidado y atención de animales, especializado en conocimientos sobre perros.
-                                    </p>
-                                    <p class="adjustX"><strong>Opera en:</strong> Maipú, Pudahuel, Lo Prado</p>
-                                    <div class="profile-buttons">
-                                        <button class="btn view-profile">Ver perfil</button>
-                                        <button class="btn schedule-appointment">Agendar una cita</button>
-                                </div>
-                            </div>  
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#calendario">
+                                <i class="fas fa-calendar-alt me-2"></i>Calendario
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#lista">
+                                <i class="fas fa-list me-2"></i>Lista
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="calendario">
+                            <div id="calendar"></div>
                         </div>
-                        <!--Fin de tarjeta-->
-
-
-                        <div class="profile-card">
-                            <div class="picture-align">
-                            <img src="{% static 'img/probando123.jpg' %}" alt="Veterinario" class="profile-image">
-                                <div class="profile-info">
-                                    
-                                        <h4>Fernanda Correa</h4>
-                                        <p>Especialista en felinos</p>
-                                        <div class="rating">
-                                            <span>⭐ 4.5 / 5</span>
-                                            <p>en 23 reseñas</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                    <div class="card-body">
-                                        <p class="description">
-                                           Lorem ipsum dolor sit amet consectetur adipisicing elit. Facilis, rerum repellat est enim nulla corporis voluptatum nemo expedita, sapiente quis quam quia odit laudantium culpa in commodi? Accusantium, repellat harum!Lorem
-                                        </p>
-                                        <p class="adjustX"><strong>Opera en:</strong> Maipú, Cerrillos, Pudahuel</p>
-                                        <div class="profile-buttons">
-                                            <button class="btn view-profile">Ver perfil</button>
-                                            <button class="btn schedule-appointment">Agendar una cita</button>
-                                    </div>
-                                </div>  
+                        <div class="tab-pane fade" id="lista">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Hora</th>
+                                            <th>Servicio</th>
+                                            <th>Veterinario</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="citasTableBody">
+                                    </tbody>
+                                </table>
                             </div>
+                            <nav aria-label="Paginación de citas">
+                                <ul class="pagination justify-content-center" id="pagination">
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
+<!-- Modal de Cita -->
+<div class="modal fade" id="citaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="citaModalTitle">Nueva Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="citaForm">
+                    <input type="hidden" id="citaId">
+                    <div class="mb-3">
+                        <label for="servicio" class="form-label">Servicio</label>
+                        <select class="form-select" id="servicio" name="servicio" required>
+                            <option value="">Seleccione un servicio</option>
+                            <option value="PELUQUERIA">Peluquería</option>
+                            <option value="LIMPIEZA">Limpieza</option>
+                            <option value="DENTAL">Limpieza Dental</option>
+                            <option value="VACUNACION">Vacunación</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="veterinariaModal" class="form-label">Veterinaria</label>
+                        <select class="form-select" id="veterinariaModal" name="veterinaria" required>
+                            <option value="">Seleccione una veterinaria</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="veterinario" class="form-label">Veterinario</label>
+                        <select class="form-select" id="veterinario" name="veterinario" required>
+                            <option value="">Seleccione un veterinario</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="fecha" name="fecha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hora" class="form-label">Hora</label>
+                        <select class="form-select" id="hora" name="hora" required>
+                            <option value="">Seleccione una hora</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notas" class="form-label">Notas</label>
+                        <textarea class="form-control" id="notas" name="notas" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarCita">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar FullCalendar
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: '/api/calendario/',
+            eventClick: function (info) {
+                cargarCita(info.event.id);
+            }
+        });
+        calendar.render();
 
+        // Cargar veterinarias
+        fetch('/api/veterinarios/')
+            .then(response => response.json())
+            .then(data => {
+                const veterinarias = data.veterinarias;
+                const selectVeterinaria = document.getElementById('veterinaria');
+                const selectVeterinariaModal = document.getElementById('veterinariaModal');
 
+                veterinarias.forEach(vet => {
+                    const option = new Option(vet.nombre, vet.id);
+                    selectVeterinaria.add(option.cloneNode(true));
+                    selectVeterinariaModal.add(option);
+                });
+            });
 
+        // Event Listeners
+        document.getElementById('veterinariaModal').addEventListener('change', cargarVeterinarios);
+        document.getElementById('fecha').addEventListener('change', cargarHorariosDisponibles);
+        document.getElementById('filterForm').addEventListener('submit', aplicarFiltros);
+        document.getElementById('guardarCita').addEventListener('click', guardarCita);
 
-    {%endblock%}
+        // Cargar datos iniciales
+        cargarCitas();
+    });
+
+    function cargarVeterinarios() {
+        const veterinariaId = document.getElementById('veterinariaModal').value;
+        const selectVeterinario = document.getElementById('veterinario');
+
+        selectVeterinario.innerHTML = '<option value="">Seleccione un veterinario</option>';
+
+        if (veterinariaId) {
+            fetch(`/api/veterinarios/?veterinaria_id=${veterinariaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.veterinarios.forEach(vet => {
+                        const option = new Option(vet.usuario__NombreUsuario, vet.id);
+                        selectVeterinario.add(option);
+                    });
+                });
+        }
+    }
+
+    function cargarHorariosDisponibles() {
+        const fecha = document.getElementById('fecha').value;
+        const veterinarioId = document.getElementById('veterinario').value;
+        const selectHora = document.getElementById('hora');
+
+        selectHora.innerHTML = '<option value="">Seleccione una hora</option>';
+
+        if (fecha && veterinarioId) {
+            fetch(`/api/horarios-disponibles/?fecha=${fecha}&veterinario_id=${veterinarioId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.horarios.forEach(hora => {
+                            const option = new Option(hora, hora);
+                            selectHora.add(option);
+                        });
+                    }
+                });
+        }
+    }
+
+    function aplicarFiltros(event) {
+        event.preventDefault();
+        cargarCitas();
+    }
+
+    function cargarCitas(page = 1) {
+        const formData = new FormData(document.getElementById('filterForm'));
+        const queryParams = new URLSearchParams(formData);
+        queryParams.append('page', page);
+
+        fetch(`/citas/?${queryParams.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                actualizarTablaCitas(data.citas);
+                actualizarPaginacion(data.pagination);
+            });
+    }
+
+    function actualizarTablaCitas(citas) {
+        const tbody = document.getElementById('citasTableBody');
+        tbody.innerHTML = '';
+
+        citas.forEach(cita => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${cita.fecha}</td>
+                <td>${cita.hora}</td>
+                <td>${cita.servicio}</td>
+                <td>${cita.veterinario}</td>
+                <td><span class="badge bg-${getEstadoColor(cita.estado)}">${cita.estado}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="cargarCita(${cita.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="cancelarCita(${cita.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function getEstadoColor(estado) {
+        const colores = {
+            'PENDIENTE': 'warning',
+            'CONFIRMADA': 'success',
+            'CANCELADA': 'danger'
+        };
+        return colores[estado] || 'secondary';
+    }
+
+    function actualizarPaginacion(pagination) {
+        const paginationEl = document.getElementById('pagination');
+        paginationEl.innerHTML = '';
+
+        // Agregar botones de paginación...
+    }
+
+    function cargarCita(id) {
+        fetch(`/api/citas/${id}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('citaId').value = data.id;
+                document.getElementById('servicio').value = data.servicio;
+                document.getElementById('veterinariaModal').value = data.veterinaria;
+                cargarVeterinarios().then(() => {
+                    document.getElementById('veterinario').value = data.veterinario;
+                });
+                document.getElementById('fecha').value = data.fecha;
+                document.getElementById('hora').value = data.hora;
+                document.getElementById('notas').value = data.notas;
+
+                const modal = new bootstrap.Modal(document.getElementById('citaModal'));
+                modal.show();
+            });
+    }
+
+    function guardarCita() {
+        const formData = new FormData(document.getElementById('citaForm'));
+        const id = document.getElementById('citaId').value;
+        const url = id ? `/api/citas/${id}/` : '/api/citas/';
+    }
+</script>
+{% endblock %}

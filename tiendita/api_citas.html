@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Carrito de Compras - Vet & Pet Center{% endblock %}
+
+{% block extra_styles %}
+<link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.css' rel='stylesheet' />
+<style>
+    .fc-event {
+        cursor: pointer;
+    }
+
+    .appointment-details {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .status-PENDIENTE {
+        background-color: #fff3cd;
+    }
+
+    .status-CONFIRMADA {
+        background-color: #d1e7dd;
+    }
+
+    .status-COMPLETADA {
+        background-color: #cfe2ff;
+    }
+
+    .status-CANCELADA {
+        background-color: #f8d7da;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Calendar Column -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Calendario de Citas</h5>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Details Column -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Detalles de la Cita</h5>
+                </div>
+                <div class="card-body" id="appointment-details">
+                    <p class="text-muted text-center">Seleccione una cita para ver los detalles</p>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a href="{% url 'crear_cita' %}" class="btn btn-primary w-100">
+                    <i class="fas fa-plus"></i> Nueva Cita
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Quick View -->
+<div class="modal fade" id="appointmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de la Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be dynamically loaded -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="#" class="btn btn-primary" id="editAppointmentBtn">Editar</a>
+                <a href="#" class="btn btn-danger" id="cancelAppointmentBtn">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/locales/es.min.js'></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: "{% url 'api_citas' %}",
+            eventClick: function (info) {
+                showAppointmentDetails(info.event.id);
+            },
+            eventDidMount: function (info) {
+                info.el.setAttribute('data-bs-toggle', 'tooltip');
+                info.el.setAttribute('title', info.event.title);
+            }
+        });
+        calendar.render();
+    });
+
+    function showAppointmentDetails(appointmentId) {
+        fetch(`/api/citas/${appointmentId}/`)
+            .then(response => response.json())
+            .then(data => {
+                const modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+                const modalBody = document.querySelector('#appointmentModal .modal-body');
+
+                modalBody.innerHTML = `
+                <div class="appointment-details status-${data.estado}">
+                    <h6>Mascota: ${data.mascota}</h6>
+                    <p>Servicio: ${data.servicio}</p>
+                    <p>Veterinario: ${data.veterinario}</p>
+                    <p>Fecha: ${data.fecha}</p>
+                    <p>Hora: ${data.hora}</p>
+                    <p>Estado: ${data.estado}</p>
+                    <p>Notas: ${data.notas || 'Sin notas'}</p>
+                </div>
+            `;
+
+                document.getElementById('editAppointmentBtn').href = `/citas/${appointmentId}/editar/`;
+                document.getElementById('cancelAppointmentBtn').href = `/citas/${appointmentId}/cancelar/`;
+
+                modal.show();
+            });
+    }
+</script>
+{% endblock %}
