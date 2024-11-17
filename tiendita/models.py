@@ -150,10 +150,10 @@ class Veterinario(models.Model):
     usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     veterinaria = models.ForeignKey(Veterinaria, on_delete=models.CASCADE)
     especialidad = models.CharField(max_length=100)
-    color = models.CharField(max_length=7, default="#2196F3")
+    # color = models.CharField(max_length=7, default="#2196F3")
     # Nuevos campos
-    numero_colegiado = models.CharField(max_length=20, blank=True)
-    experiencia_años = models.IntegerField(default=0)
+    telefono = models.CharField(max_length=15, blank=True)
+    experiencia_años = models.CharField(max_length=150)
     horario_inicio = models.TimeField(null=True, blank=True)
     horario_fin = models.TimeField(null=True, blank=True)
 
@@ -194,7 +194,7 @@ class Servicio(models.Model):
         default='S'
     )
     # TipoAnimal = models.FloatField(choices=CustomUser.TIPO_ANIMAL_CHOICES)
-    # Precio = models.DecimalField(max_digits=10, decimal_places=2)
+    Precio = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         verbose_name = 'Servicio'

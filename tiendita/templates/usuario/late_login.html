@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	{% load static %} 
+</head>
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+
+<body>
+    <div class="main">  	
+		<input type="checkbox" id="chk" aria-hidden="true">
+        <div class="signup">
+            <div class="row">
+                <a  aria-hidden="true"  href="{% url 'home' %}">
+                    <i class="fa fa-paw" ></i>
+                </a>     
+                <h5 for="chk" aria-hidden="true" class="form-title">Iniciar sesión</h5>
+            </div>
+            
+            <form method="post" action="{% url 'loginuser' %}">
+
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+            </form>
+            
+        </div>
+        <div class="row">
+            <label>No tienes cuenta?.   </label>
+            <a href="{% url 'registeruser' %}">Registrate</a>
+        </div>
+        <br>
+
+<!--		<div class="login">
+				<form>
+					<label for="chk" aria-hidden="true" class="form-title">Iniciar sesión</label>
+					<input type="email" name="email" placeholder="Correo electrónico" required="">
+					<input type="password" name="pswd" placeholder="Contraseña" required="">
+					<button>Iniciar sesión</button>
+				</form>
+                
+			</div>
+-->
+	</div>    
+</body>
+</html>
+
+

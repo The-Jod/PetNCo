@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Confirmación Principal -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success fa-4x"></i>
+                    </div>
+                    <h2 class="mb-4">¡Gracias por tu compra!</h2>
+                    <p class="lead mb-4">
+                        Tu orden #{{ orden.id }} ha sido confirmada
+                    </p>
+                    <div class="alert alert-success d-inline-block">
+                        <strong>Total pagado:</strong> ${{ orden.TotalOrden|floatformat:0}}
+                    </div>
+                    {% if not correo_enviado %}
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Hubo un problema enviando el correo de confirmación. 
+                        Por favor, guarda esta página para tu referencia.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Detalles de la Orden -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-4">Detalles de la Orden</h4>
+                    
+                    <!-- Productos -->
+                    <div class="order-items mb-4">
+                        {% for item in orden.items.all %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
+                            <div class="d-flex align-items-center">
+                                {% if item.SKUProducto.imagen %}
+                                <img src="{{ item.SKUProducto.imagen.url }}" 
+                                     alt="{{ item.NombreProducto }}" 
+                                     class="me-3" 
+                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">{{ item.NombreProducto }}</h6>
+                                    <small class="text-muted">
+                                        Cantidad: {{ item.CantidadProducto }}
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="fw-bold">${{ item.PrecioProducto|floatformat:0 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Resumen de Costos -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>${{ subtotal|floatformat:0 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío</span>
+                            <span>
+                                {% if orden.CostoEnvio == 0 %}
+                                    <span class="badge bg-success">Gratis</span>
+                                {% else %}
+                                    ${{ orden.CostoEnvio|floatformat:0 }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                            <strong>Total</strong>
+                            <strong>${{ orden.TotalOrden|floatformat:0 }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de Envío -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-4">Información de Envío</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Datos de Contacto</h6>
+                            <p class="mb-1"><strong>{{ orden.NombreCliente }} {{ orden.ApellidoCliente }}</strong></p>
+                            <p class="mb-1">{{ orden.EmailCliente }}</p>
+                            <p class="mb-3">{{ orden.TelefonoCliente }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Dirección de Envío</h6>
+                            <p class="mb-1">{{ orden.DireccionCliente }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="text-center">
+                <a href="{% url 'productos' %}" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-shopping-bag me-2"></i>
+                    Seguir comprando
+                </a>
+                <a href="#" class="btn btn-outline-primary btn-lg" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>
+                    Imprimir orden
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+    @media print {
+        .btn { display: none !important; }
+        .card { border: 1px solid #ddd !important; }
+        .shadow-sm { box-shadow: none !important; }
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .order-items .bg-light {
+        background-color: #f8f9fa !important;
+        transition: background-color 0.3s ease;
+    }
+    
+    .order-items .bg-light:hover {
+        background-color: #e9ecef !important;
+    }
+</style>
+{% endblock %} 
