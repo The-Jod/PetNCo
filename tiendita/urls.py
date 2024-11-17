@@ -2,9 +2,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth import views as auth_views
+from django.contrib.auth import views as auth_views 
+from django.contrib.auth.views import LogoutView
 from . import views
-from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView
+from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView, CustomLoginView
+
 
 """
 URL configuration for Petnco project.
@@ -32,25 +34,23 @@ Including another URLconf
 urlpatterns = [
     path('',views.home_view, name='home'),
     path('registro_citas',views.vetdate_view, name='registro'),
-    path('login',RegistroUsuarioView.as_view(), name='login'),
-    path('pago/',views.pago_view,name='checkout'),
-    path('carrito/',views.carrito_view,name='carrito'),
+    path('late_registration',RegistroUsuarioView.as_view(), name='registeruser'),
+    path('late_login',CustomLoginView.as_view(), name='loginuser'),
+    path('late_logout', LogoutView.as_view(next_page='loginuser'), name='logout'),
+    path('pago/', views.checkout_view, name='checkout'),
     path('productos/', views.catalogo_view, name='productos'),  
     path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
     path('productos/<int:sku>/', views.producto_detalle_modal, name='producto-modal'),
-       # Vista principal que contiene todos los modales
-    path('citas/', views.lista_citas, name='lista_citas'),
-    
-    # Endpoints para AJAX
-    path('api/citas/crear/', views.crear_cita, name='crear_cita'),
-    path('api/citas/<int:pk>/', views.crear_cita, name='obtener_cita'),
-    path('api/citas/<int:pk>/editar/', views.editar_cita, name='editar_cita'),
-    path('api/citas/<int:pk>/cancelar/', views.cancelar_cita, name='cancelar_cita'),
-    
-    path('api/calendario/', views.api_citas_calendario, name='api_calendario'),
-    path('api/horarios-disponibles/', views.api_horarios_disponibles, name='api_horarios_disponibles'),
-    path('api/veterinarios/', views.obtener_veterinarios, name='api_veterinarios'),
-
-    
-    
+    path('carrito/', views.carrito_view, name='carrito'),
+    path('agregar/<int:sku>/', views.agregar_al_carrito, name='agregar_al_carrito'),
+    path('eliminar/<int:sku>/', views.eliminar_del_carrito, name='eliminar_del_carrito'),
+    path('limpiar/', views.limpiar_carrito, name='limpiar_carrito'),
+    path('carrito/actualizar-cantidad/', views.actualizar_cantidad, name='actualizar_cantidad'),
+    path('checkout/webpay/return/', views.webpay_return, name='webpay_return'),
+    path('orden/confirmada/<int:orden_id>/', views.orden_confirmada, name='orden_confirmada'),
+    path('checkout/', views.checkout_view, name='checkout'),
+    path('procesar-pago/', views.procesar_pago_view, name='procesar_pago'),
+    path('orden-confirmada/', views.orden_confirmada_view, name='orden_confirmada'),
+    path('limpiar-sesion/', views.limpiar_sesion_view, name='limpiar_sesion'),
+    path('webpay/retorno/', views.webpay_retorno_view, name='webpay_retorno'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

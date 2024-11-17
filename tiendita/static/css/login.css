@@ -17,6 +17,7 @@ body{
 	box-shadow: 5px 20px 50px #000;
 }
 #chk{
+	color: #FFFFFF;
 	display: none;
 }
 .signup{
@@ -91,7 +92,7 @@ button:hover{
 
 
 form {
-    background-color: #FFFFFF;
+    background-color: #7244c9;
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: auto;
@@ -99,8 +100,21 @@ form {
 }
 
 label {
-    font-size: 14px;
-    color: #333333;
+	padding-left: 28%;
+    font-size: 16px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+h5 {
+    font-size: 16px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+a {
+    font-size: 16px;
+    color: #FFFFFF;
     font-weight: bold;
 }
 
@@ -115,6 +129,9 @@ button:hover {
 }
 
 .errorlist {
-    color: #FF0000;
+    color: #ff3e3e;
     font-size: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 5px 0;
 }

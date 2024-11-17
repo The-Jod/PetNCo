@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,6 +43,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://petnco.onrender.com',
+    # Puedes agregar más dominios si es necesario
+]
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'bootstrap5',    
     'django.contrib.humanize',
+    
 ]
 
 MIDDLEWARE = [
@@ -140,3 +153,17 @@ STATIC_URL = 'tiendita/static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Webpay
+WEBPAY_COMMERCE_CODE = '597055555532'  # Código de comercio de prueba
+WEBPAY_API_KEY = '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C'  # API key de prueba
+WEBPAY_ENVIRONMENT = 'INTEGRACION'
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'echeverria.ala@gmail.com'
+EMAIL_HOST_PASSWORD = 'eitcdofvcinwmims'  # Me usan la llave del correo y te juro q los mato a todos
+DEFAULT_FROM_EMAIL = 'echeverria.ala@gmail.com'
