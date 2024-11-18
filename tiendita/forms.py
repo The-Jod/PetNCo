@@ -278,80 +278,92 @@ class CustomLoginForm(AuthenticationForm):
         
         return cleaned_data
     
-class CitaVeterinariaForm(forms.ModelForm):
-   class Meta:
-    model = CitaVeterinaria
-    fields = ['servicio', 'veterinaria', 'veterinario', 'fecha', 'hora', 'notas']
-    widgets = {
-        'servicio': forms.Select(attrs={'class': 'form-select', 'id': 'id_servicio'}),
-        'veterinaria': forms.Select(attrs={'class': 'form-select', 'id': 'id_veterinaria'}),
-        'veterinario': forms.Select(attrs={'class': 'form-select', 'id': 'id_veterinario'}),
-        'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'min': date.today().isoformat()}),
-        'hora': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-        'notas': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Agregue notas o comentarios importantes sobre la cita...'})
-    }
+class VeterinariaForm(forms.ModelForm):
+    class Meta:
+        model = Veterinaria
+        fields = ['NombreVeterinaria', 'LocalidadVeterinaria', 'HorarioInicioVeterinaria', 'HorarioCierreVeterinaria', 'DisponibilidadVeterinaria', 'telefono', 'email']
+        widgets = {
+            'NombreVeterinaria': forms.TextInput(attrs={'class': 'form-control'}),
+            'LocalidadVeterinaria': forms.TextInput(attrs={'class': 'form-control'}),
+            'HorarioInicioVeterinaria': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'HorarioCierreVeterinaria': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'DisponibilidadVeterinaria': forms.Select(attrs={'class': 'form-select'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
 
+class VeterinarioForm(forms.ModelForm):
+    class Meta:
+        model = Veterinario
+        fields = ['usuario', 'veterinaria', 'especialidad', 'telefono', 'experiencia_años', 'horario_inicio', 'horario_fin', 'nombre_veterinario']
+        widgets = {
+            'usuario': forms.Select(attrs={'class': 'form-select'}),
+            'veterinaria': forms.Select(attrs={'class': 'form-select'}),
+            'especialidad': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'experiencia_años': forms.TextInput(attrs={'class': 'form-control'}),
+            'horario_inicio': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'horario_fin': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'nombre_veterinario': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'})
+        }
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-        
-        # Filtrar veterinarios según la veterinaria seleccionada
-        if self.instance and self.instance.veterinaria:
-            self.fields['veterinario'].queryset = Veterinario.objects.filter(
-                veterinaria=self.instance.veterinaria
-            )
-        else:
-            self.fields['veterinario'].queryset = Veterinario.objects.none()
-
-        # Agregar clases de Bootstrap y placeholders
-        for field in self.fields:
-            if not isinstance(self.fields[field].widget, (forms.CheckboxInput, forms.RadioSelect)):
-                self.fields[field].widget.attrs['class'] = 'form-control'
-
+    # Campos opcionales: Usuario y Veterinaria
+    usuario = forms.ModelChoiceField(
+        queryset=CustomUser.objects.all(), 
+        required=False, 
+        empty_label="Seleccione un usuario", 
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    veterinaria = forms.ModelChoiceField(
+        queryset=Veterinaria.objects.all(), 
+        required=False, 
+        empty_label="Seleccione una veterinaria", 
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    # Validación personalizada para asegurarse de que si no se selecciona usuario, el nombre del veterinario debe ser proporcionado
     def clean(self):
         cleaned_data = super().clean()
-        fecha = cleaned_data.get('fecha')
-        hora = cleaned_data.get('hora')
-        veterinario = cleaned_data.get('veterinario')
-        veterinaria = cleaned_data.get('veterinaria')
+        usuario = cleaned_data.get("usuario")
+        nombre_veterinario = cleaned_data.get("nombre_veterinario")
+        veterinaria = cleaned_data.get("veterinaria")
 
-        if fecha and hora and veterinario and veterinaria:
-            # Verificar fecha pasada
-            if fecha < date.today():
-                raise ValidationError('No se pueden agendar citas en fechas pasadas.')
+        # Si no se selecciona un usuario, nombre_veterinario debe ser obligatorio
+        if not usuario and not nombre_veterinario:
+            self.add_error('nombre_veterinario', 'Debe ingresar el nombre del veterinario si no selecciona un usuario.')
 
-            # Verificar horario de atención
-            hora_cita = datetime.strptime(hora.strftime('%H:%M'), '%H:%M').time()
-            if (hora_cita < veterinaria.HorarioInicioVeterinaria or 
-                hora_cita > veterinaria.HorarioCierreVeterinaria):
-                raise ValidationError(
-                    f'El horario de atención es de {veterinaria.HorarioInicioVeterinaria} a {veterinaria.HorarioCierreVeterinaria}'
-                )
-
-            # Verificar disponibilidad del veterinario
-            if not self.veterinario_disponible(veterinario, fecha, hora):
-                raise ValidationError('El veterinario no está disponible en el horario seleccionado.')
-
-            # Verificar disponibilidad de la veterinaria
-            if veterinaria.DisponibilidadVeterinaria == 'N':
-                raise ValidationError('La veterinaria no está disponible en este momento.')
+        # Si no se selecciona una veterinaria, esto también podría ser validado si es necesario
+        if not veterinaria:
+            self.add_error('veterinaria', 'Debe seleccionar una veterinaria.')
 
         return cleaned_data
+class ServicioForm(forms.ModelForm):
+    class Meta:
+        model = Servicio
+        fields = ['NombreServicio', 'TipoServicio', 'LocalidadServicio', 'HorarioInicioServicio', 'HorarioCierreServicio', 'DisponibilidadServicio', 'Precio']
+        widgets = {
+            'NombreServicio': forms.TextInput(attrs={'class': 'form-control'}),
+            'TipoServicio': forms.Select(attrs={'class': 'form-select'}),
+            'LocalidadServicio': forms.TextInput(attrs={'class': 'form-control'}),
+            'HorarioInicioServicio': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'HorarioCierreServicio': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'DisponibilidadServicio': forms.Select(attrs={'class': 'form-select'}),
+            'Precio': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
 
-    def veterinario_disponible(self, veterinario, fecha, hora):
-        # Excluir la cita actual en caso de edición
-        citas_existentes = CitaVeterinaria.objects.filter(
-            veterinario=veterinario,
-            fecha=fecha,
-            hora=hora,
-            estado__in=['PENDIENTE', 'CONFIRMADA']
-        )
-        
-        if self.instance.pk:
-            citas_existentes = citas_existentes.exclude(pk=self.instance.pk)
-            
-        return not citas_existentes.exists()
+class CitaVeterinariaForm(forms.ModelForm):
+    class Meta:
+        model = CitaVeterinaria
+        fields = ['servicio', 'veterinaria', 'veterinario', 'fecha', 'hora', 'notas']
+        widgets = {
+            'servicio': forms.Select(attrs={'class': 'form-select'}),
+            'veterinaria': forms.Select(attrs={'class': 'form-select'}),
+            'veterinario': forms.Select(attrs={'class': 'form-select'}),
+            'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'hora': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'notas': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
     
-    
-    
+
+

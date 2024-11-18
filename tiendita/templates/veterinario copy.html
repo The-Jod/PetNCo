@@ -1,0 +1,186 @@
+{% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
+{% load static %} <!-- Renderiza archivos staticos-->
+<!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
+{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+
+{% endblock %}
+{% block extra_scripts %}
+
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: '{% url "get_veterinarias" %}',  // Usar el nombre de la URL de Django
+            type: 'GET',
+            success: function (veterinarias) {
+                const select = $('#veterinaria');
+                select.empty();
+                select.append('<option value="">Seleccione una veterinaria...</option>');
+
+                veterinarias.forEach(function (vet) {
+                    select.append(`<option value="${vet.CodigoVeterinaria}">${vet.nombre}</option>`);
+                });
+
+                const veterinariaSeleccionada = '{{ vet.veterinaria_id|default:"" }}';
+                if (veterinariaSeleccionada) {
+                    select.val(veterinariaSeleccionada);
+                }
+            },
+            error: function () {
+                alert('Error al cargar las veterinarias');
+            }
+        });
+    });
+</script>
+<script src="{% static 'js/navbar.js' %}"></script>
+<!-- <script>
+    document.getElementById('addVeter inariaForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Evitar el envío del formulario por defecto
+
+        const formData = new FormData(this);
+        fetch("{% url 'veterinario_add' %}", {
+
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}' // Incluir el token CSRF
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Agregar la nueva veterinaria a la tabla
+                    const newRow = `
+                    <tr>
+                        <td>${data.veterinario.usuario}</td>
+                        <td>${data.veterinario.veterinaria}</td>
+                        <td>${data.veterinario.especialidad}</td>
+                        <td>${data.veterinario.experiencia_años}</td>
+                        <td>
+                            <a href="/veterinarias/edit/${data.veterinaria.id}/" class="btn btn-warning">Editar</a>
+                            <form action="/veterinarias/delete/${data.veterinaria.id}/" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                `;
+                    document.querySelector('tbody').insertAdjacentHTML('beforeend', newRow);
+                    // Cerrar el modal
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('addVeterinariaModal'));
+                    modal.hide();
+                    // Limpiar el formulario
+                    this.reset();
+                } else {
+                    // Manejar errores
+                    alert('Error al agregar la veterinaria: ' + data.errors.join(', '));
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+</script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.js"></script>
+
+
+
+{% endblock %}
+
+{% block content %}<!-- Deja pasar el contenido de esta vista -->
+<div class="container-fluid">
+
+    <h2>Lista de Veterinarios</h2>
+
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVeterinariaModal">
+        Agregar Veterinaria
+    </button>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Especialidad</th>
+                <th>Veterinaria</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for veterinario in veterinarios %}
+            <tr>
+                <td>{{ veterinario.usuario.NombreUsuario }}</td>
+                <td>{{ veterinario.especialidad }}</td>
+                <td>{{ veterinario.veterinaria.NombreVeterinaria }}</td>
+                <td>
+                    <a href="{% url 'veterinario_edit' veterinario.pk %}" class="btn btn-warning">Editar</a>
+                    <form action="{% url 'veterinario_delete' veterinario.pk %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- Modal para agregar veterinaria -->
+    <div class="modal fade" id="addVeterinariaModal" tabindex="-1" aria-labelledby="addVeterinariaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addVeterinariaModalLabel">Agregar Veterinaria</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addVeterinariaForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="NombreVeterinaria" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="NombreVeterinaria" name="NombreVeterinaria"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="LocalidadVeterinaria" class="form-label">Localidad</label>
+                            <input type="text" class="form-control" id="LocalidadVeterinaria"
+                                name="LocalidadVeterinaria" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="HorarioInicioVeterinaria" class="form-label">Horario Inicio</label>
+                            <input type="time" class="form-control" id="HorarioInicioVeterinaria"
+                                name="HorarioInicioVeterinaria" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="HorarioCierreVeterinaria" class="form-label">Horario Cierre</label>
+                            <input type="time" class="form-control" id="HorarioCierreVeterinaria"
+                                name="HorarioCierreVeterinaria" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="DisponibilidadVeterinaria" class="form-label">Disponibilidad</label>
+                            <select class="form-select" id="DisponibilidadVeterinaria" name="DisponibilidadVeterinaria">
+                                <option value="S">Sí</option>
+                                <option value="N">No</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="telefono" name="telefono">
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.js"></script>
+
+{% endblock %}

@@ -241,26 +241,32 @@ class Veterinaria(models.Model):
     def __str__(self):
         return self.NombreVeterinaria
 
+
 class Veterinario(models.Model):
-    usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    veterinaria = models.ForeignKey(Veterinaria, on_delete=models.CASCADE)
+      # Ya no es primary_key
+    usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
+    veterinaria = models.ForeignKey(Veterinaria, on_delete=models.CASCADE, null=True, blank=True)
     especialidad = models.CharField(max_length=100)
-    # color = models.CharField(max_length=7, default="#2196F3")
-    # Nuevos campos
     telefono = models.CharField(max_length=15, blank=True)
     experiencia_años = models.CharField(max_length=150)
     horario_inicio = models.TimeField(null=True, blank=True)
     horario_fin = models.TimeField(null=True, blank=True)
+    nombre_veterinario = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
 
     class Meta:
         verbose_name = 'Veterinario'
         verbose_name_plural = 'Veterinarios'
-        indexes = [
-            models.Index(fields=['especialidad'])
-        ]
 
     def __str__(self):
-        return f"Dr. {self.usuario.NombreUsuario}"
+        if self.usuario:
+            return f"Dr. {self.usuario.NombreUsuario}"
+        if self.nombre_veterinario:
+            return self.nombre_veterinario
+        elif self.email:
+            return self.email
+        return "Veterinario sin nombre ni correo"
+
 
 class Servicio(models.Model):
     TIPO_SERVICIO = [

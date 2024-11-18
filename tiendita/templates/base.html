@@ -34,6 +34,7 @@
 
 
 
+
     {% block extra_styles %}{% endblock %}
 </head>
 
@@ -53,12 +54,24 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto" data-aos="fade-left">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product_add' %}">
+
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <span>DEBUG Admin View</span>
                             <i class="fa fa-flask" aria-hidden="true"></i>
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'product_add' %}">Creación de productos</a></li>
+                            <li><a class="dropdown-item" href="{% url 'veterinaria' %}">Creación Clínica
+                                    Veterinaria</a></li>
+                            <li><a class="dropdown-item" href="{% url 'veterinario' %}">Creación Veterinario</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'servicio' %}">Creación de Servicio</a></li>
+                        </ul>
                     </li>
+
 
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'productos' %}">

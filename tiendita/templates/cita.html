@@ -20,167 +20,74 @@
 {% endblock %}
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
-<div class="container-fluid">
-    <div class="row my-4">
-        <!-- Sidebar with filters -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Filtros</h5>
-                </div>
-                <div class="card-body">
-                    <form id="filterForm">
-                        <div class="mb-3">
-                            <label for="estado" class="form-label">Estado</label>
-                            <select class="form-select" id="estado" name="estado">
-                                <option value="">Todos</option>
-                                <option value="PENDIENTE">Pendiente</option>
-                                <option value="CONFIRMADA">Confirmada</option>
-                                <option value="CANCELADA">Cancelada</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fecha_desde" class="form-label">Desde</label>
-                            <input type="date" class="form-control" id="fecha_desde" name="fecha_desde">
-                        </div>
-                        <div class="mb-3">
-                            <label for="fecha_hasta" class="form-label">Hasta</label>
-                            <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
-                        </div>
-                        <div class="mb-3">
-                            <label for="veterinaria" class="form-label">Veterinaria</label>
-                            <select class="form-select" id="veterinaria" name="veterinaria">
-                                <option value="">Todas</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Aplicar Filtros</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Nueva Cita</h5>
-                </div>
-                <div class="card-body">
-                    <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#citaModal">
-                        <i class="fas fa-plus-circle me-2"></i>Agendar Cita
-                    </button>
-                </div>
-            </div>
+<h2>Lista de Citas</h2>
+<a href="{% url 'cita_add' %}" class="btn btn-primary">Agregar Cita</a>
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col">
+            <select name="estado" class="form-select">
+                <option value="">Filtrar por Estado</option>
+                {% for estado in estados %}
+                <option value="{{ estado.0 }}" {% if filtros.estado==estado.0 %}selected{% endif %}>{{ estado.1 }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
-
-        <!-- Main content -->
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-bs-toggle="tab" href="#calendario">
-                                <i class="fas fa-calendar-alt me-2"></i>Calendario
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#lista">
-                                <i class="fas fa-list me-2"></i>Lista
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-body">
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="calendario">
-                            <div id="calendar"></div>
-                        </div>
-                        <div class="tab-pane fade" id="lista">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Fecha</th>
-                                            <th>Hora</th>
-                                            <th>Servicio</th>
-                                            <th>Veterinario</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="citasTableBody">
-                                    </tbody>
-                                </table>
-                            </div>
-                            <nav aria-label="Paginación de citas">
-                                <ul class="pagination justify-content-center" id="pagination">
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col">
+            <input type="date" name="fecha_desde" class="form-control" value="{{ filtros.fecha_desde }}">
+        </div>
+        <div class="col">
+            <input type="date" name="fecha_hasta" class="form-control" value="{{ filtros.fecha_hasta }}">
+        </div>
+        <div class="col">
+            <select name="veterinaria" class="form-select">
+                <option value="">Filtrar por Veterinaria</option>
+                {% for veterinaria in veterinarias %}
+                <option value="{{ veterinaria.id }}" {% if filtros.veterinaria==veterinaria.id %}selected{% endif %}>{{
+                    veterinaria.NombreVeterinaria }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col">
+            <button type="submit" class="btn btn-secondary">Filtrar</button>
         </div>
     </div>
-</div>
-
-<!-- Modal de Cita -->
-<div class="modal fade" id="citaModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="citaModalTitle">Nueva Cita</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="citaForm">
-                    <input type="hidden" id="citaId">
-                    <div class="mb-3">
-                        <label for="servicio" class="form-label">Servicio</label>
-                        <select class="form-select" id="servicio" name="servicio" required>
-                            <option value="">Seleccione un servicio</option>
-                            <option value="PELUQUERIA">Peluquería</option>
-                            <option value="LIMPIEZA">Limpieza</option>
-                            <option value="DENTAL">Limpieza Dental</option>
-                            <option value="VACUNACION">Vacunación</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="veterinariaModal" class="form-label">Veterinaria</label>
-                        <select class="form-select" id="veterinariaModal" name="veterinaria" required>
-                            <option value="">Seleccione una veterinaria</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="veterinario" class="form-label">Veterinario</label>
-                        <select class="form-select" id="veterinario" name="veterinario" required>
-                            <option value="">Seleccione un veterinario</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="fecha" class="form-label">Fecha</label>
-                        <input type="date" class="form-control" id="fecha" name="fecha" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="hora" class="form-label">Hora</label>
-                        <select class="form-select" id="hora" name="hora" required>
-                            <option value="">Seleccione una hora</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="notas" class="form-label">Notas</label>
-                        <textarea class="form-control" id="notas" name="notas" rows="3"></textarea>
-                    </div>
+</form>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Servicio</th>
+            <th>Veterinaria</th>
+            <th>Veterinario</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cita in citas %}
+        <tr>
+            <td>{{ cita.servicio }}</td>
+            <td>{{ cita.veterinaria.NombreVeterinaria }}</td>
+            <td>{{ cita.veterinario }}</td>
+            <td>{{ cita.fecha }}</td>
+            <td>{{ cita.hora }}</td>
+            <td>{{ cita.get_estado_display }}</ </td>
+            <td>
+                <a href="{% url 'cita_edit' cita.pk %}" class="btn btn-warning">Editar</a>
+                <form action="{% url 'cita_delete' cita.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="guardarCita">Guardar</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-{% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.js"></script>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Inicializar FullCalendar

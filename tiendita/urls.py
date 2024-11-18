@@ -6,7 +6,11 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
 from . import views
 from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView, CustomLoginView
-
+from .views import (
+    VeterinariaListView, VeterinariaCreateView, VeterinariaUpdateView, VeterinariaDeleteView,
+    VeterinarioListView, VeterinarioCreateView, VeterinarioUpdateView, VeterinarioDeleteView,
+    ServicioListView, ServicioCreateView, ServicioUpdateView, ServicioDeleteView,
+    CitaVeterinariaListView, CitaVeterinariaCreateView, CitaVeterinariaUpdateView, CitaVeterinariaDeleteView)
 
 """
 URL configuration for Petnco project.
@@ -33,7 +37,6 @@ Including another URLconf
 
 urlpatterns = [
     path('',views.home_view, name='home'),
-    path('registro_citas',views.vetdate_view, name='registro'),
     path('late_registration',RegistroUsuarioView.as_view(), name='registeruser'),
     path('late_login',CustomLoginView.as_view(), name='loginuser'),
     path('late_logout', LogoutView.as_view(next_page='loginuser'), name='logout'),
@@ -53,4 +56,25 @@ urlpatterns = [
     path('orden-confirmada/', views.orden_confirmada_view, name='orden_confirmada'),
     path('limpiar-sesion/', views.limpiar_sesion_view, name='limpiar_sesion'),
     path('webpay/retorno/', views.webpay_retorno_view, name='webpay_retorno'),
+    
+    path('veterinarias/',views.clinica_view, name='veterinaria'),
+    path('veterinarias/add/', VeterinariaCreateView.as_view(), name='veterinaria_add'),
+    path('veterinarias/edit/<int:pk>/', VeterinariaUpdateView.as_view(), name='veterinaria_edit'),
+    path('veterinarias/delete/<int:pk>/', VeterinariaDeleteView.as_view(), name='veterinaria_delete'),
+
+    path('veterinarios/', views.veterinario_view, name='veterinario'),
+    path('veterinarios/add/', VeterinarioCreateView.as_view(), name='veterinario_add'),
+    path('veterinarios/edit/<int:pk>/', VeterinarioUpdateView.as_view(), name='veterinario_edit'),
+    path('veterinarios/delete/<int:pk>/', VeterinarioDeleteView.as_view(), name='veterinario_delete'),
+
+    path('servicios/', views.servicio_view, name='servicio'),
+    path('servicios/add/', ServicioCreateView.as_view(), name='servicio_add'),
+    path('servicios/edit/<int:pk>/', ServicioUpdateView.as_view(), name='servicio_edit'),
+    path('servicios/delete/<int:pk>/', ServicioDeleteView.as_view(), name='servicio_delete'),
+
+    path('citas/', views.cita_view, name='cita'),
+    path('citas/add/', CitaVeterinariaCreateView.as_view(), name='registro'),
+    path('citas/edit/<int:pk>/', CitaVeterinariaUpdateView.as_view(), name='cita_edit'),
+    path('citas/delete/<int:pk>/', CitaVeterinariaDeleteView.as_view(), name='cita_delete'),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
