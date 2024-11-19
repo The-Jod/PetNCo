@@ -1,10 +1,301 @@
 {% extends "base.html" %} <!-- extiende el contenido del archivo mencionado (base.html)-->
-{% load static %} <!-- Renderiza archivos estáticos-->
-
-{% block title %}Página de Inicio - Vet & Pet Center{% endblock %}
+{% load static %} <!-- Renderiza archivos staticos-->
+<!-- con block title se libera la posibilidad de añadir un titulo para cada vista diferente-->
+{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
 <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
 <link rel="stylesheet" href="{% static 'css/citas.css' %}">
+
+{% endblock %}
+
+{% block content %}<!-- Deja pasar el contenido de esta vista -->
+
+
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 col-md-4">
+            <!--Filtro de comunas-->
+            <label for="sortComunas" class="form-label">Ingresa tu comuna:</label>
+            <select id="sortComunas" class="form-select">
+                <option value="todas">Todas las comunas</option>
+                <option value="maipu">Maipú</option>
+                <option value="pudahuel">Pudahuel</option>
+                <option value="loprado">Lo Prado</option>
+                <option value="cerrillos">Cerrillos</option>
+                <option value="cerronavia">Cerro Navia</option>
+                <option value="estacioncentral">Estación Central</option>
+            </select>
+            <!--Filtro de citas-->
+            <label for="sortTipoCita" class="form-label">Ingresa tu tipo de cita:</label>
+            <select id="sortTipoCita" class="form-select">
+                <option value="">Todas las citas</option>
+                <option value="adomicilio">A domicilio</option>
+                <option value="onsite">On-Site</option>
+            </select>
+            <!--Filtro de mascotas-->
+            <label for="sortMascota" class="form-label">Ingresa tu mascota:</label>
+            <select id="sortMascota" class="form-select">
+                <option value="">Todas las mascotas</option>
+                <option value="perro">Perro</option>
+                <option value="gato">Gato</option>
+            </select>
+            <button class="filter-button">Aplicar filtros</button>
+        </div>
+
+        <div class="col-12 col-md-8">
+            <div class="row">
+                {% for veterinario in veterinarios %}
+                <div class="col-12 col-md-4 mb-4">
+                    <div class="card card">
+                        <div class="picture-align">
+
+                        </div>
+                        <div class="card-body">
+                            <img src="{% static 'img/probando12.png' %}" alt="Veterinario" class="profile-image">
+                            <div class="profile-info">
+                                {{ veterinario.nombre_veterinario }}
+                                <br>
+                                {{ veterinario.veterinaria.NombreVeterinaria }}
+                                <br>
+                                Especialista en {{ veterinario.especialidad }}
+                                <!-- Puedes agregar información adicional en esta sección si lo deseas -->
+                            </div>
+                            <!-- Nombre del veterinario -->
+                            <h4>
+
+                                <!-- Experiencia -->
+                                Profesional con {{ veterinario.experiencia_años }} años de experiencia.
+
+                                <div class="profile-buttons">
+                                    <button class="btn view-profile" data-id="{{ veterinario.codigo_veterinario }}">Ver
+                                        perfil</button>
+                                    <button class="btn schedule-appointment"
+                                        data-id="{{ veterinario.codigo_veterinario }}">Agendar una cita</button>
+                                </div>
+                        </div>
+
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <p class="text-center">No se encontraron veterinarios.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<!-- Modal Agregar -->
+<div class="modal fade" id="modalcrear" tabindex="-1" aria-labelledby="modalcrearLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalcrearLabel">Nuevo Veterinario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="clinicaform" class="needs-validation" novalidate method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre_veterinario" class="form-label">Nombre del Veterinario</label>
+                            <input type="text" class="form-control" id="nombre_veterinario" name="nombre_veterinario"
+                                required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el nombre del veterinario.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="veterinaria" class="form-label">Veterinaria</label>
+                            <select class="form-select" id="id_veterinaria" name="veterinaria" required>
+                                <option value="">Seleccione una veterinaria...</option>
+                                {% for veterinaria in veterinarias %}
+                                <option value="{{ veterinaria.CodigoVeterinaria}}">{{ veterinaria.NombreVeterinaria
+                                    }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione una veterinaria.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="especialidad" class="form-label">Especialidad</label>
+                            <input type="text" class="form-control" id="especialidad" name="especialidad" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese la especialidad.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese un número de teléfono válido.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="experiencia_años" class="form-label">Experiencia</label>
+                            <input type="text" class="form-control" id="experiencia_años" name="experiencia_años"
+                                required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese los años de experiencia.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese un email válido.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="horario_inicio" class="form-label">Horario de Inicio</label>
+                            <input type="time" class="form-control" id="horario_inicio" name="horario_inicio" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el horario de inicio.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="horario_fin" class="form-label">Horario de Cierre</label>
+                            <input type="time" class="form-control" id="horario_fin" name="horario_fin" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el horario de cierre.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modaleditar" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Veterinario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm" class="needs-validation" novalidate method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_id" name="id">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_Nombreveterinario" class="form-label">Nombre del Veterinario</label>
+                            <input type="text" class="form-control" id="edit_Nombreveterinario"
+                                name="nombre_veterinario" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el nombre del veterinario.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_Veterinaria" class="form-label">Veterinaria</label>
+                            <select class="form-select" id="edit_Veterinaria" name="veterinaria" required>
+                                <option value="">Seleccione una veterinaria...</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione la veterinaria.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_Especialidad" class="form-label">Especialidad</label>
+                            <input type="text" class="form-control" id="edit_Especialidad" name="especialidad" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese la especialidad.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="edit_telefono" name="telefono" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese un número de teléfono válido.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_ExperienciaAños" class="form-label">Experiencia</label>
+                            <input type="number" class="form-control" id="edit_ExperienciaAños" name="experiencia_años"
+                                required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese los años de experiencia.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email" name="email" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese un email válido.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_HorarioInicio" class="form-label">Horario de Inicio</label>
+                            <input type="time" class="form-control" id="edit_HorarioInicio" name="horario_inicio"
+                                required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el horario de inicio.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_HorarioFin" form-label">Horario de Cierre</label>
+                            <input type="time" class="form-control" id="edit_HorarioFin" name="horario_fin"
+                                value="{{ vet.horario_fin|date:'H:i' }}" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el horario de cierre.
+                            </div>
+                        </div>
+                    </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 {% endblock %}
 {% block extra_scripts %}
 <script src="{% static 'js/navbar.js' %}"></script>
@@ -12,247 +303,281 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-
-<link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.3/main.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-
-{% endblock %}
-{% block content %}<!-- Deja pasar el contenido de esta vista -->
-
-<h2>Lista de Citas</h2>
-<a href="{% url 'cita_add' %}" class="btn btn-primary">Agregar Cita</a>
-<form method="get" class="mb-3">
-    <div class="row">
-        <div class="col">
-            <select name="estado" class="form-select">
-                <option value="">Filtrar por Estado</option>
-                {% for estado in estados %}
-                <option value="{{ estado.0 }}" {% if filtros.estado==estado.0 %}selected{% endif %}>{{ estado.1 }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col">
-            <input type="date" name="fecha_desde" class="form-control" value="{{ filtros.fecha_desde }}">
-        </div>
-        <div class="col">
-            <input type="date" name="fecha_hasta" class="form-control" value="{{ filtros.fecha_hasta }}">
-        </div>
-        <div class="col">
-            <select name="veterinaria" class="form-select">
-                <option value="">Filtrar por Veterinaria</option>
-                {% for veterinaria in veterinarias %}
-                <option value="{{ veterinaria.id }}" {% if filtros.veterinaria==veterinaria.id %}selected{% endif %}>{{
-                    veterinaria.NombreVeterinaria }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col">
-            <button type="submit" class="btn btn-secondary">Filtrar</button>
-        </div>
-    </div>
-</form>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Servicio</th>
-            <th>Veterinaria</th>
-            <th>Veterinario</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for cita in citas %}
-        <tr>
-            <td>{{ cita.servicio }}</td>
-            <td>{{ cita.veterinaria.NombreVeterinaria }}</td>
-            <td>{{ cita.veterinario }}</td>
-            <td>{{ cita.fecha }}</td>
-            <td>{{ cita.hora }}</td>
-            <td>{{ cita.get_estado_display }}</ </td>
-            <td>
-                <a href="{% url 'cita_edit' cita.pk %}" class="btn btn-warning">Editar</a>
-                <form action="{% url 'cita_delete' cita.pk %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-
-
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Inicializar FullCalendar
-        const calendarEl = document.getElementById('calendar');
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'es',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            events: '/api/calendario/',
-            eventClick: function (info) {
-                cargarCita(info.event.id);
-            }
-        });
-        calendar.render();
+    $(document).ready(function () {
 
-        // Cargar veterinarias
-        fetch('/api/veterinarios/')
-            .then(response => response.json())
-            .then(data => {
-                const veterinarias = data.veterinarias;
-                const selectVeterinaria = document.getElementById('veterinaria');
-                const selectVeterinariaModal = document.getElementById('veterinariaModal');
-
-                veterinarias.forEach(vet => {
-                    const option = new Option(vet.nombre, vet.id);
-                    selectVeterinaria.add(option.cloneNode(true));
-                    selectVeterinariaModal.add(option);
-                });
+        // Función para mostrar mensajes con SweetAlert
+        function showMessage(type, message) {
+            const icons = {
+                success: 'success',
+                error: 'error',
+                warning: 'warning',
+            };
+            Swal.fire({
+                icon: icons[type],
+                title: type === 'success' ? '¡Éxito!' : type === 'warning' ? 'Advertencia' : 'Error',
+                text: message,
+                timer: 2000,  // Se cierra automáticamente después de 2 segundos
+                showConfirmButton: false
             });
-
-        // Event Listeners
-        document.getElementById('veterinariaModal').addEventListener('change', cargarVeterinarios);
-        document.getElementById('fecha').addEventListener('change', cargarHorariosDisponibles);
-        document.getElementById('filterForm').addEventListener('submit', aplicarFiltros);
-        document.getElementById('guardarCita').addEventListener('click', guardarCita);
-
-        // Cargar datos iniciales
-        cargarCitas();
-    });
-
-    function cargarVeterinarios() {
-        const veterinariaId = document.getElementById('veterinariaModal').value;
-        const selectVeterinario = document.getElementById('veterinario');
-
-        selectVeterinario.innerHTML = '<option value="">Seleccione un veterinario</option>';
-
-        if (veterinariaId) {
-            fetch(`/api/veterinarios/?veterinaria_id=${veterinariaId}`)
-                .then(response => response.json())
-                .then(data => {
-                    data.veterinarios.forEach(vet => {
-                        const option = new Option(vet.usuario__NombreUsuario, vet.id);
-                        selectVeterinario.add(option);
-                    });
-                });
         }
-    }
 
-    function cargarHorariosDisponibles() {
-        const fecha = document.getElementById('fecha').value;
-        const veterinarioId = document.getElementById('veterinario').value;
-        const selectHora = document.getElementById('hora');
 
-        selectHora.innerHTML = '<option value="">Seleccione una hora</option>';
 
-        if (fecha && veterinarioId) {
-            fetch(`/api/horarios-disponibles/?fecha=${fecha}&veterinario_id=${veterinarioId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        data.horarios.forEach(hora => {
-                            const option = new Option(hora, hora);
-                            selectHora.add(option);
+        $('#clinicaform').on('submit', function (e) {
+            e.preventDefault();  // Prevenir el envío normal del formulario
+
+            const veterinaria = $('#id_veterinaria').val();
+            console.log("Veterinaria seleccionada:", veterinaria);
+            if (!veterinaria) {
+                alert("Debe seleccionar una veterinaria");
+                return;
+            }
+            const $form = $(this);
+            const $submitBtn = $form.find('button[type="submit"]');
+            toggleButtonState($submitBtn, 'disable'); // Deshabilitar el botón mientras se procesa
+
+            $.ajax({
+                url: "{% url 'veterinario_add' %}",  // URL para enviar la solicitud
+                type: 'POST',  // Método de la solicitud
+                data: new FormData(this),  // Datos del formulario
+                processData: false,  // No procesar los datos
+                contentType: false,  // No establecer tipo de contenido
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },  // Añadir el token CSRF para seguridad
+                success: function (response) {
+                    console.log(response);  // Ver la respuesta en consola
+                    if (response.success) {
+                        // Cerrar el modal y resetear el formulario
+                        $('#modalcrear').modal('hide');
+                        $form[0].reset();
+
+                        // Mostrar mensaje de éxito con SweetAlert
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Veterinario agregado exitosamente',
+                            text: 'El veterinario ha sido agregado correctamente.',
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();  // Recargar la página después de que el usuario cierre la alerta
+                            }
+                        });
+                    } else {
+                        // Procesar y mostrar errores del servidor
+                        let errorMessages = [];
+                        for (let field in response.errors) {
+                            if (response.errors.hasOwnProperty(field)) {
+                                errorMessages.push(`${field}: ${response.errors[field].join(', ')}`);
+                            }
+                        }
+
+                        // Mostrar los errores con SweetAlert
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al agregar',
+                            html: 'Hubo problemas con los siguientes campos:<br>' + errorMessages.join('<br>'),
+                            confirmButtonText: 'Aceptar'
                         });
                     }
-                });
-        }
-    }
-
-    function aplicarFiltros(event) {
-        event.preventDefault();
-        cargarCitas();
-    }
-
-    function cargarCitas(page = 1) {
-        const formData = new FormData(document.getElementById('filterForm'));
-        const queryParams = new URLSearchParams(formData);
-        queryParams.append('page', page);
-
-        fetch(`/citas/?${queryParams.toString()}`)
-            .then(response => response.json())
-            .then(data => {
-                actualizarTablaCitas(data.citas);
-                actualizarPaginacion(data.pagination);
+                },
+                error: function () {
+                    // Mostrar mensaje de error en caso de error en la solicitud
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en el servidor',
+                        text: 'Hubo un error al procesar la solicitud. Intente nuevamente.',
+                        confirmButtonText: 'Aceptar'
+                    });
+                },
+                complete: function () {
+                    // Habilitar el botón después de completar la solicitud
+                    toggleButtonState($submitBtn, 'enable');
+                }
             });
-    }
-
-    function actualizarTablaCitas(citas) {
-        const tbody = document.getElementById('citasTableBody');
-        tbody.innerHTML = '';
-
-        citas.forEach(cita => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${cita.fecha}</td>
-                <td>${cita.hora}</td>
-                <td>${cita.servicio}</td>
-                <td>${cita.veterinario}</td>
-                <td><span class="badge bg-${getEstadoColor(cita.estado)}">${cita.estado}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="cargarCita(${cita.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="cancelarCita(${cita.id})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
         });
-    }
 
-    function getEstadoColor(estado) {
-        const colores = {
-            'PENDIENTE': 'warning',
-            'CONFIRMADA': 'success',
-            'CANCELADA': 'danger'
-        };
-        return colores[estado] || 'secondary';
-    }
 
-    function actualizarPaginacion(pagination) {
-        const paginationEl = document.getElementById('pagination');
-        paginationEl.innerHTML = '';
+        // Función para habilitar/deshabilitar el botón de envío
+        function toggleButtonState(button, action) {
+            if (action === 'disable') {
+                button.prop('disabled', true);
+            } else if (action === 'enable') {
+                button.prop('disabled', false);
+            }
+        }
 
-        // Agregar botones de paginación...
-    }
+        // Función para mostrar mensajes de éxito o error
+        function showMessage(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            $('#messageContainer').html(`<div class="alert ${alertClass}">${message}</div>`).fadeIn().delay(3000).fadeOut();
+        }
 
-    function cargarCita(id) {
-        fetch(`/api/citas/${id}/`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('citaId').value = data.id;
-                document.getElementById('servicio').value = data.servicio;
-                document.getElementById('veterinariaModal').value = data.veterinaria;
-                cargarVeterinarios().then(() => {
-                    document.getElementById('veterinario').value = data.veterinario;
-                });
-                document.getElementById('fecha').value = data.fecha;
-                document.getElementById('hora').value = data.hora;
-                document.getElementById('notas').value = data.notas;
+        $('#modaleditar').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
 
-                const modal = new bootstrap.Modal(document.getElementById('citaModal'));
-                modal.show();
+            // Obtener los datos del veterinario desde los atributos data-* del botón
+            var id = button.data('id');
+            var nombre = button.data('nombre');
+            var especialidad = button.data('especialidad');
+            var veterinaria = button.data('veterinaria');
+            var horarioInicio = button.data('horarioinicio');
+            var horarioCierre = button.data('horariocierre');
+            var disponibilidad = button.data('disponibilidad');
+            var telefono = button.data('telefono');
+            var email = button.data('email');
+
+            var modal = $(this);
+
+            // Asignar los valores al formulario del modal
+            modal.find('.modal-body #edit_id').val(id); // Asignar el id del veterinario
+            modal.find('.modal-body #edit_Nombreveterinario').val(nombre); // Asignar el nombre del veterinario
+            modal.find('.modal-body #edit_Especialidad').val(especialidad); // Asignar la especialidad
+            modal.find('.modal-body #edit_Veterinaria').val(veterinaria); // Asignar la veterinaria
+            modal.find('.modal-body #edit_HorarioInicioveterinario').val(horarioInicio); // Asignar el horario de inicio
+            modal.find('.modal-body #edit_HorarioCierreveterinario').val(horarioCierre); // Asignar el horario de cierre
+            modal.find('.modal-body #edit_Disponibilidadveterinario').val(disponibilidad); // Asignar la disponibilidad
+            modal.find('.modal-body #edit_telefono').val(telefono); // Asignar el teléfono
+            modal.find('.modal-body #edit_email').val(email); // Asignar el correo electrónico
+        });
+
+        $('#editForm').on('submit', function (e) {
+            e.preventDefault(); // Prevenir el envío tradicional del formulario
+            const $form = $(this);
+            const id = $('#edit_id').val(); // Obtener el ID de la veterinario desde el campo oculto
+            const $submitBtn = $form.find('button[type="submit"]');
+            toggleButtonState($submitBtn, 'disable'); // Deshabilitar el botón de envío mientras se procesa
+
+            // Validar formulario antes de enviar
+            if ($form[0].checkValidity() === false) {
+                e.stopPropagation();
+                $form.addClass('was-validated');
+                toggleButtonState($submitBtn, 'enable');
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'veterinario_edit' pk='0' %}".replace('0', id), // Ruta con ID
+                type: 'POST',
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }, // Agregar token CSRF
+                success: function (response) {
+                    if (response.success) {
+                        // Mostrar SweetAlert de éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Actualización exitosa!',
+                            text: 'El veterinario se ha actualizado correctamente.',
+                            showConfirmButton: false,
+
+                        });
+                        setTimeout(() => location.reload(), 1400); // Recargar página
+                    } else {
+                        // Mostrar errores del servidor en SweetAlert
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al actualizar',
+                            html: Object.values(response.errors).join('<br>'), // Mostrar errores como lista
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hubo un error',
+                        text: 'Intente nuevamente más tarde.',
+                    });
+                },
+                complete: function () {
+                    // Rehabilitar botón de envío
+                    $submitBtn.prop('disabled', false).text('Actualizar');
+                }
             });
-    }
+        });
 
-    function guardarCita() {
-        const formData = new FormData(document.getElementById('citaForm'));
-        const id = document.getElementById('citaId').value;
-        const url = id ? `/api/citas/${id}/` : '/api/citas/';
-    }
+        $('.btn-delete').on('click', function () {
+            var id = $(this).data('id');  // Obtener el ID dinámico del botón
+
+            // Confirmación de eliminación con SweetAlert
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¡No podrás revertir esta acción!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminarla',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'veterinario_delete' pk='0' %}".replace('0', id),  // Ruta con el ID
+                        type: 'POST',  // Utiliza POST para la eliminación
+                        data: {
+                            'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),  // Token CSRF
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                // Mostrar mensaje de éxito con SweetAlert
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminación exitosa',
+                                    text: 'La veterinario ha sido eliminada.',
+                                    showConfirmButton: false,
+                                    timer: 1500  // Se cierra automáticamente después de 1.5 segundos
+                                }).then(() => {
+                                    // Comprobar si la respuesta indica que se debe recargar
+                                    if (response.reload) {
+                                        location.reload();  // Recargar la página después de eliminar la veterinario
+                                    }
+                                });
+                            } else {
+                                // Mostrar mensaje de error si no se pudo eliminar
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error al eliminar',
+                                    text: response.error || 'Hubo un error al intentar eliminar la veterinario.',
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            // Mostrar mensaje de error en caso de fallos en la solicitud
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error al eliminar',
+                                text: xhr.responseJSON?.error || 'Hubo un error al intentar eliminar la veterinario.',
+                                confirmButtonText: 'Aceptar'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+
+
+        // Validación de formularios
+        $('.needs-validation').each(function () {
+            $(this).on('submit', function (event) {
+                if (!this.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+        });
+
+        // Limpiar formularios al cerrar modales
+        $('.modal').on('hidden.bs.modal', function () {
+            const $form = $(this).find('form');
+            $form[0].reset();
+            $form.removeClass('was-validated');
+        });
+    });
 </script>
+
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'js/navbar.js' %}"></script>
 {% endblock %}

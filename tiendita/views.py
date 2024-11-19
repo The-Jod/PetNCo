@@ -26,6 +26,11 @@ from django.views import View
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, FormView
 from django.views.decorators.http import require_http_methods, require_POST
 
+from django.views.generic import TemplateView, View
+from django.utils.decorators import method_decorator
+
+import json
+from datetime import datetime
 
 
 # Transbank
@@ -823,8 +828,7 @@ def clinica_view(request):
 
 
 class VeterinariaCreateView(LoginRequiredMixin, CreateView):
-    
-    
+      
     model = Veterinaria
     form_class = VeterinariaForm
     template_name = 'clinica.html'
@@ -863,6 +867,7 @@ class VeterinariaCreateView(LoginRequiredMixin, CreateView):
             'success': False,
             'errors': form.errors
         })
+  
 class VeterinariaUpdateView(LoginRequiredMixin, UpdateView):
     model = Veterinaria
     form_class = VeterinariaForm
@@ -930,54 +935,144 @@ class VeterinarioListView(LoginRequiredMixin, ListView):
     template_name = 'veterinario.html'
     context_object_name = 'veterinarios'
 
-
-def get_veterinarias(request):
-    search = request.GET.get('search', '')
-    veterinarias = Veterinaria.objects.filter(
-        nombre__icontains=search
-    ).values('CodigoVeterinaria', 'nombre')[:10]  # Limitamos a 10 resultados
-    return JsonResponse(list(veterinarias), safe=False)
-
+# Vista basada en función para crear veterinario
 def veterinario_view(request):
-    # Carga inicial de todos los veterinarios
+    # Obtener todas las veterinarias para el select
+    veterinarias = Veterinaria.objects.all()
+    if not veterinarias.exists():
+        return JsonResponse({
+            'success': False,
+            'errors': {'veterinaria': 'No hay veterinarias registradas. Por favor, registre al menos una.'}
+        })
+    if request.method == 'POST':
+        form = VeterinarioForm(request.POST)
+        
+        if form.is_valid():
+            # Obtener los datos del formulario
+            codigo_veterinario = form.cleaned_data.get('codigo_veterinario')
+            usuario = form.cleaned_data.get('usuario')
+            veterinaria = form.cleaned_data.get('veterinaria')
+
+            # Verificar si ya existe un veterinario con el mismo código
+            if Veterinario.objects.filter(codigo_veterinario=codigo_veterinario).exists():
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'codigo_veterinario': 'Este código de veterinario ya está registrado.'}
+                })
+            
+            # Verificar si ya existe un veterinario con el mismo usuario
+            if Veterinario.objects.filter(usuario=usuario).exists():
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'usuario': 'Este usuario ya está registrado como veterinario.'}
+                })
+
+            # Verificar si ya existe un veterinario con el mismo nombre
+            if Veterinario.objects.filter(usuario__NombreUsuario=form.cleaned_data['usuario'].NombreUsuario).exists():
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'usuario': 'Ya existe un veterinario con el mismo nombre.'}
+                })
+
+            # Si todas las validaciones pasan, guardar el nuevo veterinario
+            veterinario = form.save()
+
+            return JsonResponse({
+                'success': True,
+                'reload': True,
+                'veterinario': {
+                    'codigo_veterinario': veterinario.codigo_veterinario,
+                    'nombre': str(veterinario.usuario.NombreUsuario),
+                    'especialidad': veterinario.especialidad,
+                    'veterinaria': veterinario.veterinaria.NombreVeterinaria if veterinario.veterinaria else 'No asociada',
+                }
+            })
+
+        else:
+            # Si el formulario no es válido, devolver los errores
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            })
+
+    else:
+        # Si el método no es POST, mostrar el formulario vacío
+        form = VeterinarioForm()
+    
+    return render(request, 'veterinario.html', {
+        'form': form,
+        'veterinarias': veterinarias
+    })
+
+def vetcita_list_view(request):
+    # Obtener todos los veterinarios
     veterinarios = Veterinario.objects.all()
 
-    # Filtro por localidad
-    localidad = request.GET.get('localidad')
-    if localidad:
-        veterinarios = veterinarios.filter(veterinaria__LocalidadVeterinaria__icontains=localidad)
-
-    # Filtro de búsqueda por nombre de la clínica (especialidad en este caso)
+    # Filtro de búsqueda por nombre de veterinario
     query = request.GET.get('q')
     if query:
-        veterinarios = veterinarios.filter(especialidad__icontains=query)
+        veterinarios = veterinarios.filter(nombre_veterinario__icontains=query)
 
-    # Filtro por horarios
-    horario_inicio = request.GET.get('horario_inicio')
-    if horario_inicio:
-        veterinarios = veterinarios.filter(horario_inicio__gte=horario_inicio)
+    # Filtro por especialidad
+    especialidad = request.GET.get('especialidad', '')
+    if especialidad:
+        veterinarios = veterinarios.filter(especialidad__icontains=especialidad)
 
-    horario_fin = request.GET.get('horario_fin')
-    if horario_fin:
-        veterinarios = veterinarios.filter(horario_fin__lte=horario_fin)
+    # Filtro por veterinaria
+    veterinaria_id = request.GET.get('veterinaria')
+    if veterinaria_id:
+        try:
+            veterinaria_id = int(veterinaria_id)
+            veterinarios = veterinarios.filter(veterinaria_id=veterinaria_id)
+        except ValueError:
+            pass  # Ignorar si no se puede convertir a entero
+
+    # Contexto para renderizar en la página
+    context = {
+        'query': query,
+        'especialidad': especialidad,
+        'veterinarios': veterinarios,  # Lista de veterinarios
+    }
+
+    return render(request, 'cita.html', context)
+
+
+def veterinario_list_view(request):
+    # Obtener todos los veterinarios
+    veterinarios = Veterinario.objects.all()
+
+    # Filtro de búsqueda por nombre de veterinario
+    query = request.GET.get('q')
+    if query:
+        veterinarios = veterinarios.filter(usuario__NombreUsuario__icontains=query)
+
+    # Filtro por especialidad (si existe)
+    especialidad = request.GET.get('especialidad', '')
+    if especialidad:
+        veterinarios = veterinarios.filter(especialidad__icontains=especialidad)
+
+    # Filtro por veterinaria (si existe)
+    veterinaria_id = request.GET.get('veterinaria')
+    if veterinaria_id:
+        veterinarios = veterinarios.filter(veterinaria_id=veterinaria_id)
 
     # Verificar si es una solicitud AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        veterinarias_data = veterinarios.values(
+        # Obtener solo los campos necesarios y convertir a una lista de diccionarios
+        data = list(veterinarios.values(
+            'codigo_veterinario',
+            'usuario__NombreUsuario',
+            'especialidad',
             'veterinaria__NombreVeterinaria',
-            'veterinaria__LocalidadVeterinaria',
-            'veterinaria__HorarioInicioVeterinaria',
-            'veterinaria__HorarioCierreVeterinaria',
-        )
-        return JsonResponse({'veterinarias': list(veterinarias_data)})
+        ))
+        return JsonResponse({'veterinarios': data})  # Responder con los datos en formato JSON
 
-    # Contexto normal para renderizado en la página
+    # Contexto normal para renderizado en la página (no es una solicitud AJAX)
     context = {
-        'veterinarios': veterinarios,
-        'localidad': request.GET.get('localidad', ''),
-        'query': request.GET.get('q', ''),
-        'horario_inicio': request.GET.get('horario_inicio', ''),
-        'horario_fin': request.GET.get('horario_fin', ''),
+        'query': query,
+        'especialidad': especialidad,
+        'veterinarias': Veterinaria.objects.all(),  # Para el filtro de veterinaria
+        'veterinarios': veterinarios,  # Lista de veterinarios para mostrar en la vista
     }
 
     return render(request, 'veterinario.html', context)
@@ -986,53 +1081,35 @@ def veterinario_view(request):
 class VeterinarioCreateView(LoginRequiredMixin, CreateView):
     model = Veterinario
     form_class = VeterinarioForm
-    template_name = 'veterinario.html'  # Cambiar la plantilla según corresponda
+    template_name = 'veterinario.html'
 
     def form_valid(self, form):
-        # Obtener el código del veterinario desde el formulario
-        codigo_veterinario = form.cleaned_data.get('codigo_veterinario')
-        usuario = form.cleaned_data.get('usuario')
-        veterinaria = form.cleaned_data.get('veterinaria')
-
-        # Verificar si ya existe un veterinario con el mismo código
-        if Veterinario.objects.filter(codigo_veterinario=codigo_veterinario).exists():
-            return JsonResponse({
-                'success': False,
-                'errors': {'codigo_veterinario': 'Este código de veterinario ya está registrado.'}
-            })
-
-        # Validar si el usuario ya está registrado como veterinario
-        if Veterinario.objects.filter(usuario=usuario).exists():
-            return JsonResponse({
-                'success': False,
-                'errors': {'usuario': 'Este usuario ya está registrado como veterinario.'}
-            })
-
-        # Validación de la veterinaria (opcional)
-        if veterinaria and Veterinaria.objects.filter(CodigoVeterinaria=veterinaria.CodigoVeterinaria).exists():
-            pass  # Validaciones adicionales si es necesario
+        # Verificar si ya existe un veterinario con el mismo usuario
+        usuario = form.cleaned_data['usuario']
         
-        # Guardar el nuevo veterinario si las validaciones son correctas
-        veterinario = form.save()
 
-        # Si el formulario es válido, enviar una respuesta en JSON con la información del veterinario
+        # Si no hay duplicados, guardar el veterinario
+        veterinario = form.save()
         return JsonResponse({
             'success': True,
             'reload': True,
             'veterinario': {
-                'codigo_veterinario': veterinario.codigo_veterinario,  # Nuevo campo
-                'nombre': str(veterinario.usuario.NombreUsuario),  # Nombre del veterinario
+                'id': veterinario.id,
+                'nombre': veterinario.nombre_veterinario or veterinario.usuario.NombreUsuario,
                 'especialidad': veterinario.especialidad,
-                'veterinaria': veterinario.veterinaria.NombreVeterinaria if veterinario.veterinaria else 'No asociada',
+                'telefono': veterinario.telefono,
+                'email': veterinario.email,
+                'veterinaria': veterinario.veterinaria.NombreVeterinaria if veterinario.veterinaria else None,
             }
         })
 
     def form_invalid(self, form):
-        # Si el formulario no es válido, retornar los errores del formulario en JSON
+        # Si el formulario no es válido, devolver los errores
         return JsonResponse({
             'success': False,
             'errors': form.errors
         })
+
 
         
 class VeterinarioUpdateView(LoginRequiredMixin, UpdateView):
@@ -1074,6 +1151,7 @@ class VeterinarioUpdateView(LoginRequiredMixin, UpdateView):
 
 
 
+
 class VeterinarioDeleteView(LoginRequiredMixin, DeleteView):
     model = Veterinario
     template_name = 'veterinario_confirm_delete.html'
@@ -1102,8 +1180,6 @@ class CitaVeterinariaListView(LoginRequiredMixin, ListView):
     model = CitaVeterinaria
     template_name = 'cita.html'
     context_object_name = 'citas'
-  
-
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(usuario=self.request.user)
@@ -1126,21 +1202,76 @@ class CitaVeterinariaListView(LoginRequiredMixin, ListView):
     
     
     
-def cita_view(request):
-    #carga incial de todas las veterinarios
-    veterinarios = CitaVeterinaria.objects.all()
     
-    # Filtro de búsqueda por especialidad de veterinario
-    query = request.GET.get('q')
-    if query:
-        veterinarios = CitaVeterinaria.filter( especialidad__icontains=query)
-    context={
-        'veterinarios':veterinarios
-    }
-    return render(request, 'veterinario.html', context)
+    def cita_view(request):
+        veterinarios = Veterinario.objects.all()
+        if request.method == 'POST':
+            form = CitaVeterinariaForm(request.POST)
+            if form.is_valid():
+                cita = form.save()
+                return JsonResponse({
+                    'success': True,
+                    'cita': {
+                        'id': cita.id,
+                        'servicio': cita.servicio,
+                        'fecha': cita.fecha,
+                        'hora': cita.hora,
+                        'estado': cita.estado,
+                        'veterinario': cita.veterinario.usuario.NombreUsuario,
+                        'veterinaria': cita.veterinaria.NombreVeterinaria,
+                    }
+                })
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors})
+        else:
+            form = CitaVeterinariaForm()
+        
+        return render(request, 'cita.html', {'form': form, 'veterinarios': veterinarios})
 
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(usuario=self.request.user)
+        estado = self.request.GET.get('estado')
+        fecha_desde = self.request.GET.get('fecha_desde')
+        fecha_hasta = self.request.GET.get('fecha_hasta')
+        veterinaria = self.request.GET.get('veterinaria')
 
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        if fecha_desde:
+            queryset = queryset.filter(fecha__gte=fecha_desde)
+        if fecha_hasta:
+            queryset = queryset.filter(fecha__lte=fecha_hasta)
+        if veterinaria:
+            queryset = queryset.filter(veterinaria_id=veterinaria)
+
+        return queryset.order_by('-fecha', '-hora')
+    
+
+
+# Mantener tus vistas existentes
+class CitaVeterinariaListView(LoginRequiredMixin, ListView):
+    model = CitaVeterinaria
+    template_name = 'cita.html'
+    context_object_name = 'citas'
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(usuario=self.request.user)
+        estado = self.request.GET.get('estado')
+        fecha_desde = self.request.GET.get('fecha_desde')
+        fecha_hasta = self.request.GET.get('fecha_hasta')
+        veterinaria = self.request.GET.get('veterinaria')
+
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        if fecha_desde:
+            queryset = queryset.filter(fecha__gte=fecha_desde)
+        if fecha_hasta:
+            queryset = queryset.filter(fecha__lte=fecha_hasta)
+        if veterinaria:
+            queryset = queryset.filter(veterinaria_id=veterinaria)
+
+        return queryset.order_by('-fecha', '-hora')
 
 class CitaVeterinariaCreateView(LoginRequiredMixin, CreateView):
     model = CitaVeterinaria
@@ -1148,16 +1279,121 @@ class CitaVeterinariaCreateView(LoginRequiredMixin, CreateView):
     template_name = 'cita.html'
     success_url = reverse_lazy('cita_list')
 
-class CitaVeterinariaUpdateView(LoginRequiredMixin , UpdateView):
+    def form_valid(self, form):
+        cita = form.save()
+        return JsonResponse({
+            'success': True,
+            'cita': {
+                'id': cita.id,
+                'servicio': cita.servicio,
+                'fecha': cita.fecha,
+                'hora': cita.hora,
+                'estado': cita.estado,
+                'veterinario': cita.veterinario.usuario.NombreUsuario,
+                'veterinaria': cita.veterinaria.NombreVeterinaria,
+            }
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({'success': False, 'errors': form.errors})
+
+
+class CitaVeterinariaUpdateView(LoginRequiredMixin, UpdateView):
     model = CitaVeterinaria
     form_class = CitaVeterinariaForm
     template_name = 'cita.html'
     success_url = reverse_lazy('cita_list')
 
+
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, View, ListView, CreateView, UpdateView, DeleteView
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from .models import CitaVeterinaria, Veterinaria, Veterinario
+import json
+from datetime import datetime
 class CitaVeterinariaDeleteView(LoginRequiredMixin, DeleteView):
     model = CitaVeterinaria
     template_name = 'cita_confirm_delete.html'
     success_url = reverse_lazy('cita_list')
+
+# Agregar las nuevas vistas del calendario
+class CalendarView(LoginRequiredMixin, TemplateView):
+    template_name = 'cita.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['veterinarias'] = Veterinaria.objects.all()
+        context['veterinarios'] = Veterinario.objects.all()
+        return context
+
+class CitaVeterinariaCalendarAPI(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        
+        citas = CitaVeterinaria.objects.filter(
+            usuario=request.user,
+            fecha__range=[start, end]
+        )
+        
+        events = []
+        for cita in citas:
+            color = {
+                'PENDIENTE': '#ffd700',
+                'CONFIRMADA': '#28a745',
+                'CANCELADA': '#dc3545'
+            }.get(cita.estado, '#ffd700')
+            
+            events.append({
+                'id': cita.id,
+                'title': f'{cita.servicio} - Dr. {cita.veterinario.nombre}',
+                'start': f'{cita.fecha}T{cita.hora}',
+                'color': color,
+                'extendedProps': {
+                    'estado': cita.estado,
+                    'veterinaria': cita.veterinaria.nombre,
+                    'veterinario': cita.veterinario.nombre,
+                    'notas': cita.notas
+                }
+            })
+        
+        return JsonResponse(events, safe=False)
+
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        try:
+            fecha_hora = datetime.fromisoformat(data['start'].replace('Z', '+00:00'))
+            
+            cita = CitaVeterinaria.objects.create(
+                usuario=request.user,
+                servicio=data['servicio'],
+                veterinaria_id=data['veterinaria'],
+                veterinario_id=data['veterinario'],
+                fecha=fecha_hora.date(),
+                hora=fecha_hora.time(),
+                notas=data.get('notas', ''),
+                estado='PENDIENTE'
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'id': cita.id
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+    
+    
+    
+    
+    
+    
     
     
     
