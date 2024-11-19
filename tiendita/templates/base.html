@@ -3,6 +3,7 @@
 {% load bootstrap_icons %}
 {% bootstrap_css %}
 {% bootstrap_javascript %}
+{% load carrito_tags %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -86,14 +87,20 @@
                     <li class="nav-item">
                         <a class="nav-link cart-link" href="{% url 'carrito' %}">
                             <span>Carrito</span>
-                            <i class="fas fa-shopping-cart nav-icon"></i>
-                            {% if request.COOKIES.carrito %}
-                                {% with carrito=request.COOKIES.carrito|json_script:"carrito-data"|safe %}
-                                    <span class="cart-count">{{ carrito.items|length }}</span>
+                            <i class="fas fa-shopping-cart"></i>
+                            {% with carrito_json=request.COOKIES.carrito|default:"{}" %}
+                                {% with carrito_dict=carrito_json|safe|json_parse %}
+                                    <span class="cart-count-inline">
+                                        {% if carrito_dict %}
+                                            {% with total=carrito_dict.values|sum_quantities %}
+                                                {{ total }}
+                                            {% endwith %}
+                                        {% else %}
+                                            0
+                                        {% endif %}
+                                    </span>
                                 {% endwith %}
-                            {% else %}
-                                <span class="cart-count">0</span>
-                            {% endif %}
+                            {% endwith %}
                         </a>
                     </li>
 

@@ -12,14 +12,14 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.validators import RegexValidator
+import re
 
 # Definir la función de validación al principio del archivo
 def validate_image_file_extension(value):
-    if value:  # Verificar si hay un archivo
-        ext = os.path.splitext(value.name)[1]
-        valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
-        if not ext.lower() in valid_extensions:
-            raise ValidationError('Solo se permiten archivos JPG, PNG o WebP.')
+    ext = os.path.splitext(value.name)[1]
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+    if not ext.lower() in valid_extensions:
+        raise ValidationError('Formato de archivo no soportado.')
 
 # Manager personalizado para manejar la creación de usuarios
 class CustomUserManager(BaseUserManager):
@@ -130,48 +130,18 @@ class Producto(models.Model):
 
     CategoriaProducto = models.FloatField(choices=CATEGORIAS)
     TipoAnimal = models.FloatField(choices=TIPO_ANIMAL)
-    ImagenProducto = models.ImageField(upload_to='productos/', null=True, blank=True)
+    ImagenProducto = models.ImageField(
+        upload_to='productos/',
+        validators=[validate_image_file_extension],
+        null=True,
+        blank=True
+    )
 
     def save(self, *args, **kwargs):
-        # Primero guardamos el modelo para tener el ID
-        super().save(*args, **kwargs)
-        
-        # Si hay una imagen, la procesamos
+        # Si hay una imagen nueva, asegurarse de que solo se guarde una versión
         if self.ImagenProducto:
-            try:
-                # Abrir la imagen
-                img = Image.open(self.ImagenProducto.path)
-                
-                # Convertir a RGB si es necesario
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
-                
-                # Redimensionar si es muy grande (manteniendo proporción)
-                if img.height > 800 or img.width > 800:
-                    output_size = (800, 800)
-                    img.thumbnail(output_size, Image.Resampling.LANCZOS)
-                
-                # Crear el nombre del archivo WebP
-                nombre_base = os.path.splitext(os.path.basename(self.ImagenProducto.name))[0]
-                nuevo_nombre = f"{nombre_base}.webp"
-                
-                # Guardar como WebP
-                buffer = BytesIO()
-                img.save(buffer, 'WebP', quality=85, optimize=True)
-                
-                # Actualizar el campo de imagen
-                self.ImagenProducto.save(
-                    nuevo_nombre,
-                    ContentFile(buffer.getvalue()),
-                    save=False
-                )
-                
-                # Limpiar el buffer
-                buffer.close()
-                
-            except Exception as e:
-                print(f"Error procesando imagen del producto {self.SKUProducto}: {e}")
-        
+            # Mantener solo el formato original
+            self.ImagenProducto.name = re.sub(r'\.webp$', '', self.ImagenProducto.name)
         super().save(*args, **kwargs)
 
     def __str__(self):
