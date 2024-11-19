@@ -3,48 +3,52 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Document</title>
-	{% load static %} 
+	<title>Inicia tu sesión con Vet & Pet</title>
+	{% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"> 
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
-<link rel="stylesheet" href="{% static 'css/login.css' %}">
 
 <body>
-    <div class="main">  	
-		<input type="checkbox" id="chk" aria-hidden="true">
-        <div class="signup">
-            <div class="row">
-                <a  aria-hidden="true"  href="{% url 'home' %}">
-                    <i class="fa fa-paw" ></i>
-                </a>     
-                <h5 for="chk" aria-hidden="true" class="form-title">Iniciar sesión</h5>
+    <div class="main">
+        <div class="signup-container">
+            <div class="signup">
+                <form method="POST">
+                    <div class="header">
+                        <a href="{% url 'home' %}" class="home-icon">
+                            <i class="fa fa-paw"></i>
+                        </a>
+                        <h2 class="form-title">Iniciar Sesión</h2>
+                    </div>
+
+                    {% csrf_token %}
+                    <div class="form-fields">
+                        {% for field in form %}
+                            <p>
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.errors %}
+                                    <span class="errorlist">
+                                        {% for error in field.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </span>
+                                {% endif %}
+                            </p>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="submit-btn">Iniciar Sesión</button>
+                </form>
             </div>
-            
-            <form method="post" action="{% url 'loginuser' %}">
-
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary">Iniciar sesión</button>
-            </form>
-            
+            <div class="login-link">
+                <span>¿No tienes cuenta?</span>
+                <a href="{% url 'registeruser' %}">Regístrate</a>
+            </div>
         </div>
-        <div class="row">
-            <label>No tienes cuenta?.   </label>
-            <a href="{% url 'registeruser' %}">Registrate</a>
-        </div>
-        <br>
-
-<!--		<div class="login">
-				<form>
-					<label for="chk" aria-hidden="true" class="form-title">Iniciar sesión</label>
-					<input type="email" name="email" placeholder="Correo electrónico" required="">
-					<input type="password" name="pswd" placeholder="Contraseña" required="">
-					<button>Iniciar sesión</button>
-				</form>
-                
-			</div>
--->
-	</div>    
+    </div>    
 </body>
+
 </html>
 
 

@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.utils import timezone
+import os
 
 # Local application imports
 from .models import Producto, CustomUser , CitaVeterinaria, Servicio, Veterinario, Veterinaria
@@ -123,9 +124,9 @@ class ProductoForm(forms.ModelForm):
     )
     
     
-    ImagenProducto = forms.ImageField (
-        required=False,  # Opcional ya que es precio de oferta
-        widget=forms.TextInput(attrs={
+    ImagenProducto = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
             'class': 'form-control',
         })
     )
@@ -188,29 +189,45 @@ class ProductoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProductoForm, self).__init__(*args, **kwargs)
-    # Busca la imagen de producto, Fue un parto lograr que funcionara, xfavor no le muevan.
+        # Configuración del widget de imagen
         if self.instance and self.instance.pk:
             self.fields['ImagenProducto'].widget = forms.FileInput(attrs={
                 'class': 'form-control',
             })
         else:
             self.fields['ImagenProducto'].widget = forms.ClearableFileInput(attrs={
-            'class': 'form-control',
-        })
-    
-        def __init__(self, *args, **kwargs):
-            super(ProductoForm, self).__init__(*args, **kwargs)
-
-        # Busca la imagen de producto, Fue un parto lograr que funcionara, xfavor no le muevan.
-            if self.instance and self.instance.pk:
-                self.fields['ImagenProducto'].widget = forms.FileInput(attrs={
-                    'class': 'form-control',
-                })
-            else:
-                self.fields['ImagenProducto'].widget = forms.ClearableFileInput(attrs={
                 'class': 'form-control',
             })
 
+    def clean_ImagenProducto(self):
+        imagen = self.cleaned_data.get('ImagenProducto')
+        # Si no hay nueva imagen y es una actualización, mantener la imagen existente
+        if not imagen and self.instance.pk:
+            return self.instance.ImagenProducto
+            
+        if imagen and hasattr(imagen, 'name'):
+            # Validar extensión
+            ext = imagen.name.split('.')[-1].lower()
+            valid_extensions = ['png', 'jpg', 'jpeg', 'webp']
+            
+            if ext not in valid_extensions:
+                raise forms.ValidationError(
+                    f'Solo se permiten archivos con extensión: {", ".join(valid_extensions)}'
+                )
+            
+            if imagen.size > 5 * 1024 * 1024:  # 5MB
+                raise forms.ValidationError('El archivo no debe superar los 5MB')
+
+        return imagen
+
+    def save(self, commit=True):
+        producto = super().save(commit=False)
+        # Si no hay nueva imagen, mantener la existente
+        if not self.cleaned_data.get('ImagenProducto') and self.instance.pk:
+            producto.ImagenProducto = self.instance.ImagenProducto
+        if commit:
+            producto.save()
+        return producto
 
 class RegistroUsuarioForm(UserCreationForm):
     class Meta:

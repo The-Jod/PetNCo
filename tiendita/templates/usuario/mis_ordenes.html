@@ -1,0 +1,76 @@
+{% load static %}
+{% load humanize %}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title mb-4">Mis Órdenes</h5>
+        
+        {% if ordenes %}
+            {% for orden in ordenes %}
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong>Orden #{{ orden.id }}</strong>
+                        </div>
+                        <div class="col text-center">
+                            <span class="badge {% if orden.EstadoOrden == 'pagado' %}bg-success
+                                         {% elif orden.EstadoOrden == 'pendiente' %}bg-warning
+                                         {% elif orden.EstadoOrden == 'enviado' %}bg-info
+                                         {% else %}bg-secondary{% endif %}">
+                                {{ orden.get_EstadoOrden_display }}
+                            </span>
+                        </div>
+                        <div class="col text-end">
+                            <small class="text-muted">{{ orden.FechaOrden|date:"d/m/Y H:i" }}</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for item in orden.items.all %}
+                    <div class="row mb-2">
+                        <div class="col-md-2">
+                            {% if item.SKUProducto.ImagenProducto %}
+                                <img src="{{ item.SKUProducto.ImagenProducto.url }}" 
+                                     alt="{{ item.NombreProducto }}" 
+                                     class="img-fluid rounded">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-0">{{ item.NombreProducto }}</h6>
+                            <small class="text-muted">Cantidad: {{ item.CantidadProducto }}</small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="fw-bold">${{ item.PrecioProducto|floatformat:0|intcomma }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="border-top pt-3 mt-3">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-1"><strong>Dirección de envío:</strong></p>
+                                <p class="text-muted">{{ orden.DireccionCliente }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-end">
+                                    <p class="mb-1">Total: ${{ orden.TotalOrden|floatformat:0|intcomma }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                <h5>No tienes órdenes todavía</h5>
+                <p class="text-muted">¡Explora nuestra tienda y realiza tu primera compra!</p>
+                <a href="{% url 'productos' %}" class="btn btn-primary">
+                    Ir a la tienda
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div> 

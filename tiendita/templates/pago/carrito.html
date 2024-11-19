@@ -5,48 +5,7 @@
 
 {% block extra_styles %}
 <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
-
-<!-- Realmente era necesario? meter estilos Arriba del HTML? -->
-<style>
-    .saved-for-later {
-        opacity: 0.7;
-    }
-
-    .progress-indicator {
-        height: 4px;
-        background: #eee;
-        margin-bottom: 20px;
-    }
-
-    .progress-indicator .step {
-        width: 33.33%;
-        height: 100%;
-        background: #007bff;
-        transition: width 0.3s;
-    }
-
-    .stock-status {
-        font-size: 0.8em;
-        color: #28a745;
-    }
-
-    .product-category-tag {
-        font-size: 0.75em;
-        padding: 2px 8px;
-        border-radius: 12px;
-        margin-right: 5px;
-    }
-
-    .dog-tag {
-        background: #e3f2fd;
-        color: #0d47a1;
-    }
-
-    .cat-tag {
-        background: #f3e5f5;
-        color: #4a148c;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/carrito.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -179,8 +138,6 @@
                             <small class="text-muted d-block mb-2">Métodos de pago aceptados:</small>
                             <div class="payment-methods">
                                 <i data-feather="credit-card" class="me-2"></i>
-                                <i data-feather="smartphone" class="me-2"></i>
-                                <i data-feather="dollar-sign"></i>
                             </div>
                         </div>
 

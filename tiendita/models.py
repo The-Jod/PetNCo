@@ -3,7 +3,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
-
 from django.utils import timezone
 from PIL import Image
 import os
@@ -12,6 +11,15 @@ from django.core.files.base import ContentFile
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.validators import RegexValidator
+import re
+
+# Definir la función de validación al principio del archivo
+def validate_image_file_extension(value):
+    ext = os.path.splitext(value.name)[1]
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+    if not ext.lower() in valid_extensions:
+        raise ValidationError('Formato de archivo no soportado.')
 
 # Manager personalizado para manejar la creación de usuarios
 class CustomUserManager(BaseUserManager):
@@ -27,22 +35,62 @@ class CustomUserManager(BaseUserManager):
 
 # Modelo personalizado de Usuario
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    RutUsuario = models.IntegerField(unique=True)  # Reemplazamos username por RUT
+    RutUsuario = models.IntegerField(unique=True)
     NombreUsuario = models.CharField(max_length=80, null=True, blank=True)
-    EmailUsuario = models.EmailField(max_length=128, )
+    ApellidoUsuario = models.CharField(max_length=80, null=True, blank=True)
+    EmailUsuario = models.EmailField(max_length=128)
+    
+    telefono_validator = RegexValidator(
+        regex=r'^\+56[0-9]{9}$',
+        message='El número debe tener formato +56 seguido de 9 dígitos'
+    )
+    
+    TelefonoUsuario = models.CharField(
+        max_length=20, 
+        null=True, 
+        blank=True,
+        validators=[telefono_validator],
+        help_text='Formato: +56 9 12345678'
+    )
+    
     DomicilioUsuario = models.CharField(max_length=200, null=True, blank=True)
-    TipoAnimal = models.FloatField(blank=True,null=True)
+    
+    TIPO_ANIMAL_CHOICES = [
+        (0.1, 'Gato'),
+        (0.2, 'Perro'),
+        (0.3, 'Ave'),
+        (0.4, 'Hamster')
+    ]
+    
+    TipoAnimal = models.FloatField(choices=TIPO_ANIMAL_CHOICES, null=True, blank=True)
+    ImagenPerfil = models.ImageField(
+        upload_to='perfiles/', 
+        null=True, 
+        blank=True,
+        validators=[validate_image_file_extension]
+    )
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'RutUsuario'  # Este será el campo de inicio de sesión
-    REQUIRED_FIELDS = ['EmailUsuario']  # Otros campos requeridos además de la contraseña
+    USERNAME_FIELD = 'RutUsuario'
+    REQUIRED_FIELDS = ['EmailUsuario']
 
     def __str__(self):
-        return str(self.RutUsuario)
+        return f"{self.NombreUsuario} {self.ApellidoUsuario}" if self.NombreUsuario else str(self.RutUsuario)
+
+    def get_full_name(self):
+        return f"{self.NombreUsuario} {self.ApellidoUsuario}"
+
+    def get_short_name(self):
+        return self.NombreUsuario
+
+    def get_phone_without_prefix(self):
+        if self.TelefonoUsuario and self.TelefonoUsuario.startswith('+56'):
+            return self.TelefonoUsuario[3:]
+        return self.TelefonoUsuario
 
 # Create your models here.
 from django.db import models
@@ -82,48 +130,18 @@ class Producto(models.Model):
 
     CategoriaProducto = models.FloatField(choices=CATEGORIAS)
     TipoAnimal = models.FloatField(choices=TIPO_ANIMAL)
-    ImagenProducto = models.ImageField(upload_to='productos/', null=True, blank=True)
+    ImagenProducto = models.ImageField(
+        upload_to='productos/',
+        validators=[validate_image_file_extension],
+        null=True,
+        blank=True
+    )
 
     def save(self, *args, **kwargs):
-        # Primero guardamos el modelo para tener el ID
-        super().save(*args, **kwargs)
-        
-        # Si hay una imagen, la procesamos
+        # Si hay una imagen nueva, asegurarse de que solo se guarde una versión
         if self.ImagenProducto:
-            try:
-                # Abrir la imagen
-                img = Image.open(self.ImagenProducto.path)
-                
-                # Convertir a RGB si es necesario
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
-                
-                # Redimensionar si es muy grande (manteniendo proporción)
-                if img.height > 800 or img.width > 800:
-                    output_size = (800, 800)
-                    img.thumbnail(output_size, Image.Resampling.LANCZOS)
-                
-                # Crear el nombre del archivo WebP
-                nombre_base = os.path.splitext(os.path.basename(self.ImagenProducto.name))[0]
-                nuevo_nombre = f"{nombre_base}.webp"
-                
-                # Guardar como WebP
-                buffer = BytesIO()
-                img.save(buffer, 'WebP', quality=85, optimize=True)
-                
-                # Actualizar el campo de imagen
-                self.ImagenProducto.save(
-                    nuevo_nombre,
-                    ContentFile(buffer.getvalue()),
-                    save=False
-                )
-                
-                # Limpiar el buffer
-                buffer.close()
-                
-            except Exception as e:
-                print(f"Error procesando imagen del producto {self.SKUProducto}: {e}")
-        
+            # Mantener solo el formato original
+            self.ImagenProducto.name = re.sub(r'\.webp$', '', self.ImagenProducto.name)
         super().save(*args, **kwargs)
 
     def __str__(self):
