@@ -82,5 +82,6 @@ urlpatterns = [
     path('perfil/', views.perfil_usuario_view, name='perfil'),
     path('mis-ordenes/', views.mis_ordenes_view, name='mis_ordenes'),
     path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
+    path('actualizar-imagen-perfil/', views.actualizar_imagen_perfil, name='actualizar_imagen_perfil'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -3,7 +3,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
-
 from django.utils import timezone
 from PIL import Image
 import os
@@ -12,6 +11,15 @@ from django.core.files.base import ContentFile
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.validators import RegexValidator
+
+# Definir la función de validación al principio del archivo
+def validate_image_file_extension(value):
+    if value:  # Verificar si hay un archivo
+        ext = os.path.splitext(value.name)[1]
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+        if not ext.lower() in valid_extensions:
+            raise ValidationError('Solo se permiten archivos JPG, PNG o WebP.')
 
 # Manager personalizado para manejar la creación de usuarios
 class CustomUserManager(BaseUserManager):
@@ -27,22 +35,62 @@ class CustomUserManager(BaseUserManager):
 
 # Modelo personalizado de Usuario
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    RutUsuario = models.IntegerField(unique=True)  # Reemplazamos username por RUT
+    RutUsuario = models.IntegerField(unique=True)
     NombreUsuario = models.CharField(max_length=80, null=True, blank=True)
-    EmailUsuario = models.EmailField(max_length=128, )
+    ApellidoUsuario = models.CharField(max_length=80, null=True, blank=True)
+    EmailUsuario = models.EmailField(max_length=128)
+    
+    telefono_validator = RegexValidator(
+        regex=r'^\+56[0-9]{9}$',
+        message='El número debe tener formato +56 seguido de 9 dígitos'
+    )
+    
+    TelefonoUsuario = models.CharField(
+        max_length=20, 
+        null=True, 
+        blank=True,
+        validators=[telefono_validator],
+        help_text='Formato: +56 9 12345678'
+    )
+    
     DomicilioUsuario = models.CharField(max_length=200, null=True, blank=True)
-    TipoAnimal = models.FloatField(blank=True,null=True)
+    
+    TIPO_ANIMAL_CHOICES = [
+        (0.1, 'Gato'),
+        (0.2, 'Perro'),
+        (0.3, 'Ave'),
+        (0.4, 'Hamster')
+    ]
+    
+    TipoAnimal = models.FloatField(choices=TIPO_ANIMAL_CHOICES, null=True, blank=True)
+    ImagenPerfil = models.ImageField(
+        upload_to='perfiles/', 
+        null=True, 
+        blank=True,
+        validators=[validate_image_file_extension]
+    )
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'RutUsuario'  # Este será el campo de inicio de sesión
-    REQUIRED_FIELDS = ['EmailUsuario']  # Otros campos requeridos además de la contraseña
+    USERNAME_FIELD = 'RutUsuario'
+    REQUIRED_FIELDS = ['EmailUsuario']
 
     def __str__(self):
-        return str(self.RutUsuario)
+        return f"{self.NombreUsuario} {self.ApellidoUsuario}" if self.NombreUsuario else str(self.RutUsuario)
+
+    def get_full_name(self):
+        return f"{self.NombreUsuario} {self.ApellidoUsuario}"
+
+    def get_short_name(self):
+        return self.NombreUsuario
+
+    def get_phone_without_prefix(self):
+        if self.TelefonoUsuario and self.TelefonoUsuario.startswith('+56'):
+            return self.TelefonoUsuario[3:]
+        return self.TelefonoUsuario
 
 # Create your models here.
 from django.db import models

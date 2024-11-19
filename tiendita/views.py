@@ -44,7 +44,8 @@ from .models import (
     Servicio, 
     CitaVeterinaria, 
     Orden, 
-    OrdenItem
+    OrdenItem,
+    validate_image_file_extension  # Importar la función de validación
 )
 from .forms import (
     ProductoForm, 
@@ -1225,40 +1226,48 @@ class ServicioDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'servicio_confirm_delete.html'
     success_url = reverse_lazy('servicio_list')
     
-    
-    
-
 @login_required
 def perfil_usuario_view(request):
-    user = request.user
-    # Obtener órdenes del usuario
-    ordenes = Orden.objects.filter(usuario=user).order_by('-FechaOrden')
-    # Obtener citas del usuario
-    citas = CitaVeterinaria.objects.filter(usuario=user).order_by('-fecha')
-    
     if request.method == 'POST':
-        # Actualizar datos del perfil
-        nombre = request.POST.get('nombre')
-        apellido = request.POST.get('apellido')
-        email = request.POST.get('email')
-        telefono = request.POST.get('telefono')
+        user = request.user
+        user.NombreUsuario = request.POST.get('nombre')
+        user.ApellidoUsuario = request.POST.get('apellido')
+        user.EmailUsuario = request.POST.get('email')
+        
+        # Manejar el teléfono
+        telefono = request.POST.get('telefono', '')
+        # Remover el prefijo si existe
+        if telefono.startswith('+56'):
+            telefono = telefono[3:]
+        # Limpiar cualquier espacio o carácter no numérico
+        telefono = ''.join(filter(str.isdigit, telefono))
+        # Agregar el prefijo si no está vacío
+        user.TelefonoUsuario = f'+56{telefono}' if telefono else None
+        
+        user.DomicilioUsuario = request.POST.get('direccion')
+        
+        # Manejar el tipo de animal
+        tipo_animal = request.POST.get('tipo_animal')
+        if tipo_animal:
+            try:
+                # Reemplazar la coma por punto y convertir a float
+                tipo_animal = float(tipo_animal.replace(',', '.'))
+                user.TipoAnimal = tipo_animal
+            except ValueError:
+                messages.error(request, 'Valor inválido para el tipo de animal')
+                return redirect('perfil')
+        else:
+            user.TipoAnimal = None
         
         try:
-            user.NombreUsuario = nombre
-            user.ApellidoUsuario = apellido
-            user.email = email
-            user.TelefonoUsuario = telefono
             user.save()
-            messages.success(request, 'Perfil actualizado exitosamente')
+            messages.success(request, 'Perfil actualizado correctamente')
         except Exception as e:
-            messages.error(request, 'Error al actualizar el perfil')
-            
-    context = {
-        'user': user,
-        'ordenes': ordenes,
-        'citas': citas
-    }
-    return render(request, 'usuario/perfil.html', context)
+            messages.error(request, f'Error al actualizar el perfil: {str(e)}')
+        
+        return redirect('perfil')
+
+    return render(request, 'usuario/perfil.html')
     
     
     
@@ -1291,3 +1300,44 @@ def mis_ordenes_view(request):
     
     
     
+
+@login_required
+def actualizar_imagen_perfil(request):
+    if request.method == 'POST' and request.FILES.get('imagen'):
+        imagen = request.FILES['imagen']
+        
+        # Validar extensión usando la función del modelo
+        try:
+            validate_image_file_extension(imagen)
+        except ValidationError as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+        
+        # Actualizar imagen
+        try:
+            user = request.user
+            user.ImagenPerfil = imagen
+            user.save()
+            
+            return JsonResponse({
+                'success': True,
+                'image_url': user.ImagenPerfil.url
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al actualizar la imagen: {str(e)}'
+            })
+            
+    return JsonResponse({
+        'success': False,
+        'error': 'No se proporcionó ninguna imagen'
+    })
+    
+    
+    
+    
+    
+

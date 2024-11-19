@@ -1,5 +1,4 @@
 {% load static %}
-{% load static %}
 {% load bootstrap5 %}
 {% load bootstrap_icons %}
 {% bootstrap_css %}
@@ -69,6 +68,12 @@
                         </ul>
                     </li>
                     {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'registro' %}">
+                            <span>Agendar Cita</span>
+                            <i class="fas fa-calendar-alt nav-icon"></i>
+                        </a>
+                    </li>
 
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'productos' %}">
@@ -77,29 +82,42 @@
                         </a>
                     </li>
 
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'registro' %}">
-                                <span>Agendar Cita</span>
-                                <i class="fas fa-calendar-alt nav-icon"></i>
-                            </a>
-                        </li>
 
+                    <li class="nav-item">
+                        <a class="nav-link cart-link" href="{% url 'carrito' %}">
+                            <span>Carrito</span>
+                            <i class="fas fa-shopping-cart nav-icon"></i>
+                            {% if request.COOKIES.carrito %}
+                                {% with carrito=request.COOKIES.carrito|json_script:"carrito-data"|safe %}
+                                    <span class="cart-count">{{ carrito.items|length }}</span>
+                                {% endwith %}
+                            {% else %}
+                                <span class="cart-count">0</span>
+                            {% endif %}
+                        </a>
+                    </li>
+
+                    {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.ImagenPerfil and user.ImagenPerfil.url %}
+                                    <img src="{{ user.ImagenPerfil.url }}" 
+                                         alt="Perfil"
+                                         class="rounded-circle navbar-profile-image me-2"
+                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{% static 'img/default-avatar.png' %}" 
+                                         alt="Perfil"
+                                         class="rounded-circle navbar-profile-image me-2"
+                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                {% endif %}
                                 <span>{{ user.NombreUsuario }}</span>
-                                <i class="fas fa-user nav-icon"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li>
                                     <a class="dropdown-item" href="{% url 'perfil' %}">
                                         <i class="fas fa-user-circle me-2"></i>Mi Perfil
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'mis_ordenes' %}">
-                                        <i class="fas fa-shopping-bag me-2"></i>Mis Órdenes
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
@@ -118,20 +136,6 @@
                             </a>
                         </li>
                     {% endif %}
-
-                    <li class="nav-item">
-                        <a class="nav-link cart-link" href="{% url 'carrito' %}">
-                            <span>Carrito</span>
-                            <i class="fas fa-shopping-cart nav-icon"></i>
-                            {% if request.COOKIES.carrito %}
-                                {% with carrito=request.COOKIES.carrito|json_script:"carrito-data"|safe %}
-                                    <span class="cart-count">{{ carrito.items|length }}</span>
-                                {% endwith %}
-                            {% else %}
-                                <span class="cart-count">0</span>
-                            {% endif %}
-                        </a>
-                    </li>
                 </ul>
             </div>
         </div>
