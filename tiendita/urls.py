@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views 
 from django.contrib.auth.views import LogoutView
 from . import views
-from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView, CustomLoginView
+from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView, CustomLoginView,CalendarView
 from .views import (
     VeterinariaListView, VeterinariaCreateView, VeterinariaUpdateView, VeterinariaDeleteView,
     VeterinarioListView, VeterinarioCreateView, VeterinarioUpdateView, VeterinarioDeleteView,
@@ -63,7 +63,8 @@ urlpatterns = [
     path('veterinarias/add/', VeterinariaCreateView.as_view(), name='veterinaria_add'),
     path('veterinarias/edit/<int:pk>/', VeterinariaUpdateView.as_view(), name='veterinaria_edit'),
     path('veterinarias/delete/<int:pk>/', VeterinariaDeleteView.as_view(), name='veterinaria_delete'),
-
+    
+    path('veterinarios/', views.veterinario_list_view, name='veterinario'),
     path('veterinarios/', views.veterinario_view, name='veterinario'),
     path('veterinarios/add/', VeterinarioCreateView.as_view(), name='veterinario_add'),
     path('veterinarios/edit/<int:pk>/', VeterinarioUpdateView.as_view(), name='veterinario_edit'),
@@ -74,8 +75,13 @@ urlpatterns = [
     path('servicios/edit/<int:pk>/', ServicioUpdateView.as_view(), name='servicio_edit'),
     path('servicios/delete/<int:pk>/', ServicioDeleteView.as_view(), name='servicio_delete'),
 
-    path('citas/', views.cita_view, name='cita'),
-    path('citas/add/', CitaVeterinariaCreateView.as_view(), name='registro'),
+
+   # Nuevas URLs para el calendario
+    path('calendar/', views.CalendarView.as_view(), name='calendar'),
+    path('api/citas/', views.CitaVeterinariaCalendarAPI.as_view(), name='citas_api'),
+
+    path('citas/', views.vetcita_list_view, name='registro'),
+    path('citas/add/', CitaVeterinariaCreateView.as_view(), name='registro_add'),
     path('citas/edit/<int:pk>/', CitaVeterinariaUpdateView.as_view(), name='cita_edit'),
     path('citas/delete/<int:pk>/', CitaVeterinariaDeleteView.as_view(), name='cita_delete'),
     

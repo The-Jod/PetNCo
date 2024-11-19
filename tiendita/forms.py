@@ -355,6 +355,8 @@ class VeterinarioForm(forms.ModelForm):
             self.add_error('veterinaria', 'Debe seleccionar una veterinaria.')
 
         return cleaned_data
+
+
 class ServicioForm(forms.ModelForm):
     class Meta:
         model = Servicio

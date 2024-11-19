@@ -259,9 +259,7 @@ class Veterinaria(models.Model):
     def __str__(self):
         return self.NombreVeterinaria
 
-
 class Veterinario(models.Model):
-      # Ya no es primary_key
     usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
     veterinaria = models.ForeignKey(Veterinaria, on_delete=models.CASCADE, null=True, blank=True)
     especialidad = models.CharField(max_length=100)
