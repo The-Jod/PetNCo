@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">Mis Órdenes</h2>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pendiente" {% if filtro_estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="pagado" {% if filtro_estado == 'pagado' %}selected{% endif %}>Pagado</option>
+                        <option value="enviado" {% if filtro_estado == 'enviado' %}selected{% endif %}>Enviado</option>
+                        <option value="entregado" {% if filtro_estado == 'entregado' %}selected{% endif %}>Entregado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="fecha_desde" class="form-control" value="{{ filtro_fecha_desde }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="fecha_hasta" class="form-control" value="{{ filtro_fecha_hasta }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="{% url 'mis_ordenes' %}" class="btn btn-outline-secondary">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Órdenes -->
+    {% if ordenes %}
+        {% for orden in ordenes %}
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <strong>Orden #{{ orden.id }}</strong>
+                    </div>
+                    <div class="col text-center">
+                        <span class="badge {% if orden.EstadoOrden == 'pagado' %}bg-success
+                                         {% elif orden.EstadoOrden == 'pendiente' %}bg-warning
+                                         {% elif orden.EstadoOrden == 'enviado' %}bg-info
+                                         {% else %}bg-secondary{% endif %}">
+                            {{ orden.get_EstadoOrden_display }}
+                        </span>
+                    </div>
+                    <div class="col text-end">
+                        <small class="text-muted">{{ orden.FechaOrden|date:"d/m/Y H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Productos de la orden -->
+                {% for item in orden.items.all %}
+                <div class="row mb-2">
+                    <div class="col-md-2">
+                        {% if item.SKUProducto.ImagenProducto %}
+                            <img src="{{ item.SKUProducto.ImagenProducto.url }}" 
+                                 alt="{{ item.NombreProducto }}" 
+                                 class="img-fluid rounded">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-0">{{ item.NombreProducto }}</h6>
+                        <small class="text-muted">Cantidad: {{ item.CantidadProducto }}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="fw-bold">${{ item.PrecioProducto|floatformat:0|intcomma }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Resumen de la orden -->
+                <div class="border-top pt-3 mt-3">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="mb-1"><strong>Dirección de envío:</strong></p>
+                            <p class="text-muted">{{ orden.DireccionCliente }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-end">
+                                <p class="mb-1">Subtotal: ${{ orden.SubtotalOrden|floatformat:0|intcomma }}</p>
+                                <p class="mb-1">Envío: ${{ orden.CostoEnvio|floatformat:0|intcomma }}</p>
+                                <h5 class="mb-0">Total: ${{ orden.TotalOrden|floatformat:0|intcomma }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+            <h4>No tienes órdenes todavía</h4>
+            <p class="text-muted">¡Explora nuestra tienda y realiza tu primera compra!</p>
+            <a href="{% url 'productos' %}" class="btn btn-primary">
+                Ir a la tienda
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

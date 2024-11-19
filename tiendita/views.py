@@ -575,6 +575,17 @@ def procesar_pago_view(request):
         
         logger.info(f"Total calculado: {total}")
         
+        # Verificar stock antes de crear la orden
+        for key, item in carrito.items():
+            try:
+                producto = Producto.objects.get(SKUProducto=key)
+                if producto.StockProducto < int(item['cantidad']):
+                    messages.error(request, f'Stock insuficiente para {producto.NombreProducto}')
+                    return redirect('checkout')
+            except Producto.DoesNotExist:
+                messages.error(request, f'Producto no encontrado: {key}')
+                return redirect('checkout')
+        
         # Crear la orden
         try:
             orden = Orden.objects.create(
@@ -712,6 +723,21 @@ def webpay_retorno_view(request):
         if response['response_code'] == 0:  # Pago exitoso
             # Actualizar orden
             orden.EstadoOrden = 'pagado'
+            
+            # Descontar stock de los productos
+            for item in orden.items.all():
+                try:
+                    producto = Producto.objects.get(SKUProducto=item.SKUProducto_id)
+                    if producto.StockProducto >= item.CantidadProducto:
+                        producto.StockProducto -= item.CantidadProducto
+                        producto.save()
+                    else:
+                        logger.error(f"Stock insuficiente para producto {producto.SKUProducto}")
+                        messages.warning(request, f'Stock insuficiente para {producto.NombreProducto}')
+                except Producto.DoesNotExist:
+                    logger.error(f"Producto no encontrado: {item.SKUProducto_id}")
+                    continue
+            
             orden.save()
             
             # Enviar correo de confirmación
@@ -1198,6 +1224,70 @@ class ServicioDeleteView(LoginRequiredMixin, DeleteView):
     model = Servicio
     template_name = 'servicio_confirm_delete.html'
     success_url = reverse_lazy('servicio_list')
+    
+    
+    
+
+@login_required
+def perfil_usuario_view(request):
+    user = request.user
+    # Obtener órdenes del usuario
+    ordenes = Orden.objects.filter(usuario=user).order_by('-FechaOrden')
+    # Obtener citas del usuario
+    citas = CitaVeterinaria.objects.filter(usuario=user).order_by('-fecha')
+    
+    if request.method == 'POST':
+        # Actualizar datos del perfil
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        
+        try:
+            user.NombreUsuario = nombre
+            user.ApellidoUsuario = apellido
+            user.email = email
+            user.TelefonoUsuario = telefono
+            user.save()
+            messages.success(request, 'Perfil actualizado exitosamente')
+        except Exception as e:
+            messages.error(request, 'Error al actualizar el perfil')
+            
+    context = {
+        'user': user,
+        'ordenes': ordenes,
+        'citas': citas
+    }
+    return render(request, 'usuario/perfil.html', context)
+    
+    
+    
+
+@login_required
+def mis_ordenes_view(request):
+    # Obtener todas las órdenes del usuario actual, ordenadas por fecha descendente
+    ordenes = Orden.objects.filter(usuario=request.user).order_by('-FechaOrden')
+    
+    # Obtener filtros de la URL
+    estado = request.GET.get('estado')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    
+    # Aplicar filtros si existen
+    if estado:
+        ordenes = ordenes.filter(EstadoOrden=estado)
+    if fecha_desde:
+        ordenes = ordenes.filter(FechaOrden__gte=fecha_desde)
+    if fecha_hasta:
+        ordenes = ordenes.filter(FechaOrden__lte=fecha_hasta)
+    
+    context = {
+        'ordenes': ordenes,
+        'filtro_estado': estado,
+        'filtro_fecha_desde': fecha_desde,
+        'filtro_fecha_hasta': fecha_hasta
+    }
+    return render(request, 'usuario/mis_ordenes.html', context)
     
     
     

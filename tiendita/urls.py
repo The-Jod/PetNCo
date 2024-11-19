@@ -40,15 +40,17 @@ urlpatterns = [
     path('late_registration',RegistroUsuarioView.as_view(), name='registeruser'),
     path('late_login',CustomLoginView.as_view(), name='loginuser'),
     path('late_logout', LogoutView.as_view(next_page='loginuser'), name='logout'),
-    path('pago/', views.checkout_view, name='checkout'),
+
     path('productos/', views.catalogo_view, name='productos'),  
     path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
     path('productos/<int:sku>/', views.producto_detalle_modal, name='producto-modal'),
-    path('carrito/', views.carrito_view, name='carrito'),
     path('agregar/<int:sku>/', views.agregar_al_carrito, name='agregar_al_carrito'),
     path('eliminar/<int:sku>/', views.eliminar_del_carrito, name='eliminar_del_carrito'),
     path('limpiar/', views.limpiar_carrito, name='limpiar_carrito'),
+
     path('carrito/actualizar-cantidad/', views.actualizar_cantidad, name='actualizar_cantidad'),
+    path('carrito/', views.carrito_view, name='carrito'),
+    path('pago/', views.checkout_view, name='checkout'),
     path('checkout/webpay/return/', views.webpay_return, name='webpay_return'),
     path('orden/confirmada/<int:orden_id>/', views.orden_confirmada, name='orden_confirmada'),
     path('checkout/', views.checkout_view, name='checkout'),
@@ -77,4 +79,8 @@ urlpatterns = [
     path('citas/edit/<int:pk>/', CitaVeterinariaUpdateView.as_view(), name='cita_edit'),
     path('citas/delete/<int:pk>/', CitaVeterinariaDeleteView.as_view(), name='cita_delete'),
     
+    path('perfil/', views.perfil_usuario_view, name='perfil'),
+    path('mis-ordenes/', views.mis_ordenes_view, name='mis_ordenes'),
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

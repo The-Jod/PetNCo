@@ -54,8 +54,7 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto" data-aos="fade-left">
-
-
+                    {% if user.is_staff %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -64,14 +63,12 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{% url 'product_add' %}">Creación de productos</a></li>
-                            <li><a class="dropdown-item" href="{% url 'veterinaria' %}">Creación Clínica
-                                    Veterinaria</a></li>
-                            <li><a class="dropdown-item" href="{% url 'veterinario' %}">Creación Veterinario</a>
-                            </li>
+                            <li><a class="dropdown-item" href="{% url 'veterinaria' %}">Creación Clínica Veterinaria</a></li>
+                            <li><a class="dropdown-item" href="{% url 'veterinario' %}">Creación Veterinario</a></li>
                             <li><a class="dropdown-item" href="{% url 'servicio' %}">Creación de Servicio</a></li>
                         </ul>
                     </li>
-
+                    {% endif %}
 
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'productos' %}">
@@ -79,29 +76,60 @@
                             <i class="fas fa-paw nav-icon"></i>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'registro' %}">
-                            <span>Agendar Cita</span>
-                            <i class="fas fa-calendar-alt nav-icon"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'checkout' %}">
-                            <span>Pagar</span>
-                            <i class="fas fa-dollar-sign nav-icon"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'loginuser' %}">
-                            <span>Iniciar Sesion</span>
-                            <i class="fas fa-user nav-icon"></i>
-                        </a>
-                    </li>
+
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'registro' %}">
+                                <span>Agendar Cita</span>
+                                <i class="fas fa-calendar-alt nav-icon"></i>
+                            </a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <span>{{ user.NombreUsuario }}</span>
+                                <i class="fas fa-user nav-icon"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'perfil' %}">
+                                        <i class="fas fa-user-circle me-2"></i>Mi Perfil
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'mis_ordenes' %}">
+                                        <i class="fas fa-shopping-bag me-2"></i>Mis Órdenes
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'logout' %}">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'loginuser' %}">
+                                <span>Iniciar Sesión</span>
+                                <i class="fas fa-user nav-icon"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
                     <li class="nav-item">
                         <a class="nav-link cart-link" href="{% url 'carrito' %}">
                             <span>Carrito</span>
                             <i class="fas fa-shopping-cart nav-icon"></i>
-                            <span class="cart-count">5</span>
+                            {% if request.COOKIES.carrito %}
+                                {% with carrito=request.COOKIES.carrito|json_script:"carrito-data"|safe %}
+                                    <span class="cart-count">{{ carrito.items|length }}</span>
+                                {% endwith %}
+                            {% else %}
+                                <span class="cart-count">0</span>
+                            {% endif %}
                         </a>
                     </li>
                 </ul>

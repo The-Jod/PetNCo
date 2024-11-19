@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-column align-items-center text-center">
+                        <img src="{% static 'img/default-avatar.png' %}" alt="Avatar" class="rounded-circle" width="150">
+                        <div class="mt-3">
+                            <h4>{{ user.NombreUsuario }} {{ user.ApellidoUsuario }}</h4>
+                            <p class="text-muted font-size-sm">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                            <h6 class="mb-0">Órdenes</h6>
+                            <span class="text-secondary">{{ ordenes.count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                            <h6 class="mb-0">Citas</h6>
+                            <span class="text-secondary">{{ citas.count }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Datos del Usuario -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Datos Personales</h5>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" class="form-control" name="nombre" value="{{ user.NombreUsuario }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" class="form-control" name="apellido" value="{{ user.ApellidoUsuario }}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ user.email }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" name="telefono" value="{{ user.TelefonoUsuario }}">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Actualizar Datos</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Historial de Órdenes -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Historial de Órdenes</h5>
+                    {% if ordenes %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Orden #</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Total</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for orden in ordenes %}
+                                    <tr>
+                                        <td>{{ orden.id }}</td>
+                                        <td>{{ orden.FechaOrden|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <span class="badge {% if orden.EstadoOrden == 'pagado' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ orden.get_EstadoOrden_display }}
+                                            </span>
+                                        </td>
+                                        <td>${{ orden.TotalOrden|floatformat:0 }}</td>
+                                        <td>
+                                            <a href="#" class="btn btn-sm btn-outline-primary">Ver detalles</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No hay órdenes registradas.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Historial de Citas -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Historial de Citas</h5>
+                    {% if citas %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Veterinaria</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cita in citas %}
+                                    <tr>
+                                        <td>{{ cita.fecha|date:"d/m/Y" }}</td>
+                                        <td>{{ cita.hora }}</td>
+                                        <td>{{ cita.veterinaria.NombreVeterinaria }}</td>
+                                        <td>
+                                            <span class="badge {% if cita.estado == 'confirmada' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ cita.get_estado_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="#" class="btn btn-sm btn-outline-primary">Ver detalles</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No hay citas registradas.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
