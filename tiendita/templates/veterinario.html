@@ -18,33 +18,32 @@
             <i class="fas fa-plus"></i> Nuevo Veterinario
         </button>
     </div>
-
     <div class="container">
-        <div class="row mb-4">
+        <div class="row">
             <!-- Formulario de filtros -->
-            <div class="col-12">
+            <div class="col-12 col-md-4">
                 <form method="GET" action="{% url 'veterinario' %}" class="p-4 border rounded shadow-sm bg-light">
                     <h3 class="mb-4">Filtros de Búsqueda</h3>
                     <div class="row">
-                        <div class="col-md-3 mb-3">
+                        <div class="md-3">
                             <label for="localidad">Localidad:</label>
                             <input type="text" id="localidad" name="localidad" value="{{ localidad|default:'' }}"
                                 class="form-control" placeholder="Buscar por localidad...">
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="md-3">
                             <label for="q" class="form-label">Nombre de Clínica:</label>
                             <input type="text" id="q" name="q" value="{{ query|default:'' }}" class="form-control"
                                 placeholder="Buscar por nombre...">
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="md-3">
                             <label for="horario_inicio" class="form-label">Desde:</label>
                             <input type="time" id="horario_inicio" name="horario_inicio"
                                 value="{{ horario_inicio|default:'' }}" class="form-control">
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="md-3">
                             <label for="horario_fin" class="form-label">Hasta:</label>
                             <input type="time" id="horario_fin" name="horario_fin" value="{{ horario_fin|default:'' }}"
                                 class="form-control">
@@ -57,309 +56,284 @@
                     </div>
                 </form>
             </div>
-        </div>
 
-        <!-- Tabla de Veterinarios -->
-        <div class="row">
-            <div class="col-12">
-                <div class="table-responsive">
-                    <table id="tabla-veterinarios" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Especialidad</th>
-                                <th>Veterinaria</th>
-                                <th>Horario</th>
-                                <th>Disponibilidad</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for veterinario in veterinarios %}
-                            <tr>
-                                <td>{{ veterinario.nombre_veterinario }}</td>
-                                <td>{{ veterinario.especialidad }}</td>
-                                <td>
-                                    {% if veterinario.veterinaria %}
-                                    {{ veterinario.veterinaria.NombreVeterinaria }}
-                                    {% else %}
-                                    No asociada
-                                    {% endif %}
-                                </td>
-                                <td>{{ veterinario.horario_inicio|time:"H:i" }} - {{ veterinario.horario_fin|time:"H:i"
-                                    }}</td>
-                                <td>{{ veterinario.Disponibilidadveterinario }}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                            data-bs-target="#modaleditar" data-id="{{ veterinario.codigo_veterinario }}"
-                                            data-nombre="{{ veterinario.nombre_veterinario }}"
-                                            data-especialidad="{{ veterinario.especialidad }}"
-                                            data-veterinaria-id="{{ veterinario.veterinaria.id|default:'' }}"
-                                            data-horario-inicio="{{ veterinario.horario_inicio|time:'H:i' }}"
-                                            data-horario-fin="{{ veterinario.horario_fin|time:'H:i' }}"
-                                            data-disponibilidad="{{ veterinario.Disponibilidadveterinario }}"
-                                            data-telefono="{{ veterinario.telefono }}"
-                                            data-email="{{ veterinario.usuario.email }}">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger btn-delete"
-                                            data-id="{{ veterinario.codigo_veterinario }}">
-                                            <i class="bi bi-trash3"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center">No se encontraron veterinarios.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <!-- Tabla de Veterinarios -->
+            <div class="col-12 col-md-8">
+                <div class="col-12">
+                    <div class=" table-responsive">
+                        <table id="tabla-veterinarios" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Especialidad</th>
+                                    <th>Veterinaria</th>
+                                    <th>Horario</th>
+                                    <th>Experiencia</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for veterinario in veterinarios %}
+                                <tr>
+                                    <td>{{ veterinario.nombre_veterinario }}</td>
+                                    <td>{{ veterinario.especialidad }}</td>
+                                    <td>
+                                        {% if veterinario.veterinaria %}
+                                        {{ veterinario.veterinaria.NombreVeterinaria }}
+                                        {% else %}
+                                        No asociada
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ veterinario.horario_inicio|time:"H:i" }} -
+                                        {{ veterinario.horario_fin|time:"H:i"}}</td>
+                                    <td>{{ veterinario.experiencia_años }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#modaleditar"
+                                                data-id="{{ veterinario.codigo_veterinario }}"
+                                                data-nombre="{{ veterinario.nombre_veterinario }}"
+                                                data-especialidad="{{ veterinario.especialidad }}"
+                                                data-veterinaria-id="{{ veterinario.veterinaria.id|default:'' }}"
+                                                data-horario-inicio="{{ veterinario.horario_inicio|time:'H:i' }}"
+                                                data-horario-fin="{{ veterinario.horario_fin|time:'H:i' }}"
+                                                data-disponibilidad="{{ veterinario.Disponibilidadveterinario }}"
+                                                data-telefono="{{ veterinario.telefono }}"
+                                                data-email="{{ veterinario.usuario.email }}">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger btn-delete"
+                                                data-id="{{ veterinario.codigo_veterinario }}">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No se encontraron veterinarios.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Agregar -->
+    <div class="modal fade" id="modalcrear" tabindex="-1" aria-labelledby="modalcrearLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalcrearLabel">Nuevo Veterinario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="clinicaform" class="needs-validation" novalidate method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nombre_veterinario" class="form-label">Nombre del Veterinario</label>
+                                <input type="text" class="form-control" id="nombre_veterinario"
+                                    name="nombre_veterinario" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el nombre del veterinario.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="veterinaria" class="form-label">Veterinaria</label>
+                                <select class="form-select" id="id_veterinaria" name="veterinaria" required>
+                                    <option value="">Seleccione una veterinaria...</option>
+                                    {% for veterinaria in veterinarias %}
+                                    <option value="{{ veterinaria.CodigoVeterinaria}}">{{ veterinaria.NombreVeterinaria
+                                        }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor seleccione una veterinaria.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="especialidad" class="form-label">Especialidad</label>
+                                <input type="text" class="form-control" id="especialidad" name="especialidad" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese la especialidad.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="telefono" name="telefono" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese un número de teléfono válido.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="experiencia_años" class="form-label">Experiencia</label>
+                                <input type="text" class="form-control" id="experiencia_años" name="experiencia_años"
+                                    required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese los años de experiencia.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese un email válido.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="horario_inicio" class="form-label">Horario de Inicio</label>
+                                <input type="time" class="form-control" id="horario_inicio" name="horario_inicio"
+                                    required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el horario de inicio.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="horario_fin" class="form-label">Horario de Cierre</label>
+                                <input type="time" class="form-control" id="horario_fin" name="horario_fin" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el horario de cierre.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Agregar -->
-<div class="modal fade" id="modalcrear" tabindex="-1" aria-labelledby="modalcrearLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalcrearLabel">Nuevo Veterinario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="clinicaform" class="needs-validation" novalidate method="POST">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="nombre_veterinario" class="form-label">Nombre del Veterinario</label>
-                            <input type="text" class="form-control" id="nombre_veterinario" name="nombre_veterinario"
-                                required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el nombre del veterinario.
+    <!-- Modal Editar -->
+    <div class="modal fade" id="modaleditar" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Veterinario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm" class="needs-validation" novalidate method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" id="edit_id" name="id">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_Nombreveterinario" class="form-label">Nombre del Veterinario</label>
+                                <input type="text" class="form-control" id="edit_Nombreveterinario"
+                                    name="nombre_veterinario" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el nombre del veterinario.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_Veterinaria" class="form-label">Veterinaria</label>
+                                <select class="form-select" id="edit_Veterinaria" name="veterinaria" required>
+                                    <option value="">Seleccione una veterinaria...</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor seleccione la veterinaria.
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="veterinaria" class="form-label">Veterinaria</label>
-                            <select class="form-select" id="veterinaria" name="veterinaria" required>
-                                <option value="">Seleccione una veterinaria...</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Por favor seleccione una veterinaria.
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_Especialidad" class="form-label">Especialidad</label>
+                                <input type="text" class="form-control" id="edit_Especialidad" name="especialidad"
+                                    required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese la especialidad.
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="especialidad" class="form-label">Especialidad</label>
-                            <input type="text" class="form-control" id="especialidad" name="especialidad" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese la especialidad.
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="telefono" class="form-label">Teléfono</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese un número de teléfono válido.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="experiencia_años" class="form-label">Años de experiencia</label>
-                            <input type="number" class="form-control" id="experiencia_años" name="experiencia_años"
-                                required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese los años de experiencia.
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="edit_telefono" name="telefono" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese un número de teléfono válido.
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese un email válido.
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_ExperienciaAños" class="form-label">Experiencia</label>
+                                <input type="number" class="form-control" id="edit_ExperienciaAños"
+                                    name="experiencia_años" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese los años de experiencia.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="edit_email" name="email" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese un email válido.
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="horario_inicio" class="form-label">Horario de Inicio</label>
-                            <input type="time" class="form-control" id="horario_inicio" name="horario_inicio" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el horario de inicio.
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_HorarioInicio" class="form-label">Horario de Inicio</label>
+                                <input type="time" class="form-control" id="edit_HorarioInicio" name="horario_inicio"
+                                    required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el horario de inicio.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_HorarioFin" form-label">Horario de Cierre</label>
+                                <input type="time" class="form-control" id="edit_HorarioFin" name="horario_fin"
+                                    value="{{ vet.horario_fin|date:'H:i' }}" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el horario de cierre.
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="horario_fin" class="form-label">Horario de Cierre</label>
-                            <input type="time" class="form-control" id="horario_fin" name="horario_fin" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el horario de cierre.
-                            </div>
-                        </div>
-                    </div>
+                </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Editar -->
-<div class="modal fade" id="modaleditar" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Editar Veterinario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editForm" class="needs-validation" novalidate method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" id="edit_id" name="id">
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_Nombreveterinario" class="form-label">Nombre del Veterinario</label>
-                            <input type="text" class="form-control" id="edit_Nombreveterinario"
-                                name="nombre_veterinario" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el nombre del veterinario.
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_Veterinaria" class="form-label">Veterinaria</label>
-                            <select class="form-select" id="edit_Veterinaria" name="veterinaria" required>
-                                <option value="">Seleccione una veterinaria...</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Por favor seleccione la veterinaria.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_Especialidad" class="form-label">Especialidad</label>
-                            <input type="text" class="form-control" id="edit_Especialidad" name="especialidad" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese la especialidad.
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_telefono" class="form-label">Teléfono</label>
-                            <input type="tel" class="form-control" id="edit_telefono" name="telefono" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese un número de teléfono válido.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_ExperienciaAños" class="form-label">Años de experiencia</label>
-                            <input type="number" class="form-control" id="edit_ExperienciaAños" name="experiencia_años"
-                                required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese los años de experiencia.
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="edit_email" name="email" required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese un email válido.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_HorarioInicio" class="form-label">Horario de Inicio</label>
-                            <input type="time" class="form-control" id="edit_HorarioInicio" name="horario_inicio"
-                                required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el horario de inicio.
-                            </div>
-                        </div>form-label">Horario de Cierre</label>
-                        <input type="time" class="form-control" id="edit_HorarioFin" name="horario_fin"
-                            value="{{ vet.horario_fin|date:'H:i' }}" required>
-                        <div class="invalid-feedback">
-                            Por favor ingrese el horario de cierre.
-                        </div>
-                    </div>
-
-                    <!-- Email -->
-                    <div class="col-md-6 mb-3">
-                        <label for="edit_email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="edit_email" name="email" value="{{ vet.email }}">
-                        <div class="invalid-feedback">
-                            Por favor ingrese un email válido.
-                        </div>
-                    </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar cambios</button>
-            </div>
-            </form>
-        </div>
-    </div>
-</div>
-</div>
 
 
 </div>
 {% endblock %}
 {% block extra_scripts %}
 
-
-<script>
-    $(document).ready(function () {
-        // Cargar veterinarias
-        $.ajax({
-            url: '/api/veterinarias/',
-            type: 'GET',
-            success: function (veterinarias) {
-                const select = $('#veterinaria');
-                select.empty();
-                select.append('<option value="">Seleccione una veterinaria...</option>');
-
-                veterinarias.forEach(function (vet) {
-                    select.append(`<option value="${vet.CodigoVeterinaria}">${vet.nombre}</option>`);
-                });
-
-                // Si hay un veterinario seleccionado
-                const veterinariaSeleccionada = '{{ vet.veterinaria_id|default:"" }}';
-                if (veterinariaSeleccionada) {
-                    select.val(veterinariaSeleccionada);
-                }
-            },
-            error: function () {
-                alert('Error al cargar las veterinarias');
-            }
-        });
-    });
-</script>
 <script>
     $(document).ready(function () {
 
@@ -383,6 +357,13 @@
 
         $('#clinicaform').on('submit', function (e) {
             e.preventDefault();  // Prevenir el envío normal del formulario
+
+            const veterinaria = $('#id_veterinaria').val();
+            console.log("Veterinaria seleccionada:", veterinaria);
+            if (!veterinaria) {
+                alert("Debe seleccionar una veterinaria");
+                return;
+            }
             const $form = $(this);
             const $submitBtn = $form.find('button[type="submit"]');
             toggleButtonState($submitBtn, 'disable'); // Deshabilitar el botón mientras se procesa
@@ -395,6 +376,7 @@
                 contentType: false,  // No establecer tipo de contenido
                 headers: { 'X-CSRFToken': '{{ csrf_token }}' },  // Añadir el token CSRF para seguridad
                 success: function (response) {
+                    console.log(response);  // Ver la respuesta en consola
                     if (response.success) {
                         // Cerrar el modal y resetear el formulario
                         $('#modalcrear').modal('hide');
@@ -403,8 +385,8 @@
                         // Mostrar mensaje de éxito con SweetAlert
                         Swal.fire({
                             icon: 'success',
-                            title: 'veterinario agregada exitosamente',
-                            text: 'La veterinario ha sido agregada correctamente.',
+                            title: 'Veterinario agregado exitosamente',
+                            text: 'El veterinario ha sido agregado correctamente.',
                             confirmButtonText: 'Aceptar'
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -412,11 +394,19 @@
                             }
                         });
                     } else {
-                        // Mostrar mensaje de error si no es exitosa
+                        // Procesar y mostrar errores del servidor
+                        let errorMessages = [];
+                        for (let field in response.errors) {
+                            if (response.errors.hasOwnProperty(field)) {
+                                errorMessages.push(`${field}: ${response.errors[field].join(', ')}`);
+                            }
+                        }
+
+                        // Mostrar los errores con SweetAlert
                         Swal.fire({
                             icon: 'error',
                             title: 'Error al agregar',
-                            text: 'Hubo un problema al agregar la veterinario: ' + response.errors.join(', '),
+                            html: 'Hubo problemas con los siguientes campos:<br>' + errorMessages.join('<br>'),
                             confirmButtonText: 'Aceptar'
                         });
                     }
@@ -436,6 +426,7 @@
                 }
             });
         });
+
 
         // Función para habilitar/deshabilitar el botón de envío
         function toggleButtonState(button, action) {
@@ -616,6 +607,7 @@
         });
     });
 </script>
+
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{% static 'js/navbar.js' %}"></script>
