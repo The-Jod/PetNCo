@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Mi Perfil - Vet & Pet Center{% endblock %}
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/carrito.css' %}">
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="position-relative d-inline-block mb-3">
+                        {% if user.ImagenPerfil and user.ImagenPerfil.url %}
+                            <img src="{{ user.ImagenPerfil.url }}" 
+                                 alt="Foto de perfil" 
+                                 class="rounded-circle profile-image"
+                                 id="current-profile-image"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'img/default-avatar.png' %}" 
+                                 alt="Foto de perfil" 
+                                 class="rounded-circle profile-image"
+                                 id="current-profile-image"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                        {% endif %}
+                        <label for="profile-image-input" class="position-absolute bottom-0 end-0 bg-white rounded-circle p-2 shadow-sm" style="cursor: pointer;">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="profile-image-input" class="d-none" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                    <h5 class="mb-1">{{ user.NombreUsuario }}</h5>
+                    {% if user.is_staff %}
+                        <span class="badge bg-success mb-2">Administrador</span>
+                    {% endif %}
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#perfil-section" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                        <i class="fas fa-user-circle me-2"></i> Perfil
+                    </a>
+                    <a href="#ordenes-section" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-shopping-bag me-2"></i> Mis Órdenes
+                    </a>
+                    <a href="#citas-section" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-calendar-alt me-2"></i> Mis Citas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- Sección Perfil -->
+                <div class="tab-pane fade show active" id="perfil-section">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="card-title mb-0">Información Personal</h5>
+                                <button class="btn btn-outline-primary btn-sm" id="edit-profile-btn">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
+                            <form id="profile-form" method="POST">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nombre</label>
+                                        <input type="text" class="form-control" name="nombre" 
+                                               value="{{ user.NombreUsuario }}" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Apellido</label>
+                                        <input type="text" class="form-control" name="apellido" 
+                                               value="{{ user.ApellidoUsuario }}" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" name="email" 
+                                               value="{{ user.EmailUsuario }}" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Teléfono</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">+56</span>
+                                            <input type="tel" class="form-control" name="telefono" 
+                                                   value="{{ user.get_phone_without_prefix }}" 
+                                                   pattern="[0-9]{9}"
+                                                   placeholder="912345678"
+                                                   disabled>
+                                        </div>
+                                        <small class="text-muted">Ingresa 9 dígitos sin espacios ni guiones</small>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Dirección</label>
+                                        <input type="text" class="form-control" name="direccion" 
+                                               value="{{ user.DomicilioUsuario }}" disabled>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Tipo de Mascota</label>
+                                        <select class="form-select" name="tipo_animal" disabled>
+                                            <option value="">Seleccione un tipo de mascota</option>
+                                            {% for value, label in user.TIPO_ANIMAL_CHOICES %}
+                                                <option value="{{ value|stringformat:'.1f' }}" {% if user.TipoAnimal == value %}selected{% endif %}>
+                                                    {{ label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-end" style="display: none;" id="form-buttons">
+                                    <button type="button" class="btn btn-outline-secondary" id="cancel-edit-btn">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Órdenes -->
+                <div class="tab-pane fade" id="ordenes-section">
+                    {% include "usuario/mis_ordenes.html" %}
+                </div>
+
+                <!-- Sección Citas 
+                <div class="tab-pane fade" id="citas-section">
+                    % include "usuario/includes/citas_list.html" %
+                </div>
+                -->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+.profile-image {
+    transition: filter 0.3s;
+}
+
+.profile-image:hover {
+    filter: brightness(0.9);
+}
+
+.list-group-item {
+    border-radius: 0;
+    border-left: 3px solid transparent;
+}
+
+.list-group-item.active {
+    border-left-color: #0d6efd;
+    background-color: #f8f9fa;
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.form-control:disabled {
+    background-color: #fff;
+    opacity: 0.8;
+}
+
+/* Estilo para el prefijo del teléfono */
+.input-group-text {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-weight: 500;
+}
+</style>
+
+<!-- Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejo de la imagen de perfil
+    const imageInput = document.getElementById('profile-image-input');
+    const currentImage = document.getElementById('current-profile-image');
+    
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validar extensión
+            const validExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+            const extension = file.name.split('.').pop().toLowerCase();
+            
+            if (!validExtensions.includes(extension)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Solo se permiten archivos JPG, PNG o WebP'
+                });
+                this.value = ''; // Limpiar el input
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('imagen', file);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            fetch('{% url "actualizar_imagen_perfil" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentImage.src = data.image_url;
+                    const navbarImage = document.querySelector('.navbar-profile-image');
+                    if (navbarImage) navbarImage.src = data.image_url;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'Imagen actualizada correctamente'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Error al actualizar la imagen'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al procesar la solicitud'
+                });
+            });
+        }
+    });
+
+    // Manejo del formulario de perfil
+    const editBtn = document.getElementById('edit-profile-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    const formInputs = document.querySelectorAll('#profile-form input, #profile-form select');
+    const formButtons = document.getElementById('form-buttons');
+    
+    editBtn.addEventListener('click', function() {
+        formInputs.forEach(input => input.disabled = false);
+        formButtons.style.display = 'block';
+        editBtn.style.display = 'none';
+    });
+    
+    cancelBtn.addEventListener('click', function() {
+        formInputs.forEach(input => input.disabled = true);
+        formButtons.style.display = 'none';
+        editBtn.style.display = 'block';
+    });
+
+    // Validación del teléfono
+    const telefonoInput = document.querySelector('input[name="telefono"]');
+    if (telefonoInput) {
+        telefonoInput.addEventListener('input', function(e) {
+            // Remover cualquier carácter que no sea número
+            let valor = this.value.replace(/\D/g, '');
+            
+            // Limitar a 9 dígitos
+            if (valor.length > 9) {
+                valor = valor.slice(0, 9);
+            }
+            
+            // Actualizar el valor
+            this.value = valor;
+        });
+    }
+});
+</script>
+{% endblock %}

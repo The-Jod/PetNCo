@@ -1,9 +1,9 @@
 /* Variables Globales */
 :root {
-    /* Colores Principales */
     --primary: #4A90E2;
     --secondary: #8E44AD;
     --accent: #2ECC71;
+    --white: #FFFFFF;
 
     /* Gradientes */
     --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -12,7 +12,6 @@
     /* Neutros */
     --dark: #2C3E50;
     --light: #ECF0F1;
-    --white: #FFFFFF;
 
     /* Estados */
     --success: #27AE60;
@@ -226,96 +225,53 @@ body {
 }
 
 /* Navbar Styles */
-.navbar {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    padding: 1rem 2rem;
-    transition: var(--transition-normal);
+.nav-item .nav-link {
+    position: relative;
 }
 
-.navbar-scrolled {
-    box-shadow: var(--shadow-md);
-}
-
-.navbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.nav-logo {
-    height: 50px;
-    transition: var(--transition-normal);
-}
-
-.navbar-scrolled .nav-logo {
-    height: 45px;
-}
-
-.brand-text {
-    color: var(--white);
-    font-weight: 600;
-    font-size: 1.5rem;
-    transition: var(--transition-normal);
-}
-
-.navbar-nav {
-    gap: 1rem;
-}
-
-.nav-link {
-    color: var(--white) !important;
-    font-weight: 500;
-    padding: 0.5rem 1rem !important;
-    border-radius: 8px;
+/* Estilos actualizados para el carrito y badge */
+/* Estilos del carrito */
+.cart-link {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    transition: var(--transition-normal);
-    position: relative;
-    overflow: hidden;
-}
-
-.nav-link::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--white);
-    transform: translateX(-100%);
-    transition: var(--transition-normal);
-}
-
-.nav-link:hover::before {
-    transform: translateX(0);
-}
-
-.nav-icon {
-    transition: var(--transition-normal);
-}
-
-.nav-link:hover .nav-icon {
-    transform: translateY(-3px);
-}
-
-.cart-link {
-    position: relative;
-}
-
-.cart-count {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: var(--accent);
     color: var(--white);
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    transition: var(--transition-fast);
+}
+
+.cart-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Ícono del carrito */
+.cart-link i {
+    font-size: 1.1rem;
+    color: var(--white);
+}
+
+/* Contador del carrito */
+.cart-count-inline {
+    background-color: var(--white);
+    color: var(--secondary);
+    min-width: 18px;
+    height: 18px;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0 4px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Texto "Carrito" */
+.cart-link span:not(.cart-count-inline) {
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 /* Estilos generales del footer */
@@ -433,6 +389,16 @@ body {
 
 .category-container {
     padding: 2rem 0;
+}
+
+@keyframes bounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.badge.rounded-pill {
+    animation: bounce 0.3s ease-in-out;
 }
 
 .category-card {
@@ -560,4 +526,15 @@ img {
     -webkit-font-smoothing: antialiased;
     transform: translateZ(0);
     /* Fuerza aceleración por hardware */
+}
+
+/* Animación suave cuando cambia el número */
+@keyframes numberPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.cart-count-inline {
+    animation: numberPop 0.3s ease-out;
 }

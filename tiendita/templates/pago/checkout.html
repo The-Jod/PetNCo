@@ -3,6 +3,7 @@
 {% load humanize %}
 {% block extra_styles %}
 <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
 {% endblock %}
 {% block extra_scripts %}
 <script src="{% static 'js/navbar.js' %}"></script>
@@ -11,208 +12,189 @@
 
 {% block content %}
 <div class="container py-5">
-        <!-- Progress Indicator -->
-        <div class="progress-indicator">
-            <div class="step" id="cart-progress"></div>
-        </div>
-
-        {% if messages %}
-        <div class="messages mb-3">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    
     <div class="row">
-        <!-- Formulario de Envío -->
-        <div class="col-md-7 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h3 class="card-title mb-4">Datos de Envío</h3>
-                    
-                    <form method="POST" action="{% url 'procesar_pago' %}">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0 text-dark">Información de Envío</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Selector de método de datos -->
+                    {% if user.is_authenticated %}
+                    <div class="mb-4">
+                        <h5 class="mb-3">Selecciona una opción:</h5>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="datosEnvio" id="usarDatosGuardados" checked>
+                            <label class="form-check-label" for="usarDatosGuardados">
+                                Usar mis datos guardados
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="datosEnvio" id="usarNuevosDatos">
+                            <label class="form-check-label" for="usarNuevosDatos">
+                                Ingresar nuevos datos
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Formulario con datos guardados -->
+                    {% if user.is_authenticated %}
+                    <form id="formDatosGuardados" method="post" action="{% url 'procesar_pago' %}">
                         {% csrf_token %}
-                        
-                        <!-- Datos personales -->
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="nombre" class="form-label">Nombre</label>
-                                <input type="text" class="form-control form-control-lg" 
-                                       id="nombre" name="nombre" required
-                                       placeholder="Tu nombre">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">RUT</label>
+                                <input type="text" class="form-control" name="rut" value="{{ user.RutUsuario }}" readonly>
                             </div>
-                            <div class="col-md-6">
-                                <label for="apellido" class="form-label">Apellido</label>
-                                <input type="text" class="form-control form-control-lg" 
-                                       id="apellido" name="apellido" required
-                                       placeholder="Tu apellido">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" class="form-control" name="nombre" value="{{ user.NombreUsuario }}" readonly>
                             </div>
-                        </div>
-
-                        <!-- Contacto -->
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control form-control-lg" 
-                                       id="email" name="email" required
-                                       placeholder="tu@email.com">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" class="form-control" name="apellido" value="{{ user.ApellidoUsuario }}" readonly>
                             </div>
-                            <div class="col-md-6">
-                                <label for="telefono" class="form-label">Teléfono</label>
-                                <div class="input-group input-group-lg">
-                                    <span class="input-group-text">+56</span>
-                                    <input type="tel" class="form-control form-control-lg" 
-                                           id="telefono" name="telefono" required
-                                           placeholder="9 1234 5678">
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ user.EmailUsuario }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" name="telefono" value="{{ user.TelefonoUsuario }}" readonly>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" class="form-control" name="direccion" value="{{ user.DomicilioUsuario }}" readonly>
                             </div>
                         </div>
+                    </form>
+                    {% endif %}
 
-                        <!-- Dirección -->
-                        <div class="mt-4">
-                            <label for="direccion" class="form-label">Dirección de Envío</label>
-                            <input type="text" class="form-control form-control-lg" 
-                                   id="direccion" name="direccion" required
-                                   placeholder="Calle, Número, Depto/Casa">
-                        </div>
-
-                        <!-- Dentro del formulario, antes del botón -->
-                        <div class="payment-methods-section mt-4 mb-4">
-                            <div class="card shadow-sm border-0">
-                                <div class="card-body p-3">
-                                    <!-- Todo en una sola fila -->
-                                    <div class="row align-items-center">
-                                        <!-- Título y WebPay -->
-                                        <div class="col-md-4">
-                                            <div class="d-flex flex-column align-items-center">
-                                                <h6 class="mb-2 payment-title">
-                                                    <span class="badge bg-light text-dark px-3 py-2">
-                                                        <i class="fas fa-credit-card me-1"></i>
-                                                        Métodos de pago
-                                                    </span>
-                                                </h6>
-                                                <div class="webpay-logo-wrapper p-2 bg-light rounded-3">
-                                                    <img src="{% static 'img/Webpay_CL_FB_80px.png' %}" 
-                                                         alt="WebPay Transbank" 
-                                                         class="img-fluid webpay-logo"
-                                                         style="max-height: 35px;">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Tarjetas -->
-                                        <div class="col-md-4">
-                                            <div class="cards-container text-center">
-                                                <div class="d-inline-flex gap-2 p-2 bg-light rounded-3">
-                                                    <div class="card-icon"><i class="fab fa-cc-visa fa-2x"></i></div>
-                                                    <div class="card-icon"><i class="fab fa-cc-mastercard fa-2x"></i></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Información de seguridad -->
-                                        <div class="col-md-4">
-                                            <div class="security-info d-flex justify-content-center gap-3">
-                                                <div class="security-item text-center">
-                                                    <i class="fas fa-shield-alt text-success"></i>
-                                                    <small class="text-muted ms-1">Pago 100% seguro</small>
-                                                </div>
-                                                <div class="security-item text-center">
-                                                    <i class="fas fa-lock fa-lg text-success"></i>
-                                                    <small class="text-muted ms-1">Certificado SSL</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                    <!-- Formulario para nuevos datos -->
+                    <form id="formNuevosDatos" method="post" action="{% url 'procesar_pago' %}" {% if user.is_authenticated %}style="display: none;"{% endif %}>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">RUT</label>
+                                <input type="text" class="form-control" name="rut" 
+                                       pattern="\d{1,2}\.\d{3}\.\d{3}[-][0-9kK]{1}"
+                                       placeholder="12.345.678-9"
+                                       required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" class="form-control" name="nombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" class="form-control" name="apellido" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" name="telefono" 
+                                       pattern="\+56[0-9]{9}" 
+                                       title="Formato: +56912345678"
+                                       placeholder="+56912345678" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" class="form-control" name="direccion" required>
                             </div>
                         </div>
-
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                            <i class="fas fa-lock me-2"></i>
-                            Continuar al pago seguro
-                        </button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Resumen del Pedido -->
-        <div class="col-md-5">
+        <!-- Resumen del pedido -->
+        <div class="col-md-4">
             <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h3 class="card-title mb-4">Resumen del Pedido</h3>
-                    
-                    <!-- Productos -->
-                    <div class="order-items mb-4">
-                        {% if carrito %}
-                            {% for key, item in carrito.items %}
-                            <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
-                                <div class="d-flex align-items-center">
-                                    {% if item.imagen %}
-                                    <img src="{{ item.imagen }}" alt="{{ item.nombre }}" 
-                                         class="me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0 text-dark">Resumen del Pedido</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Productos en el carrito -->
+                    {% if carrito %}
+                        {% for sku, item in carrito.items %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                            <div class="d-flex align-items-center">
+                                {% if item.imagen %}
+                                <img src="{{ item.imagen }}" alt="{{ item.nombre }}" 
+                                     class="me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">{{ item.nombre }}</h6>
+                                    <small class="text-muted">Cantidad: {{ item.cantidad }}</small>
+                                </div>
+                            </div>
+                            <span class="fw-bold">${{ item.precio|floatformat:0|intcomma }}</span>
+                        </div>
+                        {% endfor %}
+
+                        <!-- Totales -->
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal</span>
+                                <span>${{ subtotal|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Envío</span>
+                                <span>
+                                    {% if shipping == 0 %}
+                                        <span class="badge bg-success">Gratis</span>
+                                    {% else %}
+                                        ${{ shipping|floatformat:0|intcomma }}
                                     {% endif %}
-                                    <div>
-                                        <h6 class="mb-0">{{ item.nombre }}</h6>
-                                        <small class="text-muted">
-                                            Cantidad: {{ item.cantidad }}
-                                        </small>
-                                    </div>
-                                </div>
-                                <span class="fw-bold">${{ item.precio|floatformat:0|intcomma }}</span>
+                                </span>
                             </div>
-                            {% endfor %}
-                            
-                            <!-- Totales -->
-                            <div class="border-top pt-3 mt-4">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Subtotal</span>
-                                    <span>${{ subtotal|floatformat:0|intcomma }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Envío</span>
-                                    <span>
-                                        {% if shipping == 0 %}
-                                            <span class="badge bg-success">Gratis</span>
-                                        {% else %}
-                                            ${{ shipping|floatformat:0|intcomma }}
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <div class="d-flex justify-content-between mt-3 pt-3 border-top">
-                                    <strong class="h5 mb-0">Total</strong>
-                                    <strong class="h5 mb-0">${{ total|floatformat:0|intcomma }}</strong>
-                                </div>
+                            <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                                <strong class="h5 mb-0">Total</strong>
+                                <strong class="h5 mb-0">${{ total|floatformat:0|intcomma }}</strong>
                             </div>
-                            
-                            <!-- Información adicional -->
-                            <div class="mt-4">
-                                <div class="alert alert-info d-flex align-items-center" role="alert">
-                                    <i class="fas fa-truck me-2"></i>
-                                    <div>
-                                        {% if subtotal >= 20000 %}
-                                            ¡Envío gratis en tu pedido!
-                                        {% else %}
-                                            Envío gratis en compras sobre $20.000
-                                        {% endif %}
-                                    </div>
-                                </div>
+                        </div>
+
+                        <!-- Métodos de pago -->
+                        <div class="mt-4">
+                            <h5 class="mb-3">Métodos de pago disponibles</h5>
+                            <div class="text-center mb-3">
+                                <img src="{% static 'img/webpay-logo.png' %}" alt="WebPay" 
+                                     class="img-fluid" style="height: 30px;">
                             </div>
-                        {% else %}
-                            <div class="text-center py-4">
-                                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
-                                <p class="mb-0">No hay productos en el carrito</p>
-                                <a href="{% url 'productos' %}" class="btn btn-primary mt-3">
-                                    Ir a comprar
-                                </a>
+                        </div>
+
+                        <!-- Información de envío gratis -->
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-truck me-2"></i>
+                            {% if subtotal >= 20000 %}
+                                ¡Envío gratis en tu pedido!
+                            {% else %}
+                                Envío gratis en compras sobre $20.000
+                            {% endif %}
+                        </div>
+
+                        <!-- Botón de pago -->
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-success w-100 btn-pagar">
+                                <i class="fas fa-lock me-2"></i>
+                                Pagar Seguro ${{ total|floatformat:0|intcomma }}
+                            </button>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Pago seguro procesado por Webpay
+                                </small>
                             </div>
-                        {% endif %}
-                    </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p>No hay productos en el carrito</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -255,4 +237,44 @@
         transform: scale(1.05);
     }
 </style>
+
+<!-- JavaScript Adicional -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const usarDatosGuardados = document.getElementById('usarDatosGuardados');
+    const usarNuevosDatos = document.getElementById('usarNuevosDatos');
+    const formDatosGuardados = document.getElementById('formDatosGuardados');
+    const formNuevosDatos = document.getElementById('formNuevosDatos');
+
+    if (usarDatosGuardados && usarNuevosDatos) {
+        usarDatosGuardados.addEventListener('change', function() {
+            if (this.checked) {
+                formDatosGuardados.style.display = 'block';
+                formNuevosDatos.style.display = 'none';
+            }
+        });
+
+        usarNuevosDatos.addEventListener('change', function() {
+            if (this.checked) {
+                formDatosGuardados.style.display = 'none';
+                formNuevosDatos.style.display = 'block';
+            }
+        });
+    }
+
+    // Función para manejar el envío del formulario
+    const btnPagar = document.querySelector('.btn-pagar');
+    if (btnPagar) {
+        btnPagar.addEventListener('click', function() {
+            const formToSubmit = usarDatosGuardados && usarDatosGuardados.checked ? 
+                formDatosGuardados : formNuevosDatos;
+            formToSubmit.submit();
+        });
+    }
+});
+</script>
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
 {% endblock %}

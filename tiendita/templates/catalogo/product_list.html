@@ -5,152 +5,8 @@
 {% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
 {% block extra_styles %}
 <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
-<style>
-    .hero-section {
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        /* Cambiado a 100% para ser responsivo */
-        height: 60vh;
-        /* Mantener altura relativa */
-        max-width: 1200px;
-        /* Ancho máximo para pantallas grandes */
-        margin: 0 auto;
-        /* Centrar el contenedor */
-        border-radius: 20px;
-        padding: 0 20px;
-        /* Espaciado lateral */
-        margin-top: -30px;
-        /* Ajusta este valor según necesites mover el carrusel hacia arriba */
+<link rel="stylesheet" href="{% static 'css/catalogo.css' %}">
 
-        border-radius: 25px;
-    }
-
-    #heroCarousel {
-        position: relative;
-        height: 100%;
-        border-radius: 20px;
-    }
-
-    .carousel.slide {
-        border-radius: 50px;
-    }
-
-    .carousel-item {
-        height: 100%;
-        border-radius: 20px;
-        background-color: #44669252;
-    }
-
-    .carousel-item img {
-        object-fit: cover;
-        height: 100%;
-        width: 100%;
-        opacity: 0.8;
-        transition: transform 6s ease-in-out;
-    }
-
-    .carousel-item.active img {
-        transform: scale(1.1);
-    }
-
-    .carousel-caption {
-        top: 40%;
-        /* Cambia a top para centrar verticalmente */
-        transform: translateY(-50%);
-        /* Ajusta para subir más */
-        padding: 0 20px;
-        text-align: center;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .carousel-caption h1 {
-        font-size: 4.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.5s ease-out 0.3s;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    }
-
-    .carousel-caption h2 {
-        font-size: 2rem;
-        margin-bottom: 2rem;
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.5s ease-out 0.5s;
-        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-    }
-
-    .carousel-item.active .carousel-caption h1,
-    .carousel-item.active .carousel-caption h2 {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .carousel-caption .btn {
-        padding: 15px 40px;
-        font-size: 1.2rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        border-radius: 50px;
-        transition: all 0.3s ease;
-        opacity: 0;
-    }
-
-
-
-    /* Media Queries para Responsividad */
-    @media (max-width: 1200px) {
-        .carousel-caption h1 {
-            font-size: 3.5rem;
-            /* Tamaño más pequeño en pantallas medianas */
-        }
-
-        .carousel-caption h2 {
-            font-size: 1.5rem;
-            /* Tamaño más pequeño en pantallas medianas */
-        }
-    }
-
-    @media (max-width: 768px) {
-        .carousel-caption h1 {
-            font-size: 2.5rem;
-            /* Tamaño aún más pequeño en pantallas pequeñas */
-        }
-
-        .carousel-caption h2 {
-            font-size: 1.2rem;
-            /* Tamaño aún más pequeño en pantallas pequeñas */
-        }
-
-        .carousel-caption .btn {
-            padding: 10px 20px;
-            /* Ajustar padding para botones en pantallas pequeñas */
-            font-size: 1rem;
-            /* Tamaño de fuente más pequeño para botones */
-        }
-    }
-
-    @media (max-width: 576px) {
-        .hero-section {
-            height: 50vh;
-            /* Ajustar altura para pantallas muy pequeñas */
-        }
-
-        .carousel-caption h1 {
-            font-size: 2rem;
-            /* Tamaño más pequeño en pantallas extra pequeñas */
-        }
-
-        .carousel-caption h2 {
-            font-size: 1rem;
-            /* Tamaño más pequeño en pantallas extra pequeñas */
-        }
-    }
-</style>
 {% endblock %}
 {% block extra_scripts %}
 <script src="{% static 'js/navbar.js' %}"></script>
@@ -158,339 +14,452 @@
 {% block content %}<!-- Deja pasar el contenido de esta vista -->
 
 <div class="container-fluid">
-    <!-- Contenedor principal con márgenes y padding -->
     <div class="container my-5">
-        <div class="row">
-            <div class="col-12">
-                <div class="hero-section">
-                    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-                        <div class="carousel-inner">
-                            {% if productos_oferta %}
-                            {% for producto in productos_oferta %}
-                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                <img src="{{ producto.ImagenProducto.url }}" class="d-block w-100"
-                                    alt="{{ producto.NombreProducto }}">
-                                <div class="carousel-caption d-none d-md-block">
-                                    <h1>{{ producto.NombreProducto }}</h1>
-                                    <h2>Precio Original: ${{ producto.PrecioProducto|floatformat:0|intcomma }}</h2>
-                                    <h2 style="color: red;">Descuento:
-                                        {{producto.porcentaje_descuento|floatformat:0|intcomma }}%</h2>
-                                    <h2>Precio de Oferta: ${{ producto.PrecioOferta|floatformat:0|intcomma }}</h2>
-                                </div>
-                            </div>
-                            {% endfor %}
-                            {% else %}
-                            <div class="carousel-item active">
-                                <img src="ruta/a/imagen_placeholder.jpg" class="d-block w-100">
-                                <div class="carousel-caption d-none d-md-block">
-                                    <h1>No hay productos en oferta actualmente.</h1>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel"
-                            data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Anterior</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel"
-                            data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Siguiente</span>
-                        </button>
+        <!-- Carrusel primero -->
+        <div id="heroCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% if productos_oferta %}
+                {% for producto in productos_oferta %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <img src="{{ producto.ImagenProducto.url }}" class="d-block w-100"
+                        alt="{{ producto.NombreProducto }}">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h1>{{ producto.NombreProducto }}</h1>
+                        <h2 class="precio-original">Precio Original: ${{ producto.PrecioProducto|intcomma }}</h2>
+                        <h2 style="color: red;">Descuento: {{ producto.porcentaje_descuento|floatformat:0 }}%</h2>
+                        <h2 class="precio-oferta">Precio de Oferta: ${{ producto.PrecioOferta|intcomma }}</h2>
                     </div>
                 </div>
-                <!-- Contenido principal: Filtros a la izquierda y lista de productos a la derecha -->
-                <div class="row" style="padding-left: 1.5%; padding-right: 1.5%;">
-                    <div class="container mt-4">
-                        <form class="d-flex" method="get" action="{% url 'productos' %}">
-                            <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos" aria-label="Search" style="border-radius: 30px;">
-                            <button class="btn btn-primary" type="submit">Buscar</button>
+                {% endfor %}
+                {% else %}
+                <div class="carousel-item active">
+                    <img src="ruta/a/imagen_placeholder.jpg" class="d-block w-100">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h1>No hay productos en oferta actualmente.</h1>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel"
+                data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel"
+                data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        </div>
+
+        <!-- Barra de búsqueda y selector después del carrusel -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <form class="d-flex" method="get">
+                    <input class="form-control me-2" type="search" 
+                           placeholder="Buscar productos..." 
+                           name="q" 
+                           value="{{ request.GET.q }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search me-2"></i>Buscar
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center justify-content-end">
+                    <label class="me-2">Items por pág.</label>
+                    <select class="form-select" style="width: auto;" 
+                            onchange="window.location.href=this.value">
+                        {% for item in items_per_page_choices %}
+                            <option value="?{% for key,value in request.GET.items %}{% if key != 'items_per_page' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}items_per_page={{ item }}"
+                                    {% if items_per_page == item %}selected{% endif %}>
+                                {{ item }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resto del contenido (filtros y productos) -->
+        <div class="row">
+            <!-- Columna de filtros -->
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-filter me-2"></i>
+                            Filtros
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" action="{% url 'productos' %}">
+
+                            <!-- Rango de precio -->
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">Rango de Precio</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Precio mínimo:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="min_price" 
+                                               value="{{ request.GET.min_price }}" min="0">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Precio máximo:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="max_price" 
+                                               value="{{ request.GET.max_price }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Categoría -->
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">
+                                    <i class="fas fa-tags me-2"></i>Categoría
+                                </h6>
+                                <select name="categoria" class="form-select">
+                                    <option value="">Todas las categorías</option>
+                                    {% for categoria in categorias %}
+                                        <option value="{{ categoria.0 }}" {% if current_filters.categoria == categoria.0 %}selected{% endif %}>
+                                            {{ categoria.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Tipo de Animal -->
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">
+                                    <i class="fas fa-paw me-2"></i>Tipo de Animal
+                                </h6>
+                                <select name="tipo_animal" class="form-select">
+                                    <option value="">Todos los tipos</option>
+                                    {% for tipo in tipos_animal %}
+                                        <option value="{{ tipo.0 }}" {% if current_filters.tipo_animal == tipo.0 %}selected{% endif %}>
+                                            {{ tipo.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Aplicar filtros
+                                </button>
+                                <a href="{% url 'productos' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-undo me-2"></i>Limpiar filtros
+                                </a>
+                            </div>
                         </form>
                     </div>
-                    <!-- Filtros-->
-                    <div class="col-md-3" style="padding-top: 1.5%;">
-                        <div class="shadow-sm">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-filter me-2"></i>
-                                    Filtros
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form method="get" action="{% url 'productos' %}">
-                                    <!-- Rango de precio -->
-                                    <div class="mb-4">
-                                        <h6 class="border-bottom pb-2">Rango de Precio</h6>
-                                        <div class="mb-3">
-                                            <label for="min_price" class="form-label">Precio mínimo:</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">$</span>
-                                                <input type="number" class="form-control" name="min_price" min="0"
-                                                    max="1000000" step="1">
-                                            </div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="max_price" class="form-label">Precio máximo:</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">$</span>
-                                                <input type="number" class="form-control" name="max_price" min="0"
-                                                    max="1000000" step="1">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Categorías -->
-                                    <div class="mb-4">
-                                        <h6 class="border-bottom pb-2">Categorías</h6>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="categorias"
-                                                value="0.1">Alimentos<br>
-                                            <input class="form-check-input" type="checkbox" name="categorias"
-                                                value="0.2">Accesorios<br>
-                                            <input class="form-check-input" type="checkbox" name="categorias"
-                                                value="0.3">Juguetes<br>
-                                            <input class="form-check-input" type="checkbox" name="categorias"
-                                                value="0.4">Camas
-                                            y
-                                            rascadores<br>
-                                        </div>
-                                    </div>
-                                    <!-- Tipo de Animal -->
-                                    <div class="mb-4">
-                                        <h6 class="border-bottom pb-2">Tipo de Animal</h6>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
-                                                value="0.1">
-                                            Gato<br>
-                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
-                                                value="0.2">
-                                            Perro<br>
-                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
-                                                value="0.3">
-                                            Ave<br>
-                                            <input class="form-check-input" type="checkbox" name="tipo_animal"
-                                                value="0.4">
-                                            Hamster<br>
-                                        </div>
-                                    </div>
-                                    <!-- Botones de acción -->
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-primary" type="submit">
-                                            <i class="fas fa-search me-2"></i>Aplicar filtros
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Lista de productos -->
-                    <div class="col-md-9">
-                        <div class="row">
-                            {% if productos %}
-                                {% for producto in productos %}
-                                <div class="col-md-4 mb-4">
-                                    <div class="card h-100" style="border-color: {{ producto.get_color_categoria }}">
-                                        <!-- Badges de categoría y tipo de animal -->
-                                        <div class="position-absolute" style="top: 10px; right: 10px;">
-                                            <span class="badge"
-                                                style="background-color: {{ producto.get_color_categoria }}">
-                                                {{producto.get_categoria_display }}
-                                            </span>
-                                        </div>
-
-                                        <!-- Imagen del producto -->
-                                        <div class="position-relative">
-                                            {% if producto.ImagenProducto %}
-                                            <picture>
-                                                <source srcset="{{ producto.ImagenProducto.url }}" type="image/webp">
-                                                <img src="{{ producto.ImagenProducto.url }}" 
-                                                     class="card-img-top"
-                                                     alt="{{ producto.NombreProducto }}"
-                                                     style="height: 200px; width: 200px; object-fit: contain; margin: 0 auto; display: block;">
-                                            </picture>
-                                            {% else %}
-                                            <img src="{% static 'img/ProductPlaceholder.png' %}" 
-                                                 class="card-img-top" 
-                                                 alt="{{ producto.NombreProducto }}"
-                                                 style="height: 200px; width: 200px; object-fit: contain; margin: 0 auto; display: block;">
-                                            {% endif %}
-
-                                            {% if producto.EstaOferta %}
-                                            <div class="position-absolute" style="top: 40px; right: -10px;">
-                                                <div class="badge bg-danger p-2">
-                                                    -{{ producto.porcentaje_descuento |floatformat:0|intcomma }}%
-                                                </div>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        <!-- Cuerpo de la card -->
-                                        <div class="card-body">
-                                            <h5 class="card-title">{{ producto.NombreProducto }}</h5>
-                                            <div class="price-section">
-                                                {% if producto.EstaOferta %}
-                                                <p class="mb-0">
-                                                    <span class="text-muted text-decoration-line-through">
-                                                        ${{ producto.PrecioProducto|floatformat:0|intcomma }}
-                                                    </span>
-                                                    <span class="text-danger fs-5 ms-2">
-                                                        ${{ producto.PrecioOferta|floatformat:0|intcomma }}
-                                                    </span>
-                                                </p>
-                                                {% else %}
-                                                <p class="card-text fs-5">
-                                                    ${{ producto.PrecioProducto|floatformat:0|intcomma }}
-                                                </p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <!-- Footer de la card -->
-                                        <div class="card-footer text-center border-0 bg-transparent">
-                                            <div class="d-flex justify-content-center px-2">
-                                                <button class="btn btn-primary open-modal-btn"
-                                                    data-sku="{{ producto.SKUProducto }}"
-                                                    aria-label="Ver detalles de {{ producto.NombreProducto }}">
-                                                    Ver detalles
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="alert alert-info text-center">
-                                    <i class="fas fa-box-open fa-3x mb-3"></i>
-                                    <h4>No se encontraron productos</h4>
-                                    <p>Intenta con otros filtros de búsqueda</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <!-- Modal de Bootstrap para mostrar los detalles del producto -->
-                    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <!-- Encabezado del modal -->
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="productModalLabel">Detalles del producto</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-
-                                <!-- Cuerpo del modal donde se cargan dinámicamente los detalles -->
-                                <div class="modal-body" id="modal-product-details">
-                                    <!-- Los detalles del producto se cargarán aquí dinámicamente -->
-                                </div>
-
-                                <!-- Footer del modal -->
-
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-bs-dismiss="modal">Cerrar</button>
-                                </div>
-
-                                
-                            </div>
-                        </div>
-                    </div>
-
-                    <script>
-                        // Me voy a matar weon, te juro que me voy a matar
-                        document.querySelectorAll('.open-modal-btn').forEach(button => {
-                            button.addEventListener('click', function () {
-                                const modalBody = document.getElementById('modal-product-details');
-                                modalBody.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div></div>';
-                                
-                                // Mostrar el modal inmediatamente
-                                var productModal = new bootstrap.Modal(document.getElementById('productModal'));
-                                productModal.show();
-                                
-                                // Luego cargar los datos
-                                const sku = this.dataset.sku;
-                                fetch(`/productos/${sku}/`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        // Llenar el modal con los datos recibidos
-                                        const modalContent = `
-                                            <div class="text-center mb-4">
-                                                <img src="${data.imagen_url}" 
-                                                     alt="${data.nombre}" 
-                                                     class="img-fluid mb-3" 
-                                                     style="max-height: 200px; max-width: 200px; object-fit: contain;">
-                                            </div>
-                                            <div class="product-details">
-                                                <h4 class="mb-3">${data.nombre}</h4>
-                                                <p class="text-muted">${data.descripcion}</p>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="fw-bold">SKU:</span>
-                                                    <span>${sku}</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="fw-bold">Precio:</span>
-                                                    <span class="fs-5">${data.precio}</span>
-                                                </div>
-                                                
-                                                ${data.esta_en_oferta ? `
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="fw-bold text-danger">Precio Oferta:</span>
-                                                    <span class="fs-5 text-danger">${data.precio_oferta}</span>
-                                                </div>
-                                                ` : ''}
-                                                
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="fw-bold">Stock disponible:</span>
-                                                    <span>${data.stock} unidades</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="fw-bold">Categoría:</span>
-                                                    <span>${data.categoria}</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                                    <span class="fw-bold">Para:</span>
-                                                    <span>${data.tipo_animal}</span>
-                                                </div>
-
-                                                <form method="POST" action="/agregar/${sku}/" class="mt-4">
-                                                    <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
-                                                    <button type="submit" class="btn btn-success w-100">
-                                                        <i class="fas fa-shopping-cart me-2"></i>
-                                                        Agregar al carrito
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        `;
-                                        document.getElementById('modal-product-details').innerHTML = modalContent;
-                                    })
-                                    .catch(error => {
-                                        modalBody.innerHTML = '<div class="alert alert-danger">Error al cargar los detalles del producto</div>';
-                                        console.error('Error:', error);
-                                    });
-                            });
-                        });
-                        // Función para obtener el token CSRF desde las cookies
-                        function getCookie(name) {
-                            let cookieValue = null;
-                            if (document.cookie && document.cookie !== '') {
-                                const cookies = document.cookie.split(';');
-                                for (let i = 0; i < cookies.length; i++) {
-                                    const cookie = cookies[i].trim();
-                        // Verifica si esta cookie comienza con el nombre dado
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                        }
-                    }
-                }
-            return cookieValue;
-        }
-                    </script>
                 </div>
+            </div>
+
+            <!-- Columna de productos -->
+            <div class="col-md-9">
+                <div class="row">
+                    {% if productos %}
+                        {% for producto in productos %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 product-card" style="border-color: {{ producto.get_color_categoria }}; cursor: pointer;" 
+                                 data-sku="{{ producto.SKUProducto }}">
+                                <div class="position-relative">
+                                    {% if producto.ImagenProducto %}
+                                        <img src="{{ producto.ImagenProducto.url }}" 
+                                             class="card-img-top product-image" 
+                                             alt="{{ producto.NombreProducto }}">
+                                    {% else %}
+                                        <img src="{% static 'img/ProductPlaceholder.png' %}" 
+                                             class="card-img-top product-image" 
+                                             alt="Imagen no disponible">
+                                    {% endif %}
+                                    
+                                    {% if producto.EstaOferta %}
+                                    <div class="position-absolute top-0 end-0 p-2">
+                                        <span class="badge bg-danger">Oferta</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ producto.NombreProducto }}</h5>
+                                    {% if producto.EstaOferta %}
+                                        <p class="card-text mb-0">
+                                            <span class="text-decoration-line-through text-muted">${{ producto.PrecioProducto|floatformat:0|intcomma }}</span>
+                                        </p>
+                                        <p class="card-text text-danger fw-bold">${{ producto.PrecioOferta|floatformat:0|intcomma }}</p>
+                                    {% else %}
+                                        <p class="card-text fw-bold">${{ producto.PrecioProducto|floatformat:0|intcomma }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-box-open fa-3x mb-3"></i>
+                            <h4>No se encontraron productos</h4>
+                            <p>Intenta con otros filtros de búsqueda</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Nueva sección de paginación -->
+                {% if productos.paginator.num_pages > 1 %}
+                <nav aria-label="Navegación de páginas" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if productos.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ productos.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in productos.paginator.page_range %}
+                            {% if productos.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > productos.number|add:'-3' and num < productos.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if productos.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ productos.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ productos.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal de Bootstrap para mostrar los detalles del producto -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Encabezado del modal -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Detalles del producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <!-- Cuerpo del modal donde se cargan dinámicamente los detalles -->
+            <div class="modal-body" id="modal-product-details">
+                <!-- Los detalles del producto se cargarán aquí dinámicamente -->
+            </div>
+
+            <!-- Footer del modal -->
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                    data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+            
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const sku = this.dataset.sku;
+            const modalBody = document.getElementById('modal-product-details');
+            modalBody.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div></div>';
+            
+            var productModal = new bootstrap.Modal(document.getElementById('productModal'));
+            productModal.show();
+            
+            fetch(`/productos/${sku}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalContent = `
+                        <div class="text-center mb-4">
+                            <img src="${data.imagen_url}" 
+                                 alt="${data.nombre}" 
+                                 class="img-fluid mb-3 product-image" 
+                                 style="max-height: 300px; width: auto; object-fit: contain;"
+                                 onerror="this.src='/static/img/ProductPlaceholder.png'"
+                                 loading="lazy">
+                        </div>
+                        <div class="product-details">
+                            <h4 class="mb-3">${data.nombre}</h4>
+                            <p class="text-muted">${data.descripcion}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold">SKU:</span>
+                                <span>${sku}</span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold">Precio:</span>
+                                <span class="fs-5">${data.precio}</span>
+                            </div>
+                            
+                            ${data.esta_en_oferta ? `
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold text-danger">Precio Oferta:</span>
+                                <span class="fs-5 text-danger">${data.precio_oferta}</span>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold">Stock disponible:</span>
+                                <span>${data.stock} unidades</span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold">Categoría:</span>
+                                <span>${data.categoria}</span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span class="fw-bold">Para:</span>
+                                <span>${data.tipo_animal}</span>
+                            </div>
+
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="fw-bold me-3">Cantidad:</span>
+                                <div class="input-group" style="width: 150px;">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="decrementCantidad()">-</button>
+                                    <input type="number" class="form-control text-center" id="cantidad" value="1" min="1" max="${data.stock}">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="incrementCantidad()">+</button>
+                                </div>
+                            </div>
+
+                            <form id="add-to-cart-form" class="mt-4">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    Agregar al carrito
+                                </button>
+                            </form>
+                        </div>
+                    `;
+                    modalBody.innerHTML = modalContent;
+
+                    // Manejar el envío del formulario
+                    document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        fetch(`/agregar/${sku}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Mostrar mensaje de éxito en el modal
+                                const successMessage = document.createElement('div');
+                                successMessage.className = 'alert alert-success mt-3';
+                                successMessage.textContent = '¡Producto agregado al carrito!';
+                                modalBody.appendChild(successMessage);
+                                
+                                // Remover el mensaje después de 2 segundos
+                                setTimeout(() => {
+                                    successMessage.remove();
+                                }, 2000);
+                            } else {
+                                throw new Error(data.error || 'Error al agregar al carrito');
+                            }
+                        })
+                        .catch(error => {
+                            const errorMessage = document.createElement('div');
+                            errorMessage.className = 'alert alert-danger mt-3';
+                            errorMessage.textContent = error.message;
+                            modalBody.appendChild(errorMessage);
+                        });
+                    });
+                })
+                .catch(error => {
+                    modalBody.innerHTML = '<div class="alert alert-danger">Error al cargar los detalles del producto</div>';
+                    console.error('Error:', error);
+                });
+        });
+    });
+
+    // Función para obtener el token CSRF desde las cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function decrementCantidad() {
+        const input = document.getElementById('cantidad');
+        if (input.value > 1) input.value--;
+    }
+
+    function incrementCantidad() {
+        const input = document.getElementById('cantidad');
+        if (input.value < parseInt(input.max)) input.value++;
+    }
+
+    function mostrarCargando(elemento) {
+        elemento.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando detalles del producto...</p>
+            </div>
+        `;
+    }
+
+    function mostrarError(elemento, mensaje) {
+        elemento.innerHTML = `
+            <div class="alert alert-danger m-3">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                ${mensaje}
+            </div>
+        `;
+    }
+
+    function validarStock(stockDisponible, cantidadSolicitada) {
+        if (cantidadSolicitada > stockDisponible) {
+            mostrarError(modalBody, `Solo hay ${stockDisponible} unidades disponibles`);
+            return false;
+        }
+        return true;
+    }
+</script>
 {%endblock%}

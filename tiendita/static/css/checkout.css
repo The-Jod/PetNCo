@@ -1,0 +1,13 @@
+.card {
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+    box-shadow: 0 12px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card:hover::before {
+    opacity: 1;
+}

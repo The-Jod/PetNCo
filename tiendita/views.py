@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.serializers import serialize
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -49,7 +49,8 @@ from .models import (
     Servicio, 
     CitaVeterinaria, 
     Orden, 
-    OrdenItem
+    OrdenItem,
+    validate_image_file_extension  # Importar la función de validación
 )
 from .forms import (
     ProductoForm, 
@@ -73,37 +74,52 @@ def pago_view(request):
 
 #------------Carrito 
 def agregar_al_carrito(request, sku):
-    producto = get_object_or_404(Producto, SKUProducto=sku)
-    
-    # Obtener carrito actual de las cookies
-    carrito = request.COOKIES.get('carrito', '{}')
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+        
     try:
-        carrito = json.loads(carrito)
-    except json.JSONDecodeError:
-        carrito = {}
-    
-    # Verificar stock antes de agregar
-    cantidad_actual = carrito.get(str(sku), {}).get('cantidad', 0)
-    if cantidad_actual + 1 > producto.StockProducto:
-        messages.warning(request, 'No hay suficiente stock disponible')
-        return redirect('carrito')
-    
-    if str(producto.SKUProducto) in carrito:
-        carrito[str(producto.SKUProducto)]['cantidad'] += 1
-    else:
-        precio = float(producto.PrecioOferta if producto.EstaOferta else producto.PrecioProducto)
-        carrito[str(producto.SKUProducto)] = {
-            'nombre': producto.NombreProducto,
-            'precio': precio,
-            'cantidad': 1,
-            'descripcion': producto.DescripcionProducto,
-            'imagen': producto.ImagenProducto.url if producto.ImagenProducto else None,
-        }
-
-    # Crear la respuesta y establecer la cookie
-    response = redirect('carrito')
-    response.set_cookie('carrito', json.dumps(carrito))
-    return response
+        producto = get_object_or_404(Producto, SKUProducto=sku)
+        
+        # Obtener carrito actual
+        carrito = json.loads(request.COOKIES.get('carrito', '{}'))
+        
+        # Verificar stock
+        cantidad_actual = carrito.get(str(sku), {}).get('cantidad', 0)
+        if cantidad_actual + 1 > producto.StockProducto:
+            return JsonResponse({
+                'success': False, 
+                'error': 'No hay suficiente stock disponible'
+            })
+        
+        # Actualizar carrito
+        if str(sku) in carrito:
+            carrito[str(sku)]['cantidad'] += 1
+        else:
+            precio = float(producto.PrecioOferta if producto.EstaOferta else producto.PrecioProducto)
+            carrito[str(sku)] = {
+                'nombre': producto.NombreProducto,
+                'precio': precio,
+                'cantidad': 1,
+                'descripcion': producto.DescripcionProducto,
+                'imagen': producto.ImagenProducto.url if producto.ImagenProducto else None,
+            }
+        
+        # Crear respuesta JSON
+        response = JsonResponse({
+            'success': True,
+            'cart_count': sum(item['cantidad'] for item in carrito.values()),
+            'message': 'Producto agregado al carrito'
+        })
+        
+        # Actualizar cookie
+        response.set_cookie('carrito', json.dumps(carrito))
+        return response
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 # Ver el carrito
 def carrito_view(request):
@@ -236,53 +252,79 @@ class CustomLoginView(LoginView):
 def catalogo_view(request):
     # Carga inicial de todos los productos
     productos = Producto.objects.all()
+    productos_oferta = Producto.objects.filter(EstaOferta=True)[:3]  # Limitamos a 3 productos en oferta
 
-    # Filtro de búsqueda por nombre de producto
+    # Obtener las opciones para los filtros
+    categorias = Producto._meta.get_field('CategoriaProducto').choices
+    tipos_animal = Producto._meta.get_field('TipoAnimal').choices
+
+    # Aplicar filtros existentes
     query = request.GET.get('q')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    categoria = request.GET.get('categoria')
+    tipo_animal = request.GET.get('tipo_animal')
+    items_per_page_choices = [5, 10, 20, 50, 100, 200]
+    items_per_page = int(request.GET.get('items_per_page', 20))  # 20 como valor por defecto
+
     if query:
         productos = productos.filter(NombreProducto__icontains=query)
 
-    # Filtro de rango de precio
-    min_price = request.GET.get('min_price', 0)
-    max_price = request.GET.get('max_price', 1000000)
+    if min_price:
+        try:
+            min_price = float(min_price)
+            productos = productos.filter(PrecioProducto__gte=min_price)
+        except ValueError:
+            pass
 
-    # Validación de precios
-    try:
-        min_price = float(min_price)
-    except ValueError:
-        min_price = 0  # Valor por defecto si es inválido
+    if max_price:
+        try:
+            max_price = float(max_price)
+            productos = productos.filter(PrecioProducto__lte=max_price)
+        except ValueError:
+            pass
 
-    try:
-        max_price = float(max_price)
-    except ValueError:
-        max_price = 1000000  # Valor por defecto si es inválido
+    if categoria:
+        productos = productos.filter(CategoriaProducto=categoria)
 
-    # Aplicación del filtro de precios
-    productos = productos.filter(PrecioProducto__gte=min_price, PrecioProducto__lte=max_price)
-
-    # Filtro de categorías
-    categorias = request.GET.getlist('categorias')
-    if categorias:
-        productos = productos.filter(CategoriaProducto__in=categorias)
-
-    # Filtro de tipo de animal
-    tipo_animal = request.GET.getlist('tipo_animal')
     if tipo_animal:
-        productos = productos.filter(TipoAnimal__in=tipo_animal)
+        productos = productos.filter(TipoAnimal=tipo_animal)
 
-    # Filtro para mostrar solo productos en oferta
-    productos_oferta = productos.filter(EstaOferta=True)
+    # Paginación
+    try:
+        items_per_page = int(items_per_page)
+    except ValueError:
+        items_per_page = 12
 
-    # Mensaje si no hay productos en oferta
-    mensaje_oferta = None
-    if not productos_oferta.exists():
-        mensaje_oferta = "No hay productos en oferta actualmente."
+    paginator = Paginator(productos, items_per_page)
+    page = request.GET.get('page')
+    
+    try:
+        productos_paginados = paginator.page(page)
+    except PageNotAnInteger:
+        productos_paginados = paginator.page(1)
+    except EmptyPage:
+        productos_paginados = paginator.page(paginator.num_pages)
 
-    # Contexto para pasar los productos filtrados al template
+    # Formatear precios para el carrusel
+    for producto in productos_oferta:
+        producto.PrecioProducto = int(producto.PrecioProducto)
+        producto.PrecioOferta = int(producto.PrecioOferta) if producto.EstaOferta else producto.PrecioProducto
+    
     context = {
-        'productos': productos,
-        'productos_oferta': productos_oferta,
-        'mensaje_oferta': mensaje_oferta,
+        'productos': productos_paginados,
+        'productos_oferta': productos_oferta,  # Añadimos los productos en oferta al contexto
+        'categorias': categorias,
+        'tipos_animal': tipos_animal,
+        'items_per_page': items_per_page,
+        'items_per_page_choices': items_per_page_choices,  # Añadimos las opciones al contexto
+        'current_filters': {
+            'q': query,
+            'min_price': min_price,
+            'max_price': max_price,
+            'categoria': categoria,
+            'tipo_animal': tipo_animal,
+        }
     }
 
     return render(request, 'catalogo/product_list.html', context)
@@ -324,12 +366,54 @@ class Product_CreateView(CreateView):
     form_class = ProductoForm
     template_name = 'catalogo/product_form.html'
     success_url = reverse_lazy('productos')
+    paginate_by = 10
 
     def get_context_data(self, **kwargs):
+        # Inicializamos el objeto
+        self.object = None
         context = {}
+        
+        # Obtenemos el formulario
         context['form'] = kwargs.get('form', self.get_form())
-        # Añadimos la lista de SKUs para validación en el frontend
-        context['productos_skus'] = self.model.objects.values_list('SKUProducto', flat=True)
+        
+        # Obtener parámetros de la URL
+        search_query = self.request.GET.get('search', '')
+        order_by = self.request.GET.get('order_by', '-SKUProducto')
+        items_per_page = int(self.request.GET.get('items_per_page', 10))
+        
+        # Obtener productos con filtros
+        productos = Producto.objects.all()
+        
+        # Aplicar búsqueda
+        if search_query:
+            productos = productos.filter(
+                Q(NombreProducto__icontains=search_query) |
+                Q(SKUProducto__icontains=search_query)
+            )
+        
+        # Aplicar ordenamiento
+        if order_by in ['SKUProducto', '-SKUProducto', 'NombreProducto', '-NombreProducto', 
+                       'PrecioProducto', '-PrecioProducto', 'StockProducto', '-StockProducto']:
+            productos = productos.order_by(order_by)
+        
+        # Paginación
+        paginator = Paginator(productos, items_per_page)
+        page = self.request.GET.get('page', 1)
+        
+        try:
+            productos_paginados = paginator.page(page)
+        except:
+            productos_paginados = paginator.page(1)
+        
+        # Agregar parámetros al contexto
+        context.update({
+            'productos': productos_paginados,
+            'search_query': search_query,
+            'current_order': order_by,
+            'items_per_page': items_per_page,
+            'available_items_per_page': [5, 10, 25, 50, 100]
+        })
+        
         return context
 
     def post(self, request, *args, **kwargs):
@@ -337,128 +421,75 @@ class Product_CreateView(CreateView):
         sku = request.POST.get('SKUProducto')
         context = self.get_context_data(form=form)
 
-        # busca
+        # Buscar
         if 'buscar' in request.POST and sku:
             producto = buscar_producto_por_sku(sku)
             if producto:
-                # Formatear los precios para mejor visualización
-                producto.PrecioProducto = f"${producto.PrecioProducto:,.0f}"
-                if producto.EstaOferta:
-                    producto.PrecioOferta = f"${producto.PrecioOferta:,.0f}"
                 form = self.form_class(instance=producto)
+                messages.info(request, f'Producto encontrado: {producto.NombreProducto}')
             else:
-                form = self.form_class()
+                form = self.form_class(initial={'SKUProducto': sku})
+                messages.warning(request, 'Producto no encontrado. Puede crear uno nuevo con este SKU.')
             context['form'] = form
             return render(request, self.template_name, context)
 
-        # actualiza o crea
+        # Crear o Actualizar
         elif 'crear_actualizar' in request.POST:
             producto = buscar_producto_por_sku(sku)
-            
-            # Validación de SKU existente solo para creación
-            if not producto and self.model.objects.filter(SKUProducto=sku).exists():
-                form.add_error('SKUProducto', 'Este SKU ya existe. Por favor, elige otro.')
-                context['form'] = form
-                return render(request, self.template_name, context)
-
             if producto:
-                form = self.form_class(request.POST, request.FILES, instance=producto)
+                # Si no se sube una nueva imagen, mantener la existente
+                if not request.FILES.get('ImagenProducto'):
+                    form = self.form_class(request.POST, instance=producto)
+                else:
+                    form = self.form_class(request.POST, request.FILES, instance=producto)
             else:
                 form = self.form_class(request.POST, request.FILES)
 
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Producto guardado exitosamente.')
-                return redirect(self.success_url)
-            
-            context['form'] = form
+                context['form'] = self.form_class()
+            else:
+                messages.error(request, 'Por favor corrija los errores en el formulario.')
             return render(request, self.template_name, context)
 
-        # borra
+        # Borrar
         elif 'borrar' in request.POST and sku:
             producto = buscar_producto_por_sku(sku)
             if producto:
+                nombre = producto.NombreProducto
                 producto.delete()
-                messages.success(request, 'Producto eliminado exitosamente.')
-                return redirect(self.success_url)
+                messages.success(request, f'Producto {nombre} eliminado exitosamente.')
+                context['form'] = self.form_class()
             else:
                 messages.error(request, 'No se encontró el producto.')
             return render(request, self.template_name, context)
-            
-        # limpiar
-        elif 'limpiar' in request.POST:
-            context['form'] = self.form_class()
-            return render(request, self.template_name, context)
 
-        # En caso de error, volvemos a renderizar el formulario
         return render(request, self.template_name, context)
 #----------------CRUD de Producto
 
 def checkout_view(request):
-    """
-    Vista para el proceso de checkout.
-    Obtiene el carrito desde las cookies y muestra el resumen del pedido.
-    """
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    logger.handlers = []
-
     try:
-        # 1. Obtener el carrito de las cookies
-        carrito_str = request.COOKIES.get('carrito', '{}')
-        logger.debug(f"Cookie carrito raw: {carrito_str}")
-
-        # 2. Decodificar el JSON
-        import json
-        carrito_data = json.loads(carrito_str)
-        logger.debug(f"Carrito decodificado: {carrito_data}")
-
-        # 3. Procesar el carrito (ahora usando el formato correcto)
-        carrito_procesado = {}
-        
-        for key, item in carrito_data.items():
-            # Los datos ya vienen en el formato correcto
-            carrito_procesado[key] = {
-                'nombre': item['nombre'],
-                'precio': float(item['precio']),
-                'cantidad': int(item['cantidad']),
-                'descripcion': item.get('descripcion', ''),
-                'imagen': item.get('imagen', '')
-            }
-            logger.debug(f"Item procesado - Key: {key}, Datos: {carrito_procesado[key]}")
-
-        # 4. Calcular totales
-        subtotal = sum(
-            item['precio'] * item['cantidad'] 
-            for item in carrito_procesado.values()
-        )
+        # Obtener carrito y calcular totales
+        carrito = json.loads(request.COOKIES.get('carrito', '{}'))
+        subtotal = sum(float(item['precio']) * item['cantidad'] for item in carrito.values())
         shipping = 0 if subtotal >= 20000 else 3990
         total = subtotal + shipping
 
-        logger.debug(f"Totales calculados - Subtotal: {subtotal}, Shipping: {shipping}, Total: {total}")
-
-        # 5. Preparar contexto
         context = {
-            'carrito': carrito_procesado,
+            'carrito': carrito,
             'subtotal': subtotal,
             'shipping': shipping,
             'total': total,
-            'debug': True,
-            'carrito_raw': carrito_str
         }
 
-        logger.debug(f"Contexto final: {context}")
+        # Si el usuario está autenticado, agregar sus datos al contexto
+        if request.user.is_authenticated:
+            context['user'] = request.user
 
-        # 6. Renderizar template
         return render(request, 'pago/checkout.html', context)
 
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decodificando JSON: {str(e)}")
-        messages.error(request, 'Error al procesar el carrito')
-        return redirect('carrito')
-    except Exception as e:
-        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
+    except json.JSONDecodeError:
         messages.error(request, 'Error al procesar el carrito')
         return redirect('carrito')
 
@@ -546,7 +577,7 @@ def procesar_pago_view(request):
         logger.info("Iniciando proceso de pago")
         
         # Validar datos del formulario
-        campos_requeridos = ['nombre', 'apellido', 'email', 'telefono', 'direccion']
+        campos_requeridos = ['rut', 'nombre', 'apellido', 'email', 'telefono', 'direccion']
         for campo in campos_requeridos:
             if not request.POST.get(campo):
                 logger.error(f"Campo requerido faltante: {campo}")
@@ -555,6 +586,7 @@ def procesar_pago_view(request):
         
         # Obtener datos del formulario
         datos_envio = {
+            'rut': request.POST.get('rut'),
             'nombre': request.POST.get('nombre'),
             'apellido': request.POST.get('apellido'),
             'email': request.POST.get('email'),
@@ -579,6 +611,17 @@ def procesar_pago_view(request):
         total = subtotal + shipping
         
         logger.info(f"Total calculado: {total}")
+        
+        # Verificar stock antes de crear la orden
+        for key, item in carrito.items():
+            try:
+                producto = Producto.objects.get(SKUProducto=key)
+                if producto.StockProducto < int(item['cantidad']):
+                    messages.error(request, f'Stock insuficiente para {producto.NombreProducto}')
+                    return redirect('checkout')
+            except Producto.DoesNotExist:
+                messages.error(request, f'Producto no encontrado: {key}')
+                return redirect('checkout')
         
         # Crear la orden
         try:
@@ -717,6 +760,21 @@ def webpay_retorno_view(request):
         if response['response_code'] == 0:  # Pago exitoso
             # Actualizar orden
             orden.EstadoOrden = 'pagado'
+            
+            # Descontar stock de los productos
+            for item in orden.items.all():
+                try:
+                    producto = Producto.objects.get(SKUProducto=item.SKUProducto_id)
+                    if producto.StockProducto >= item.CantidadProducto:
+                        producto.StockProducto -= item.CantidadProducto
+                        producto.save()
+                    else:
+                        logger.error(f"Stock insuficiente para producto {producto.SKUProducto}")
+                        messages.warning(request, f'Stock insuficiente para {producto.NombreProducto}')
+                except Producto.DoesNotExist:
+                    logger.error(f"Producto no encontrado: {item.SKUProducto_id}")
+                    continue
+            
             orden.save()
             
             # Enviar correo de confirmación
@@ -1435,5 +1493,113 @@ class ServicioDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'servicio_confirm_delete.html'
     success_url = reverse_lazy('servicio_list')
     
+@login_required
+def perfil_usuario_view(request):
+    if request.method == 'POST':
+        user = request.user
+        user.NombreUsuario = request.POST.get('nombre')
+        user.ApellidoUsuario = request.POST.get('apellido')
+        user.EmailUsuario = request.POST.get('email')
+        
+        # Manejar el teléfono
+        telefono = request.POST.get('telefono', '')
+        # Remover el prefijo si existe
+        if telefono.startswith('+56'):
+            telefono = telefono[3:]
+        # Limpiar cualquier espacio o carácter no numérico
+        telefono = ''.join(filter(str.isdigit, telefono))
+        # Agregar el prefijo si no está vacío
+        user.TelefonoUsuario = f'+56{telefono}' if telefono else None
+        
+        user.DomicilioUsuario = request.POST.get('direccion')
+        
+        # Manejar el tipo de animal
+        tipo_animal = request.POST.get('tipo_animal')
+        if tipo_animal:
+            try:
+                # Reemplazar la coma por punto y convertir a float
+                tipo_animal = float(tipo_animal.replace(',', '.'))
+                user.TipoAnimal = tipo_animal
+            except ValueError:
+                messages.error(request, 'Valor inválido para el tipo de animal')
+                return redirect('perfil')
+        else:
+            user.TipoAnimal = None
+        
+        try:
+            user.save()
+            messages.success(request, 'Perfil actualizado correctamente')
+        except Exception as e:
+            messages.error(request, f'Error al actualizar el perfil: {str(e)}')
+        
+        return redirect('perfil')
+
+    return render(request, 'usuario/perfil.html')
     
+    
+    
+
+@login_required
+def mis_ordenes_view(request):
+    # Obtener todas las órdenes del usuario actual, ordenadas por fecha descendente
+    ordenes = Orden.objects.filter(usuario=request.user).order_by('-FechaOrden')
+    
+    # Obtener filtros de la URL
+    estado = request.GET.get('estado')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    
+    # Aplicar filtros si existen
+    if estado:
+        ordenes = ordenes.filter(EstadoOrden=estado)
+    if fecha_desde:
+        ordenes = ordenes.filter(FechaOrden__gte=fecha_desde)
+    if fecha_hasta:
+        ordenes = ordenes.filter(FechaOrden__lte=fecha_hasta)
+    
+    context = {
+        'ordenes': ordenes,
+        'filtro_estado': estado,
+        'filtro_fecha_desde': fecha_desde,
+        'filtro_fecha_hasta': fecha_hasta
+    }
+    return render(request, 'usuario/mis_ordenes.html', context)
+    
+    
+    
+
+@login_required
+def actualizar_imagen_perfil(request):
+    if request.method == 'POST' and request.FILES.get('imagen'):
+        imagen = request.FILES['imagen']
+        
+        # Validar extensión usando la función del modelo
+        try:
+            validate_image_file_extension(imagen)
+        except ValidationError as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+        
+        # Actualizar imagen
+        try:
+            user = request.user
+            user.ImagenPerfil = imagen
+            user.save()
+            
+            return JsonResponse({
+                'success': True,
+                'image_url': user.ImagenPerfil.url
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al actualizar la imagen: {str(e)}'
+            })
+            
+    return JsonResponse({
+        'success': False,
+        'error': 'No se proporcionó ninguna imagen'
+    })
     
