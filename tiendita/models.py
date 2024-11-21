@@ -268,7 +268,7 @@ class Veterinario(models.Model):
     horario_inicio = models.TimeField(null=True, blank=True)
     horario_fin = models.TimeField(null=True, blank=True)
     nombre_veterinario = models.CharField(max_length=100, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True)
 
     class Meta:
         verbose_name = 'Veterinario'
@@ -320,11 +320,10 @@ class Servicio(models.Model):
     def __str__(self):
         return f"{self.NombreServicio} - {self.get_TipoServicio_display()}"
 
-
 class CitaVeterinaria(models.Model):
     ESTADO_CHOICES = [
         ('PENDIENTE', 'Pendiente'),
-        ('CONFIRMADA', 'Confirmada'),
+        ('CONFIRMADA', 'Confirmada'), 
         ('CANCELADA', 'Cancelada'),
     ]
 
@@ -332,13 +331,31 @@ class CitaVeterinaria(models.Model):
     servicio = models.CharField(max_length=255)
     veterinaria = models.ForeignKey('Veterinaria', on_delete=models.CASCADE)
     veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE)
-    fecha = models.DateField()
-    hora = models.TimeField()
-    notas = models.TextField(blank=True, null=True)
+    fecha_inicio = models.DateTimeField()
+    fecha_fin = models.DateTimeField()
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    color = models.CharField(max_length=20, default='#3788d8')
+    todo_el_dia = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['-fecha', '-hora']
+        ordering = ['-fecha_inicio']
 
     def __str__(self):
-        return f"Cita {self.servicio} - {self.fecha} {self.hora} ({self.estado})"
+        return f"{self.titulo} - {self.fecha_inicio.strftime('%Y-%m-%d %H:%M')} ({self.estado})"
+
+    def get_event_data(self):
+        return {
+            'id': self.id,
+            'title': self.titulo,
+            'start': self.fecha_inicio.isoformat(),
+            'end': self.fecha_fin.isoformat(),
+            'description': self.descripcion,
+            'color': self.color,
+            'allDay': self.todo_el_dia,
+            'estado': self.estado,
+            'veterinario': self.veterinario.nombre_veterinario,
+            'usuario': self.usuario.NombreUsuario,
+            'servicio': self.servicio
+        }

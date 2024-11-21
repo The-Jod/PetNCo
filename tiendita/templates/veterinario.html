@@ -94,10 +94,11 @@
                                                 data-id="{{ veterinario.codigo_veterinario }}"
                                                 data-nombre="{{ veterinario.nombre_veterinario }}"
                                                 data-especialidad="{{ veterinario.especialidad }}"
-                                                data-veterinaria-id="{{ veterinario.veterinaria.id|default:'' }}"
+                                                data-veterinaria-id="{{ veterinario.veterinaria.CodigoVeterinaria|default:'' }}"
                                                 data-horario-inicio="{{ veterinario.horario_inicio|time:'H:i' }}"
                                                 data-horario-fin="{{ veterinario.horario_fin|time:'H:i' }}"
                                                 data-disponibilidad="{{ veterinario.Disponibilidadveterinario }}"
+                                                data-experiencia="{{ veterinario.experiencia_años }}"
                                                 data-telefono="{{ veterinario.telefono }}"
                                                 data-email="{{ veterinario.usuario.email }}">
                                                 <i class="bi bi-pencil-square"></i>
@@ -149,8 +150,8 @@
                                 <select class="form-select" id="id_veterinaria" name="veterinaria" required>
                                     <option value="">Seleccione una veterinaria...</option>
                                     {% for veterinaria in veterinarias %}
-                                    <option value="{{ veterinaria.CodigoVeterinaria}}">{{ veterinaria.NombreVeterinaria
-                                        }}
+                                    <option value="{{ veterinaria.CodigoVeterinaria}}">
+                                        {{ veterinaria.NombreVeterinaria}}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -190,7 +191,7 @@
 
                             <div class="col-md-6 mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
+                                <input type="email" class="form-control" id="email" name="usuario_email" required>
                                 <div class="invalid-feedback">
                                     Por favor ingrese un email válido.
                                 </div>
@@ -251,8 +252,13 @@
 
                             <div class="col-md-6 mb-3">
                                 <label for="edit_Veterinaria" class="form-label">Veterinaria</label>
-                                <select class="form-select" id="edit_Veterinaria" name="veterinaria" required>
+                                <select class="form-select" id="id_veterinaria" name="veterinaria">
                                     <option value="">Seleccione una veterinaria...</option>
+                                    {% for veterinaria in veterinarias %}
+                                    <option value="{{ veterinaria.CodigoVeterinaria }}">
+                                        {{ veterinaria.NombreVeterinaria }}
+                                    </option>
+                                    {% endfor %}
                                 </select>
                                 <div class="invalid-feedback">
                                     Por favor seleccione la veterinaria.
@@ -282,8 +288,8 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="edit_ExperienciaAños" class="form-label">Experiencia</label>
-                                <input type="number" class="form-control" id="edit_ExperienciaAños"
-                                    name="experiencia_años" required>
+                                <input type="text" class="form-control" id="edit_ExperienciaAños"
+                                    name="edit_ExperienciaAños" required>
                                 <div class="invalid-feedback">
                                     Por favor ingrese los años de experiencia.
                                 </div>
@@ -291,7 +297,7 @@
 
                             <div class="col-md-6 mb-3">
                                 <label for="edit_email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="edit_email" name="email" required>
+                                <input type="email" class="form-control" id="edit_email" name="usuario_email" required>
                                 <div class="invalid-feedback">
                                     Por favor ingrese un email válido.
                                 </div>
@@ -317,19 +323,18 @@
                             </div>
                         </div>
 
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                </div>
-                </form>
             </div>
         </div>
+
+
+
     </div>
-
-
-
 </div>
 {% endblock %}
 {% block extra_scripts %}
@@ -359,7 +364,7 @@
             e.preventDefault();  // Prevenir el envío normal del formulario
 
             const veterinaria = $('#id_veterinaria').val();
-            console.log("Veterinaria seleccionada:", veterinaria);
+
             if (!veterinaria) {
                 alert("Debe seleccionar una veterinaria");
                 return;
@@ -450,26 +455,32 @@
             var id = button.data('id');
             var nombre = button.data('nombre');
             var especialidad = button.data('especialidad');
-            var veterinaria = button.data('veterinaria');
-            var horarioInicio = button.data('horarioinicio');
-            var horarioCierre = button.data('horariocierre');
+            var veterinariaId = button.data('veterinaria-id') || ''; // Valor actual de veterinaria
+            var horarioInicio = button.data('horario-inicio');
+            var horarioCierre = button.data('horario-fin');
             var disponibilidad = button.data('disponibilidad');
+            var experiencia = button.data('experiencia');
             var telefono = button.data('telefono');
             var email = button.data('email');
+
+            console.log("ID de veterinaria:", veterinariaId);
 
             var modal = $(this);
 
             // Asignar los valores al formulario del modal
-            modal.find('.modal-body #edit_id').val(id); // Asignar el id del veterinario
-            modal.find('.modal-body #edit_Nombreveterinario').val(nombre); // Asignar el nombre del veterinario
-            modal.find('.modal-body #edit_Especialidad').val(especialidad); // Asignar la especialidad
-            modal.find('.modal-body #edit_Veterinaria').val(veterinaria); // Asignar la veterinaria
-            modal.find('.modal-body #edit_HorarioInicioveterinario').val(horarioInicio); // Asignar el horario de inicio
-            modal.find('.modal-body #edit_HorarioCierreveterinario').val(horarioCierre); // Asignar el horario de cierre
-            modal.find('.modal-body #edit_Disponibilidadveterinario').val(disponibilidad); // Asignar la disponibilidad
-            modal.find('.modal-body #edit_telefono').val(telefono); // Asignar el teléfono
-            modal.find('.modal-body #edit_email').val(email); // Asignar el correo electrónico
+            modal.find('.modal-body #edit_id').val(id);
+            modal.find('.modal-body #edit_Nombreveterinario').val(nombre);
+            modal.find('.modal-body #edit_Especialidad').val(especialidad);
+            modal.find('.modal-body #edit_HorarioInicio').val(horarioInicio);
+            modal.find('.modal-body #edit_HorarioFin').val(horarioCierre);
+            modal.find('.modal-body #edit_telefono').val(telefono);
+            modal.find('.modal-body #edit_email').val(email);
+            modal.find('.modal-body #edit_ExperienciaAños').val(experiencia);
+
+            // Establecer el valor seleccionado en el select de veterinaria
+            modal.find('.modal-body #id_veterinaria').val(veterinariaId);
         });
+
 
         $('#editForm').on('submit', function (e) {
             e.preventDefault(); // Prevenir el envío tradicional del formulario
@@ -501,7 +512,7 @@
                             title: '¡Actualización exitosa!',
                             text: 'El veterinario se ha actualizado correctamente.',
                             showConfirmButton: false,
-
+                            timer: 1500
                         });
                         setTimeout(() => location.reload(), 1400); // Recargar página
                     } else {
@@ -553,13 +564,13 @@
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Eliminación exitosa',
-                                    text: 'La veterinario ha sido eliminada.',
+                                    text: 'El veterinario ha sido eliminado.',
                                     showConfirmButton: false,
                                     timer: 1500  // Se cierra automáticamente después de 1.5 segundos
                                 }).then(() => {
                                     // Comprobar si la respuesta indica que se debe recargar
                                     if (response.reload) {
-                                        location.reload();  // Recargar la página después de eliminar la veterinario
+                                        location.reload();  // Recargar la página después de eliminar el veterinario
                                     }
                                 });
                             } else {
@@ -567,7 +578,7 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error al eliminar',
-                                    text: response.error || 'Hubo un error al intentar eliminar la veterinario.',
+                                    text: response.error || 'Hubo un error al intentar eliminar el veterinario.',
                                     confirmButtonText: 'Aceptar'
                                 });
                             }
@@ -577,7 +588,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error al eliminar',
-                                text: xhr.responseJSON?.error || 'Hubo un error al intentar eliminar la veterinario.',
+                                text: xhr.responseJSON?.error || 'Hubo un error al intentar eliminar el veterinario.',
                                 confirmButtonText: 'Aceptar'
                             });
                         }

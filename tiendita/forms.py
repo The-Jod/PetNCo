@@ -370,19 +370,31 @@ class ServicioForm(forms.ModelForm):
             'DisponibilidadServicio': forms.Select(attrs={'class': 'form-select'}),
             'Precio': forms.NumberInput(attrs={'class': 'form-control'}),
         }
-
 class CitaVeterinariaForm(forms.ModelForm):
     class Meta:
         model = CitaVeterinaria
-        fields = ['servicio', 'veterinaria', 'veterinario', 'fecha', 'hora', 'notas']
+        fields = ['servicio', 'veterinaria', 'veterinario', 'fecha_inicio', 'fecha_fin', 'titulo', 'descripcion', 'estado', 'todo_el_dia']
         widgets = {
-            'servicio': forms.Select(attrs={'class': 'form-select'}),
+            'servicio': forms.TextInput(attrs={'class': 'form-control'}),
             'veterinaria': forms.Select(attrs={'class': 'form-select'}),
             'veterinario': forms.Select(attrs={'class': 'form-select'}),
-            'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'hora': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'notas': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'fecha_inicio': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'fecha_fin': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'titulo': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+            'todo_el_dia': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
-    
+
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_fin = cleaned_data.get('fecha_fin')
+
+        if fecha_inicio and fecha_fin:
+            if fecha_inicio >= fecha_fin:
+                raise forms.ValidationError("La fecha de fin debe ser posterior a la fecha de inicio")
+
+        return cleaned_data
 
 

@@ -1169,70 +1169,93 @@ class VeterinarioCreateView(LoginRequiredMixin, CreateView):
         })
 
 
-        
 class VeterinarioUpdateView(LoginRequiredMixin, UpdateView):
     model = Veterinario
     form_class = VeterinarioForm
     template_name = 'veterinario.html'
-    success_url = reverse_lazy('veterinario_list')  # Cambiar según la URL de éxito deseada
-
-    def validar_duplicados(self, form):
-        errores = {}
-        codigo_veterinario = form.cleaned_data.get('codigo_veterinario')
-
-        # Validación de duplicado por código veterinario
-        if Veterinario.objects.filter(codigo_veterinario=codigo_veterinario).exclude(pk=self.object.pk).exists():
-            errores['codigo_veterinario'] = 'Ya existe un veterinario con este código.'
-
-        return errores
-
-    def form_valid(self, form):
-        # Verificar duplicados antes de guardar el formulario
-        errores = self.validar_duplicados(form)
-        if errores:
-            return JsonResponse({'success': False, 'errors': errores})
-
-        # Guardar el formulario y enviar respuesta
-        response = super().form_valid(form)
-        return JsonResponse({'success': True, 'reload': True})
-
-    def form_invalid(self, form):
-        # Manejo de formulario inválido, devolver los errores en formato JSON
-        return JsonResponse({'success': False, 'errors': form.errors})
+    success_url = reverse_lazy('veterinario_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Mostrar un mensaje de error si existe un parámetro 'error' en la URL
-        if self.request.GET.get('error'):
-            context['error_message'] = 'Hubo un problema al guardar los cambios. Por favor, intente de nuevo.'
+        context['veterinarios'] = Veterinario.objects.all()
+        context['veterinarias'] = Veterinaria.objects.all()
+        context['is_update'] = True
         return context
-
-
-
-
-class VeterinarioDeleteView(LoginRequiredMixin, DeleteView):
-    model = Veterinario
-    template_name = 'veterinario_confirm_delete.html'
-    success_url = reverse_lazy('veterinario_list')
 
     def form_valid(self, form):
         try:
-            # Eliminar el veterinario
-            veterinario = self.get_object()
-            veterinario.delete()
+            veterinario = form.save(commit=False)
+            
+            # Validar que no exista otro veterinario con el mismo código
+            if Veterinario.objects.filter(codigo_veterinario=veterinario.codigo_veterinario).exclude(pk=self.object.pk).exists():
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'codigo_veterinario': ['Ya existe un veterinario con este código.']}
+                })
 
-            # Retornar éxito en formato JSON
-            return JsonResponse({'success': True, 'reload': True})
+            # Validar que no exista otro veterinario con el mismo usuario
+            if Veterinario.objects.filter(usuario=veterinario.usuario).exclude(pk=self.object.pk).exists():
+                return JsonResponse({
+                    'success': False, 
+                    'errors': {'usuario': ['Este usuario ya está asignado a otro veterinario.']}
+                })
 
+            veterinario.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Veterinario actualizado exitosamente',
+                'veterinario': {
+                    'id': veterinario.id,
+                    'nombre': veterinario.nombre_veterinario,
+                    'especialidad': veterinario.especialidad,
+                    'veterinaria': veterinario.veterinaria.NombreVeterinaria if veterinario.veterinaria else None,
+                    'horario_inicio': veterinario.horario_inicio.strftime('%H:%M') if veterinario.horario_inicio else None,
+                    'horario_fin': veterinario.horario_fin.strftime('%H:%M') if veterinario.horario_fin else None,
+                    'telefono': veterinario.telefono,
+                    'email': veterinario.email
+                }
+            })
+            
         except Exception as e:
-            # Si ocurre un error, devolver mensaje de error
-            return JsonResponse({'error': f'Error al eliminar: {str(e)}'}, status=500)
+            return JsonResponse({
+                'success': False,
+                'errors': {'__all__': [f'Error al actualizar: {str(e)}']}
+            })
 
     def form_invalid(self, form):
-        # Si ocurre un error en la eliminación, devolver mensaje de error
-        return JsonResponse({'error': 'Error al eliminar el veterinario'}, status=400)
-    
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        })
 
+class VeterinarioDeleteView(LoginRequiredMixin, DeleteView):
+    model = Veterinario
+    success_url = reverse_lazy('veterinario_list')
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            veterinario = self.get_object()
+            
+            # Verificar si tiene citas pendientes
+            if CitaVeterinaria.objects.filter(veterinario=veterinario, estado='pendiente').exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No se puede eliminar el veterinario porque tiene citas pendientes'
+                })
+                
+            veterinario.delete()
+            return JsonResponse({
+                'success': True,
+                'message': 'Veterinario eliminado exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': f'Error al eliminar el veterinario: {str(e)}'
+            })
+    
 #CRUD CITAS
 class CitaVeterinariaListView(LoginRequiredMixin, ListView):
     model = CitaVeterinaria
@@ -1249,211 +1272,228 @@ class CitaVeterinariaListView(LoginRequiredMixin, ListView):
         if estado:
             queryset = queryset.filter(estado=estado)
         if fecha_desde:
-            queryset = queryset.filter(fecha__gte=fecha_desde)
+            queryset = queryset.filter(fecha_inicio__gte=fecha_desde)
         if fecha_hasta:
-            queryset = queryset.filter(fecha__lte=fecha_hasta)
+            queryset = queryset.filter(fecha_inicio__lte=fecha_hasta)
         if veterinaria:
             queryset = queryset.filter(veterinaria_id=veterinaria)
 
-        return queryset.order_by('-fecha', '-hora')
-    
-    
-    
-    
-    
-    def cita_view(request):
-        veterinarios = Veterinario.objects.all()
-        if request.method == 'POST':
-            form = CitaVeterinariaForm(request.POST)
-            if form.is_valid():
-                cita = form.save()
-                return JsonResponse({
-                    'success': True,
-                    'cita': {
-                        'id': cita.id,
-                        'servicio': cita.servicio,
-                        'fecha': cita.fecha,
-                        'hora': cita.hora,
-                        'estado': cita.estado,
-                        'veterinario': cita.veterinario.usuario.NombreUsuario,
-                        'veterinaria': cita.veterinaria.NombreVeterinaria,
-                    }
-                })
-            else:
-                return JsonResponse({'success': False, 'errors': form.errors})
-        else:
-            form = CitaVeterinariaForm()
-        
-        return render(request, 'cita.html', {'form': form, 'veterinarios': veterinarios})
+        return queryset.order_by('-fecha_inicio')
 
+def cita_view(request):
+    veterinarios = Veterinario.objects.all()
+    context = {
+        'veterinarios': veterinarios
+    }
+    return render(request, 'cita.html', context)
 
-    def get_queryset(self):
-        queryset = super().get_queryset().filter(usuario=self.request.user)
-        estado = self.request.GET.get('estado')
-        fecha_desde = self.request.GET.get('fecha_desde')
-        fecha_hasta = self.request.GET.get('fecha_hasta')
-        veterinaria = self.request.GET.get('veterinaria')
-
-        if estado:
-            queryset = queryset.filter(estado=estado)
-        if fecha_desde:
-            queryset = queryset.filter(fecha__gte=fecha_desde)
-        if fecha_hasta:
-            queryset = queryset.filter(fecha__lte=fecha_hasta)
-        if veterinaria:
-            queryset = queryset.filter(veterinaria_id=veterinaria)
-
-        return queryset.order_by('-fecha', '-hora')
-    
-
-
-# Mantener tus vistas existentes
-class CitaVeterinariaListView(LoginRequiredMixin, ListView):
-    model = CitaVeterinaria
-    template_name = 'cita.html'
-    context_object_name = 'citas'
-
-    def get_queryset(self):
-        queryset = super().get_queryset().filter(usuario=self.request.user)
-        estado = self.request.GET.get('estado')
-        fecha_desde = self.request.GET.get('fecha_desde')
-        fecha_hasta = self.request.GET.get('fecha_hasta')
-        veterinaria = self.request.GET.get('veterinaria')
-
-        if estado:
-            queryset = queryset.filter(estado=estado)
-        if fecha_desde:
-            queryset = queryset.filter(fecha__gte=fecha_desde)
-        if fecha_hasta:
-            queryset = queryset.filter(fecha__lte=fecha_hasta)
-        if veterinaria:
-            queryset = queryset.filter(veterinaria_id=veterinaria)
-
-        return queryset.order_by('-fecha', '-hora')
-
-class CitaVeterinariaCreateView(LoginRequiredMixin, CreateView):
-    model = CitaVeterinaria
-    form_class = CitaVeterinariaForm
-    template_name = 'cita.html'
-    success_url = reverse_lazy('cita_list')
-
-    def form_valid(self, form):
-        cita = form.save()
-        return JsonResponse({
-            'success': True,
-            'cita': {
-                'id': cita.id,
-                'servicio': cita.servicio,
-                'fecha': cita.fecha,
-                'hora': cita.hora,
-                'estado': cita.estado,
-                'veterinario': cita.veterinario.usuario.NombreUsuario,
-                'veterinaria': cita.veterinaria.NombreVeterinaria,
-            }
-        })
-
-    def form_invalid(self, form):
-        return JsonResponse({'success': False, 'errors': form.errors})
-
-
-class CitaVeterinariaUpdateView(LoginRequiredMixin, UpdateView):
-    model = CitaVeterinaria
-    form_class = CitaVeterinariaForm
-    template_name = 'cita.html'
-    success_url = reverse_lazy('cita_list')
-
-
-
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, View, ListView, CreateView, UpdateView, DeleteView
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from .models import CitaVeterinaria, Veterinaria, Veterinario
-import json
-from datetime import datetime
-class CitaVeterinariaDeleteView(LoginRequiredMixin, DeleteView):
-    model = CitaVeterinaria
-    template_name = 'cita_confirm_delete.html'
-    success_url = reverse_lazy('cita_list')
-
-# Agregar las nuevas vistas del calendario
 class CalendarView(LoginRequiredMixin, TemplateView):
-    template_name = 'cita.html'
+    template_name = 'calendar.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['veterinarias'] = Veterinaria.objects.all()
         context['veterinarios'] = Veterinario.objects.all()
+        context['servicios'] = Servicio.objects.all()
         return context
+
+class HorariosDisponiblesAPI(LoginRequiredMixin, View):
+    def get(self, request, veterinario_id, fecha, *args, **kwargs):
+        try:
+            veterinario = Veterinario.objects.get(id=veterinario_id)
+            fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
+            
+            # Generar horarios disponibles entre horario_inicio y horario_fin
+            horarios = []
+            hora_actual = veterinario.horario_inicio
+            while hora_actual <= veterinario.horario_fin:
+                fecha_hora = datetime.combine(fecha_obj, hora_actual)
+                disponible = not CitaVeterinaria.objects.filter(
+                    veterinario=veterinario,
+                    fecha_inicio=fecha_hora
+                ).exists()
+                
+                horarios.append({
+                    'hora': hora_actual.strftime('%H:%M'),
+                    'disponible': disponible
+                })
+                hora_actual = (datetime.combine(date.today(), hora_actual) + 
+                             timedelta(minutes=30)).time()
+            
+            return JsonResponse({'horarios': horarios})
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+class AgendarCitaView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        try:
+            fecha = data['fecha']
+            hora = data['hora']
+            veterinario_id = data['veterinario_id']
+            
+            fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
+            
+            # Verificar disponibilidad
+            if CitaVeterinaria.objects.filter(
+                veterinario_id=veterinario_id,
+                fecha_inicio=fecha_hora
+            ).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'El horario seleccionado ya no está disponible'
+                }, status=400)
+            
+            # Crear la cita
+            cita = CitaVeterinaria.objects.create(
+                usuario=request.user,
+                veterinario_id=veterinario_id,
+                servicio_id=data['servicio'],
+                fecha_inicio=fecha_hora,
+                fecha_fin=fecha_hora + timedelta(minutes=30),
+                descripcion=data.get('descripcion', ''),
+                estado='PENDIENTE'
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Cita agendada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
 class CitaVeterinariaCalendarAPI(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         start = request.GET.get('start')
         end = request.GET.get('end')
+        veterinario_id = request.GET.get('veterinario_id')
         
         citas = CitaVeterinaria.objects.filter(
-            usuario=request.user,
-            fecha__range=[start, end]
+            fecha_inicio__range=[start, end]
         )
         
-        events = []
-        for cita in citas:
-            color = {
-                'PENDIENTE': '#ffd700',
-                'CONFIRMADA': '#28a745',
-                'CANCELADA': '#dc3545'
-            }.get(cita.estado, '#ffd700')
+        if veterinario_id:
+            citas = citas.filter(veterinario_id=veterinario_id)
             
-            events.append({
-                'id': cita.id,
-                'title': f'{cita.servicio} - Dr. {cita.veterinario.nombre}',
-                'start': f'{cita.fecha}T{cita.hora}',
-                'color': color,
-                'extendedProps': {
-                    'estado': cita.estado,
-                    'veterinaria': cita.veterinaria.nombre,
-                    'veterinario': cita.veterinario.nombre,
-                    'notas': cita.notas
-                }
-            })
-        
+        events = [cita.get_event_data() for cita in citas]
         return JsonResponse(events, safe=False)
 
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
         try:
-            fecha_hora = datetime.fromisoformat(data['start'].replace('Z', '+00:00'))
+            # Validar disponibilidad del horario
+            fecha = data['fecha']
+            hora = data['hora']
+            veterinario_id = data['veterinario_id']
             
+            fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
+            
+            # Verificar si ya existe una cita en ese horario
+            if CitaVeterinaria.objects.filter(
+                veterinario_id=veterinario_id,
+                fecha_inicio=fecha_hora
+            ).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'El horario seleccionado ya no está disponible'
+                }, status=400)
+            
+            # Crear la cita
             cita = CitaVeterinaria.objects.create(
                 usuario=request.user,
-                servicio=data['servicio'],
-                veterinaria_id=data['veterinaria'],
-                veterinario_id=data['veterinario'],
-                fecha=fecha_hora.date(),
-                hora=fecha_hora.time(),
-                notas=data.get('notas', ''),
+                veterinario_id=veterinario_id,
+                servicio_id=data['servicio'],
+                fecha_inicio=fecha_hora,
+                fecha_fin=fecha_hora + timedelta(minutes=30),
+                descripcion=data.get('descripcion', ''),
                 estado='PENDIENTE'
             )
             
             return JsonResponse({
-                'status': 'success',
-                'id': cita.id
+                'success': True,
+                'event': cita.get_event_data()
             })
         except Exception as e:
             return JsonResponse({
-                'status': 'error',
-                'message': str(e)
+                'success': False,
+                'error': str(e)
             }, status=400)
-    
-    
-    
-    
-    
-    
-    
-    
+
+    def put(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        try:
+            cita = CitaVeterinaria.objects.get(id=data['id'])
+            
+            # Verificar permisos
+            if not request.user.is_staff and cita.usuario != request.user:
+                raise PermissionDenied
+                
+            # Actualizar campos permitidos
+            if 'estado' in data:
+                cita.estado = data['estado']
+            if 'descripcion' in data:
+                cita.descripcion = data['descripcion']
+                
+            cita.save()
+            
+            return JsonResponse({
+                'success': True,
+                'event': cita.get_event_data()
+            })
+        except CitaVeterinaria.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Cita no encontrada'
+            }, status=404)
+        except PermissionDenied:
+            return JsonResponse({
+                'success': False,
+                'error': 'No tiene permisos para modificar esta cita'
+            }, status=403)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+class CancelarCitaView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        try:
+            cita = CitaVeterinaria.objects.get(id=pk)
+            
+            # Verificar permisos
+            if not request.user.is_staff and cita.usuario != request.user:
+                raise PermissionDenied
+                
+            # Solo permitir cancelar citas pendientes
+            if cita.estado != 'PENDIENTE':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Solo se pueden cancelar citas pendientes'
+                }, status=400)
+                
+            cita.delete()
+            return JsonResponse({'success': True})
+        except CitaVeterinaria.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Cita no encontrada'
+            }, status=404)
+        except PermissionDenied:
+            return JsonResponse({
+                'success': False,
+                'error': 'No tiene permisos para cancelar esta cita'
+            }, status=403)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
     
 class ServicioListView(LoginRequiredMixin, ListView):
     model = Servicio

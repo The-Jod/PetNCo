@@ -10,7 +10,7 @@ from .views import (
     VeterinariaListView, VeterinariaCreateView, VeterinariaUpdateView, VeterinariaDeleteView,
     VeterinarioListView, VeterinarioCreateView, VeterinarioUpdateView, VeterinarioDeleteView,
     ServicioListView, ServicioCreateView, ServicioUpdateView, ServicioDeleteView,
-    CitaVeterinariaListView, CitaVeterinariaCreateView, CitaVeterinariaUpdateView, CitaVeterinariaDeleteView)
+    CitaVeterinariaListView)
 
 """
 URL configuration for Petnco project.
@@ -76,14 +76,14 @@ urlpatterns = [
     path('servicios/delete/<int:pk>/', ServicioDeleteView.as_view(), name='servicio_delete'),
 
 
-   # Nuevas URLs para el calendario
-    path('calendar/', views.CalendarView.as_view(), name='calendar'),
-    path('api/citas/', views.CitaVeterinariaCalendarAPI.as_view(), name='citas_api'),
+   # URLs para renderizar el calendario y obtener datos de citas
+    path('calendar/', views.CalendarView.as_view(), name='calendar'),  # Renderiza la vista del calendario
+    path('api/citas/', views.CitaVeterinariaCalendarAPI.as_view(), name='citas_api'),  # API que provee los datos de las citas
+    path('api/horarios-disponibles/<int:veterinario_id>/<str:fecha>/', views.HorariosDisponiblesAPI.as_view(), name='horarios_disponibles'),  # API para obtener horarios disponibles
+    path('citas/agendar/', views.AgendarCitaView.as_view(), name='agendar_cita'),  # Vista para agendar citas
+    path('citas/cancelar/<int:pk>/', views.CancelarCitaView.as_view(), name='cancelar_cita'),  # Vista para cancelar citas
 
     path('citas/', views.vetcita_list_view, name='registro'),
-    path('citas/add/', CitaVeterinariaCreateView.as_view(), name='registro_add'),
-    path('citas/edit/<int:pk>/', CitaVeterinariaUpdateView.as_view(), name='cita_edit'),
-    path('citas/delete/<int:pk>/', CitaVeterinariaDeleteView.as_view(), name='cita_delete'),
     
     path('perfil/', views.perfil_usuario_view, name='perfil'),
     path('mis-ordenes/', views.mis_ordenes_view, name='mis_ordenes'),

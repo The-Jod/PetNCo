@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Página de Inicio - Vet & Pet Center{%endblock%}
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css' rel='stylesheet' />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.print.min.css' rel='stylesheet'
+    media='print' />
+<style>
+    #calendar {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 10px;
+    }
+
+    .fc-event {
+        cursor: pointer;
+    }
+
+    .modal-horario {
+        padding: 20px;
+    }
+
+    .horario-disponible {
+        background-color: #28a745;
+        color: white;
+        margin: 5px;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .horario-ocupado {
+        background-color: #dc3545;
+        color: white;
+        margin: 5px;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center my-4">Calendario de Citas</h2>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <select class="form-select" id="veterinarioSelect">
+                <option value="">Seleccione un veterinario</option>
+                {% for veterinario in veterinarios %}
+                <option value="{{ veterinario.id }}">{{ veterinario.nombre_veterinario }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div id="calendar"></div>
+</div>
+
+<!-- Modal para ver detalles de la cita -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de la Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Título:</strong> <span id="eventTitle"></span></p>
+                <p><strong>Veterinario:</strong> <span id="eventVeterinario"></span></p>
+                <p><strong>Cliente:</strong> <span id="eventUsuario"></span></p>
+                <p><strong>Servicio:</strong> <span id="eventServicio"></span></p>
+                <p><strong>Inicio:</strong> <span id="eventStart"></span></p>
+                <p><strong>Fin:</strong> <span id="eventEnd"></span></p>
+                <p><strong>Estado:</strong> <span id="eventEstado"></span></p>
+                <p><strong>Descripción:</strong> <span id="eventDescription"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="btnCancelarCita">Cancelar Cita</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agendar nueva cita -->
+<div class="modal fade" id="nuevaCitaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agendar Nueva Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevaCita">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Fecha Seleccionada:</label>
+                        <input type="text" id="fechaSeleccionada" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Horarios Disponibles:</label>
+                        <div id="horariosDisponibles" class="modal-horario">
+                            <!-- Los horarios se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Servicio:</label>
+                        <select class="form-select" id="servicioSelect" required>
+                            <option value="">Seleccione un servicio</option>
+                            {% for servicio in servicios %}
+                            <option value="{{ servicio.id }}">{{ servicio.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción:</label>
+                        <textarea class="form-control" id="descripcionCita" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Agendar Cita</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/es.js'></script>
+<script src="{% static 'js/navbar.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        let selectedEventId = null;
+        const calendar = $('#calendar').fullCalendar({
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay'
+            },
+            defaultView: 'month',
+            locale: 'es',
+            navLinks: true,
+            eventLimit: true,
+            events: function (start, end, timezone, callback) {
+                const veterinarioId = $('#veterinarioSelect').val();
+                $.ajax({
+                    url: '{% url "citas_api" %}',
+                    data: {
+                        start: start.format(),
+                        end: end.format(),
+                        veterinario_id: veterinarioId
+                    },
+                    success: function (events) {
+                        callback(events);
+                    }
+                });
+            },
+            selectable: true,
+            select: function (start, end) {
+                const veterinarioId = $('#veterinarioSelect').val();
+                if (!veterinarioId) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Por favor seleccione un veterinario primero',
+                        icon: 'warning'
+                    });
+                    return;
+                }
+
+                const fechaSeleccionada = moment(start).format('YYYY-MM-DD');
+                $('#fechaSeleccionada').val(fechaSeleccionada);
+
+                $.ajax({
+                    url: `/api/horarios-disponibles/${veterinarioId}/${fechaSeleccionada}/`,
+                    method: 'GET',
+                    success: function (response) {
+                        const horariosContainer = $('#horariosDisponibles');
+                        horariosContainer.empty();
+
+                        response.horarios.forEach(horario => {
+                            const horarioElement = $(`<div class="horario-${horario.disponible ? 'disponible' : 'ocupado'}">`);
+                            horarioElement.text(horario.hora);
+                            if (horario.disponible) {
+                                horarioElement.click(function () {
+                                    $('.horario-disponible').removeClass('selected');
+                                    $(this).addClass('selected');
+                                });
+                            }
+                            horariosContainer.append(horarioElement);
+                        });
+
+                        $('#nuevaCitaModal').modal('show');
+                    }
+                });
+            },
+            eventClick: function (event) {
+                selectedEventId = event.id;
+                $('#eventTitle').text(event.title);
+                $('#eventVeterinario').text(event.veterinario);
+                $('#eventUsuario').text(event.usuario);
+                $('#eventServicio').text(event.servicio);
+                $('#eventStart').text(moment(event.start).format('DD/MM/YYYY HH:mm'));
+                $('#eventEnd').text(moment(event.end).format('DD/MM/YYYY HH:mm'));
+                $('#eventEstado').text(event.estado);
+                $('#eventDescription').text(event.description || 'Sin descripción');
+                $('#eventModal').modal('show');
+            }
+        });
+
+        $('#veterinarioSelect').change(function () {
+            calendar.fullCalendar('refetchEvents');
+        });
+
+        $('#btnCancelarCita').click(function () {
+            if (selectedEventId) {
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: "No podrá revertir esta acción",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, cancelar cita',
+                    cancelButtonText: 'No, mantener cita'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{% url 'cancelar_cita' 0 %}`.replace('0', selectedEventId),
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                            },
+                            success: function () {
+                                $('#eventModal').modal('hide');
+                                calendar.fullCalendar('refetchEvents');
+                                Swal.fire('Cancelada', 'La cita ha sido cancelada', 'success');
+                            },
+                            error: function () {
+                                Swal.fire('Error', 'No se pudo cancelar la cita', 'error');
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        $('#formNuevaCita').on('submit', function (e) {
+            e.preventDefault();
+            const horarioSeleccionado = $('.horario-disponible.selected').text();
+            const veterinarioId = $('#veterinarioSelect').val();
+
+            if (!horarioSeleccionado) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Por favor seleccione un horario disponible',
+                    icon: 'warning'
+                });
+                return;
+            }
+
+            const dataCita = {
+                fecha: $('#fechaSeleccionada').val(),
+                hora: horarioSeleccionado,
+                veterinario_id: veterinarioId,
+                servicio: $('#servicioSelect').val(),
+                descripcion: $('#descripcionCita').val()
+            };
+
+            $.ajax({
+                url: '{% url "citas_api" %}',
+                method: 'POST',
+                data: JSON.stringify(dataCita),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (response) {
+                    $('#nuevaCitaModal').modal('hide');
+                    calendar.fullCalendar('refetchEvents');
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'La cita ha sido agendada correctamente',
+                        icon: 'success'
+                    });
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: xhr.responseJSON?.error || 'No se pudo agendar la cita',
+                        icon: 'error'
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
