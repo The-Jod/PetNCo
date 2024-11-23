@@ -8,6 +8,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rutInput = document.querySelector('input[name="RutUsuario"]');
+            
+            function formatRut(rut) {
+                // Limpia el RUT de puntos y guión
+                rut = rut.replace(/[.-]/g, '');
+                
+                if (rut.length > 1) {
+                    // Obtiene el dígito verificador
+                    const dv = rut.slice(-1);
+                    // Obtiene el cuerpo del RUT
+                    const rutBody = rut.slice(0, -1);
+                    // Formatea el cuerpo del RUT con puntos
+                    let formattedRut = rutBody.split('').reverse().reduce((acc, curr, i) => {
+                        return (i && i % 3 === 0) ? curr + '.' + acc : curr + acc;
+                    });
+                    // Agrega el guión y el dígito verificador
+                    return formattedRut + '-' + dv;
+                }
+                return rut;
+            }
+
+            rutInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                // Elimina cualquier carácter que no sea número o K
+                value = value.replace(/[^0-9kK]/g, '');
+                
+                if (value.length > 0) {
+                    e.target.value = formatRut(value);
+                }
+            });
+        });
+    </script>
 </head>
 
 <body>

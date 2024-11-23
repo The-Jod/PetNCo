@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Veterinarios - Vet & Pet Center{% endblock %}
+
+{% block extra_styles %}
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/lista_veterinaria.css' %}">
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Filtros en card a la izquierda -->
+        <div class="col-md-3">
+            <div class="filter-card">
+                <h3 class="mb-4">Filtros</h3>
+                
+                <!-- Búsqueda -->
+                <div class="filter-section">
+                    <h4>Búsqueda</h4>
+                    <div class="search-box mb-3">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="form-control" id="searchInput" 
+                               placeholder="Buscar veterinario...">
+                    </div>
+                </div>
+
+                <!-- Tipo de Atención -->
+                <div class="filter-section">
+                    <h4>Tipo de Atención</h4>
+                    <div class="filter-options">
+                        <label>
+                            <input type="checkbox" value="presencial"> Presencial
+                        </label>
+                        <label>
+                            <input type="checkbox" value="domicilio"> A Domicilio
+                        </label>
+                        <label>
+                            <input type="checkbox" value="virtual"> Virtual
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Especialidad -->
+                <div class="filter-section">
+                    <h4>Especialidad</h4>
+                    <select class="form-select" id="especialidad">
+                        <option value="">Todas las especialidades</option>
+                        {% for especialidad in especialidades %}
+                        <option value="{{ especialidad }}">{{ especialidad }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Calificación -->
+                <div class="filter-section">
+                    <h4>Calificación Mínima</h4>
+                    <div class="filter-options rating-filter">
+                        {% for i in "54321"|make_list %}
+                        <label>
+                            <input type="radio" name="rating" value="{{ i }}">
+                            <span class="stars">
+                                {% for j in "12345"|make_list %}
+                                <i class="fas fa-star{% if j|add:"0" > i|add:"0" %}-o{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Rango de Precios -->
+                <div class="filter-section">
+                    <h4>Rango de Precios</h4>
+                    <div class="price-range">
+                        <input type="range" class="form-range" id="precioMin" min="0" max="100000" step="1000">
+                        <div class="d-flex justify-content-between">
+                            <span>$0</span>
+                            <span>$100.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón Limpiar Filtros -->
+                <button class="btn btn-outline-secondary clear-filters">
+                    <i class="fas fa-undo-alt"></i> Limpiar Filtros
+                </button>
+            </div>
+        </div>
+
+        <!-- Lista de veterinarios -->
+        <div class="col-md-9 content-area">
+            <div class="veterinarios-lista">
+                {% for veterinario in veterinarios %}
+                <div class="veterinario-card">
+                    <div class="row g-0">
+                        <!-- Columna izquierda: Imagen y reseñas -->
+                        <div class="col-md-4">
+                            <div class="veterinario-image-container">
+                                {% if veterinario.ImagenPerfil %}
+                                <img src="{{ veterinario.ImagenPerfil.url }}" 
+                                     alt="{{ veterinario.NombreVeterinario }}"
+                                     class="img-fluid rounded"
+                                     onerror="this.src='{% static 'img/ProductPlaceholder.png' %}'">
+                                {% else %}
+                                <img src="{% static 'img/ProductPlaceholder.png' %}" 
+                                     alt="{{ veterinario.NombreVeterinario }}"
+                                     class="img-fluid rounded">
+                                {% endif %}
+                            </div>
+                            <div class="veterinario-rating mt-3">
+                                <div class="stars">
+                                    {% for i in "12345" %}
+                                    <i class="fas fa-star{% if forloop.counter > veterinario.promedio_rating %}-o{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="rating-count">({{ veterinario.total_reviews }} reseñas)</span>
+                            </div>
+                        </div>
+
+                        <!-- Columna derecha: Información y servicios -->
+                        <div class="col-md-8">
+                            <div class="veterinario-info">
+                                <h3 class="veterinario-name">Dr(a). {{ veterinario.NombreVeterinario }}</h3>
+                                <p class="veterinario-specialty">{{ veterinario.Especialidad }}</p>
+                                
+                                <div class="veterinario-services mb-3">
+                                    <h4>Servicios:</h4>
+                                    <div class="service-tags">
+                                        {% for servicio in veterinario.servicios_activos %}
+                                        <span class="service-tag">{{ servicio.NombreServicio }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="veterinario-location">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ veterinario.Ubicacion }}</span>
+                                </div>
+
+                                <div class="veterinario-footer mt-3">
+                                    <button class="btn btn-primary btn-agendar" 
+                                            data-veterinario-id="{{ veterinario.id }}">
+                                        <i class="fas fa-calendar-plus"></i>
+                                        Agendar Cita
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
+{% endblock %}

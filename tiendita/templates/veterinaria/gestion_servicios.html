@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gestión de Servicios - Vet & Pet Center{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<style>
+/* Estilos específicos para la gestión de servicios */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    margin: 0 0.25rem;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    font-weight: normal;
+}
+
+/* Estilos actualizados para la card */
+.card {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    border-radius: 1rem;
+    transform: none !important; /* Previene cualquier transformación */
+    transition: none !important; /* Previene cualquier transición */
+}
+
+/* Prevenir efectos hover */
+.card:hover {
+    transform: none !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+    transition: none !important;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.form-switch .form-check-input {
+    cursor: pointer;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Estilos para los encabezados de columna ordenables */
+.table th a {
+    color: #495057;
+    font-weight: 600;
+}
+
+.table th a:hover {
+    color: #0d6efd;
+}
+
+.table th a i {
+    font-size: 0.8rem;
+}
+
+.table th a .text-muted {
+    opacity: 0.5;
+}
+
+/* Asegurar que los íconos de ordenamiento estén alineados */
+.table th a.d-flex {
+    gap: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2 text-primary"></i>
+                    Gestión de Servicios
+                </h5>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCrearServicio">
+                    <i class="fas fa-plus me-2"></i>
+                    Nuevo Servicio
+                </button>
+            </div>
+
+            <!-- Tabla de Servicios -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a href="?order_by=CodigoServicio{% if order_by == 'CodigoServicio' and order_dir != 'desc' %}&dir=desc{% endif %}" 
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Código
+                                    {% if order_by == 'CodigoServicio' %}
+                                        <i class="fas fa-sort-{{ order_dir|yesno:'down,up' }} ms-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort ms-1 text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?order_by=NombreServicio{% if order_by == 'NombreServicio' and order_dir != 'desc' %}&dir=desc{% endif %}"
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Nombre
+                                    {% if order_by == 'NombreServicio' %}
+                                        <i class="fas fa-sort-{{ order_dir|yesno:'down,up' }} ms-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort ms-1 text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?order_by=TipoServicio{% if order_by == 'TipoServicio' and order_dir != 'desc' %}&dir=desc{% endif %}"
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Tipo
+                                    {% if order_by == 'TipoServicio' %}
+                                        <i class="fas fa-sort-{{ order_dir|yesno:'down,up' }} ms-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort ms-1 text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?order_by=EstaActivo{% if order_by == 'EstaActivo' and order_dir != 'desc' %}&dir=desc{% endif %}"
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Estado
+                                    {% if order_by == 'EstaActivo' %}
+                                        <i class="fas fa-sort-{{ order_dir|yesno:'down,up' }} ms-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort ms-1 text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for servicio in servicios %}
+                        <tr>
+                            <td>{{ servicio.CodigoServicio }}</td>
+                            <td>{{ servicio.NombreServicio }}</td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {{ servicio.get_TipoServicio_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="form-check form-switch d-flex align-items-center">
+                                    <input class="form-check-input toggle-estado" 
+                                           type="checkbox" 
+                                           data-servicio="{{ servicio.CodigoServicio }}"
+                                           autocomplete="off"
+                                           {% if servicio.EstaActivo %}checked{% endif %}>
+                                    <span class="estado-servicio badge ms-2 {% if servicio.EstaActivo %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ servicio.EstaActivo|yesno:"Activo,Inactivo" }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-warning editar-servicio" 
+                                        data-servicio="{{ servicio.CodigoServicio }}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalEditarServicio">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger eliminar-servicio"
+                                        data-servicio="{{ servicio.CodigoServicio }}"
+                                        data-nombre="{{ servicio.NombreServicio }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="text-muted mb-0">No hay servicios registrados</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Servicio -->
+<div class="modal fade" id="modalCrearServicio" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2 text-primary"></i>
+                    Nuevo Servicio
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formCrearServicio">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Servicio</label>
+                        <input type="text" class="form-control" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Servicio</label>
+                        <select class="form-select" name="tipo" required>
+                            {% for tipo, nombre in tipos_servicio %}
+                            <option value="{{ tipo }}">{{ nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Servicio -->
+<div class="modal fade" id="modalEditarServicio" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2 text-warning"></i>
+                    Editar Servicio
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditarServicio">
+                {% csrf_token %}
+                <input type="hidden" name="servicio_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Servicio</label>
+                        <input type="text" class="form-control" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Servicio</label>
+                        <select class="form-select" name="tipo" required>
+                            {% for tipo, nombre in tipos_servicio %}
+                            <option value="{{ tipo }}">{{ nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'js/veterinaria/gestion_servicios.js' %}"></script>
+<script src="{% static 'js/navbar.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    // Manejador para eliminar servicio
+    $('.eliminar-servicio').click(function() {
+        const servicioId = $(this).data('servicio');
+        const nombreServicio = $(this).data('nombre');
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: `¿Deseas eliminar el servicio "${nombreServicio}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/veterinario/servicios/${servicioId}/delete/`,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Eliminado!',
+                            text: 'El servicio ha sido eliminado correctamente',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Error al eliminar el servicio';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            errorMessage = response.error || errorMessage;
+                        } catch(e) {}
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Manejador para toggle de estado
+    $('.toggle-estado').change(function() {
+        const $toggle = $(this);
+        const servicioId = $toggle.data('servicio');
+        const nuevoEstado = $toggle.prop('checked');
+        
+        $.ajax({
+            url: '/veterinario/servicios/toggle-estado/',
+            method: 'POST',
+            data: JSON.stringify({
+                servicio_id: servicioId,
+                estado: nuevoEstado
+            }),
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                // Recargar la página para asegurar estado consistente
+                location.reload();
+            },
+            error: function(xhr) {
+                // Revertir el toggle visualmente
+                $toggle.prop('checked', !nuevoEstado);
+                
+                let errorMessage = 'Error al actualizar el estado';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch(e) {}
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

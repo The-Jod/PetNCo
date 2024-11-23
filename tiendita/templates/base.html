@@ -63,15 +63,23 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{% url 'product_add' %}">Creación de productos</a></li>
-                            <li><a class="dropdown-item" href="{% url 'veterinaria' %}">Creación Clínica Veterinaria</a></li>
-                            <li><a class="dropdown-item" href="{% url 'veterinario' %}">Creación Veterinario</a></li>
-                            <li><a class="dropdown-item" href="{% url 'servicio' %}">Creación de Servicio</a></li>
+                            <li><a class="dropdown-item" href="{% url 'home' %}">Creación Veterinario</a></li>
+                            <li><a class="dropdown-item" href="{% url 'gestion_servicios' %}">Creación de Servicio</a></li>
                         </ul>
                     </li>
                     {% endif %}
+
+                    {% if user.is_veterinario %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'registro' %}">
-                            <span>Agendar Cita</span>
+                        <a class="nav-link" href="{% url 'perfil_veterinario' %}">
+                            <span>Mi Veterinaria</span>
+                            <i class="fas fa-calendar-alt nav-icon"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'lista_veterinarios' %}">
+                            <span>Veterinaria</span>
                             <i class="fas fa-calendar-alt nav-icon"></i>
                         </a>
                     </li>

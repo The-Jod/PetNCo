@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mi Perfil Veterinario - Vet & Pet Center{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/veterinaria.css' %}">
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="position-relative d-inline-block mb-3">
+                        {% if perfil.ImagenPerfil %}
+                            <img src="{{ perfil.ImagenPerfil.url }}" 
+                                 alt="Foto de perfil" 
+                                 class="rounded-circle profile-image"
+                                 id="current-profile-image"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'img/default-avatar.png' %}" 
+                                 alt="Foto de perfil" 
+                                 class="rounded-circle profile-image"
+                                 id="current-profile-image"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                        {% endif %}
+                        <label for="profile-image-input" class="position-absolute bottom-0 end-0 bg-white rounded-circle p-2 shadow-sm" style="cursor: pointer;">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="profile-image-input" class="d-none" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div class="text-center mb-2">
+                        <h5 class="mb-1 fw-bold text-primary">{{ perfil.NombreCompletoVeterinario }}</h5>
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <span class="badge bg-light text-dark border">
+                                <i class="fas fa-user-md me-1"></i>
+                                {{ perfil.Especialidad }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge bg-info">Veterinario</span>
+                        {% if perfil.EstaActivo %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#" 
+                       onclick="window.location.href='{% url 'perfil_veterinario' %}'; return false;" 
+                       class="list-group-item list-group-item-action {% if not seccion %}active{% endif %}">
+                        <i class="fas fa-user-circle me-2"></i> Perfil
+                    </a>
+                    <a href="{% url 'disponibilidad_veterinario' %}" 
+                       class="list-group-item list-group-item-action {% if seccion == 'disponibilidad' %}active{% endif %}">
+                        <i class="fas fa-calendar-alt me-2"></i> Disponibilidad
+                    </a>
+                    <a href="{% url 'servicios_veterinario' %}" 
+                       class="list-group-item list-group-item-action {% if seccion == 'servicios' %}active{% endif %}">
+                        <i class="fas fa-stethoscope me-2"></i> Servicios
+                    </a>
+                    <a href="{% url 'resenas_veterinario' %}" 
+                       class="list-group-item list-group-item-action {% if seccion == 'resenas' %}active{% endif %}">
+                        <i class="fas fa-star me-2"></i> Reseñas
+                        <span class="badge bg-primary rounded-pill float-end">{{ perfil.cantidad_resenas }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="col-md-9">
+            {% if seccion == 'disponibilidad' %}
+                {% include "veterinaria/includes/disponibilidad.html" %}
+            {% elif seccion == 'servicios' %}
+                {% include "veterinaria/includes/servicios.html" %}
+            {% elif seccion == 'resenas' %}
+                {% include "veterinaria/includes/resenas.html" %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Información del Perfil -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title mb-0">Información Profesional</h5>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                <i class="fas fa-edit me-2"></i>Editar Perfil
+                            </button>
+                        </div>
+
+                        <!-- Sección de información personal -->
+                        <div class="profile-section mb-4">
+                            <h6 class="section-title">
+                                <i class="fas fa-user-md me-2"></i>Datos Personales
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <label>Nombre Completo</label>
+                                        <p>{{ perfil.NombreCompletoVeterinario }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <label>Especialidad</label>
+                                        <p>{{ perfil.Especialidad }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección de contacto -->
+                        <div class="profile-section mb-4">
+                            <h6 class="section-title">
+                                <i class="fas fa-address-card me-2"></i>Información de Contacto
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <label>Email</label>
+                                        <p>{{ perfil.EmailVeterinario }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <label>Teléfono</label>
+                                        <p>{{ perfil.get_phone_formatted }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección profesional -->
+                        <div class="profile-section mb-4">
+                            <h6 class="section-title">
+                                <i class="fas fa-certificate me-2"></i>Credenciales Profesionales
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <label>Número de Registro</label>
+                                        <p>{{ perfil.NumeroRegistro }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <label>Ubicación</label>
+                                        <p>
+                                            {% if perfil.Ubicacion %}
+                                                {{ perfil.Ubicacion }}
+                                                <span class="badge {% if perfil.MostrarUbicacion %}bg-success{% else %}bg-warning{% endif %} ms-2">
+                                                    {{ perfil.MostrarUbicacion|yesno:"Visible públicamente,Privada" }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">No especificada</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descripción profesional -->
+                        <div class="profile-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-file-alt me-2"></i>Descripción Profesional
+                            </h6>
+                            <div class="info-card">
+                                <p class="mb-0">{{ perfil.Descripcion|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Edición -->
+                <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editProfileModalLabel">Editar Perfil</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="formEditarPerfil" class="needs-validation" novalidate method="POST" action="{% url 'actualizar_perfil_veterinario' %}">
+                                <div class="modal-body">
+                                    {% csrf_token %}
+                                    <div class="row g-3">
+                                        <!-- Información Personal -->
+                                        <div class="col-12">
+                                            <label class="form-label">Nombre Completo</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="nombre_completo" 
+                                                   value="{{ perfil.NombreCompletoVeterinario }}" 
+                                                   required>
+                                        </div>
+
+                                        <!-- Información de Contacto -->
+                                        <div class="col-md-6">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" 
+                                                   class="form-control" 
+                                                   name="email" 
+                                                   value="{{ perfil.EmailVeterinario }}" 
+                                                   required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Teléfono</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">+56</span>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       name="telefono" 
+                                                       value="{{ perfil.TelefonoVeterinario|stringformat:'d' }}"
+                                                       placeholder="9XXXXXXXX o 22XXXXXXX"
+                                                       required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Información Profesional -->
+                                        <div class="col-md-6">
+                                            <label class="form-label">Especialidad</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="especialidad" 
+                                                   value="{{ perfil.Especialidad }}" 
+                                                   required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Número de Registro</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="numero_registro" 
+                                                   value="{{ perfil.NumeroRegistro }}" 
+                                                   required>
+                                        </div>
+
+                                        <!-- Ubicación -->
+                                        <div class="col-12">
+                                            <label class="form-label">Dirección</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="ubicacion" 
+                                                   value="{{ perfil.Ubicacion }}">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" 
+                                                       type="checkbox" 
+                                                       name="mostrar_ubicacion" 
+                                                       id="mostrarUbicacion" 
+                                                       {% if perfil.MostrarUbicacion %}checked{% endif %}>
+                                                <label class="form-check-label" for="mostrarUbicacion">
+                                                    Mostrar ubicación públicamente
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Descripción -->
+                                        <div class="col-12">
+                                            <label class="form-label">Descripción Profesional</label>
+                                            <textarea class="form-control" 
+                                                      name="descripcion" 
+                                                      rows="4" 
+                                                      required>{{ perfil.Descripcion }}</textarea>
+                                        </div>
+
+                                        <!-- Campo para activar/desactivar perfil -->
+                                        <div class="col-12 mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="estaActivo" name="esta_activo" 
+                                                       {% if perfil.EstaActivo %}checked{% endif %}>
+                                                <label class="form-check-label" for="estaActivo">
+                                                    Perfil Activo
+                                                </label>
+                                                <small class="form-text text-muted d-block">
+                                                    Al desactivar tu perfil, no aparecerás en las búsquedas de veterinarios
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Agregar estos estilos -->
+<style>
+/* Estilos generales */
+.container {
+    max-width: 1200px;
+}
+
+/* Estilos de las tarjetas */
+.card {
+    border: none;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08) !important;
+}
+
+
+/* Estilos del sidebar */
+.sidebar-card {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.profile-image-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+.profile-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.profile-image:hover {
+    transform: scale(1.02);
+    filter: brightness(0.95);
+}
+
+.camera-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: white;
+    border-radius: 50%;
+    padding: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.camera-button:hover {
+    background: #f8f9fa;
+    transform: scale(1.1);
+}
+
+/* Estilos de la navegación */
+.list-group-item {
+    border: none;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0.5rem !important;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.list-group-item.active {
+    background-color: #e3f2fd;
+    color: #0d6efd;
+    font-weight: 500;
+    border-left: 4px solid #0d6efd;
+}
+
+/* Estilos de las tarjetas de información */
+.profile-section {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.section-title {
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-right: 0.75rem;
+    color: #0d6efd;
+}
+
+.info-card {
+    background-color: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.info-card:hover {
+    background-color: #ffffff;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+/* Badges y estados */
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+    border-radius: 2rem;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* Modal de edición */
+.modal-content {
+    border-radius: 1rem;
+    border: none;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-radius: 0 0 1rem 1rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+    <!-- Scripts base -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Script principal de perfil -->
+    <script src="{% static 'js/veterinaria/perfil.js' %}"></script>
+    <script src="{% static 'js/navbar.js' %}"></script>
+
+    <!-- Cargar script de disponibilidad solo si estamos en esa sección -->
+    {% if seccion == 'disponibilidad' %}
+        <script src="{% static 'js/veterinaria/disponibilidad.js' %}"></script>
+    {% endif %}
+{% endblock %}

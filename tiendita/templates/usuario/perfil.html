@@ -38,9 +38,16 @@
                         <input type="file" id="profile-image-input" class="d-none" accept=".jpg,.jpeg,.png,.webp">
                     </div>
                     <h5 class="mb-1">{{ user.NombreUsuario }}</h5>
-                    {% if user.is_staff %}
-                        <span class="badge bg-success mb-2">Administrador</span>
-                    {% endif %}
+                    <div class="mb-2">
+                        {% if user.is_staff %}
+                            <span class="badge bg-success me-1">Administrador</span>
+                        {% endif %}
+                        {% if user.is_veterinario %}
+                            <span class="badge bg-info">Veterinario</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Usuario</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="list-group list-group-flush">
                     <a href="#perfil-section" class="list-group-item list-group-item-action active" data-bs-toggle="list">
@@ -61,74 +68,110 @@
             <div class="tab-content">
                 <!-- Sección Perfil -->
                 <div class="tab-pane fade show active" id="perfil-section">
-                    <div class="card">
-                        <div class="card-body">
-                            {% if messages %}
-                                {% for message in messages %}
-                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h5 class="card-title mb-0">Información Personal</h5>
-                                <button class="btn btn-outline-primary btn-sm" id="edit-profile-btn">
-                                    <i class="fas fa-edit"></i> Editar
-                                </button>
-                            </div>
-                            <form id="profile-form" method="POST">
-                                {% csrf_token %}
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Nombre</label>
-                                        <input type="text" class="form-control" name="nombre" 
-                                               value="{{ user.NombreUsuario }}" disabled>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Apellido</label>
-                                        <input type="text" class="form-control" name="apellido" 
-                                               value="{{ user.ApellidoUsuario }}" disabled>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" name="email" 
-                                               value="{{ user.EmailUsuario }}" disabled>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Teléfono</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">+56</span>
-                                            <input type="tel" class="form-control" name="telefono" 
-                                                   value="{{ user.get_phone_without_prefix }}" 
-                                                   pattern="[0-9]{9}"
-                                                   placeholder="912345678"
-                                                   disabled>
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                                {{ message }}
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-user-circle text-primary me-2"></i>
+                                            Información Personal
+                                        </h5>
+                                        <div>
+                                            <button class="btn btn-outline-secondary" id="change-password-btn">
+                                                <i class="fas fa-key me-2"></i> Cambiar Contraseña
+                                            </button>
+                                            <button class="btn btn-primary ms-2" id="edit-profile-btn">
+                                                <i class="fas fa-edit me-2"></i> Editar Perfil
+                                            </button>
                                         </div>
-                                        <small class="text-muted">Ingresa 9 dígitos sin espacios ni guiones</small>
                                     </div>
-                                    <div class="col-12">
-                                        <label class="form-label">Dirección</label>
-                                        <input type="text" class="form-control" name="direccion" 
-                                               value="{{ user.DomicilioUsuario }}" disabled>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">Tipo de Mascota</label>
-                                        <select class="form-select" name="tipo_animal" disabled>
-                                            <option value="">Seleccione un tipo de mascota</option>
-                                            {% for value, label in user.TIPO_ANIMAL_CHOICES %}
-                                                <option value="{{ value|stringformat:'.1f' }}" {% if user.TipoAnimal == value %}selected{% endif %}>
-                                                    {{ label }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
+                                    <form id="profile-form" method="POST">
+                                        {% csrf_token %}
+                                        <div class="row g-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Nombre</label>
+                                                <input type="text" class="form-control" name="nombre" 
+                                                       value="{{ user.NombreUsuario }}" disabled>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Apellido</label>
+                                                <input type="text" class="form-control" name="apellido" 
+                                                       value="{{ user.ApellidoUsuario }}" disabled>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" name="email" 
+                                                       value="{{ user.EmailUsuario }}" disabled>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Teléfono</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">+56</span>
+                                                    <input type="tel" class="form-control" name="telefono" 
+                                                           value="{{ user.get_phone_without_prefix }}" 
+                                                           pattern="[0-9]{9}"
+                                                           placeholder="912345678"
+                                                           disabled>
+                                                </div>
+                                                <small class="text-muted">Ingresa 9 dígitos sin espacios ni guiones</small>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Dirección</label>
+                                                <input type="text" class="form-control" name="direccion" 
+                                                       value="{{ user.DomicilioUsuario }}" disabled>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Tipo de Mascota</label>
+                                                <select class="form-select" name="tipo_animal" disabled>
+                                                    <option value="">Seleccione un tipo de mascota</option>
+                                                    {% for value, label in user.TIPO_ANIMAL_CHOICES %}
+                                                        <option value="{{ value|stringformat:'.1f' }}" {% if user.TipoAnimal == value %}selected{% endif %}>
+                                                            {{ label }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 text-end" style="display: none;" id="form-buttons">
+                                            <button type="button" class="btn btn-outline-secondary" id="cancel-edit-btn">Cancelar</button>
+                                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">Opciones de Rol</h5>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h6 class="mb-0">Modo Veterinario</h6>
+                                            <p class="text-muted small mb-0">
+                                                {% if user.is_veterinario %}
+                                                    Actualmente eres un veterinario registrado
+                                                {% else %}
+                                                    Conviértete en veterinario para ofrecer tus servicios
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" 
+                                                   id="toggleVeterinario" {% if user.is_veterinario %}checked{% endif %}>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mt-3 text-end" style="display: none;" id="form-buttons">
-                                    <button type="button" class="btn btn-outline-secondary" id="cancel-edit-btn">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -154,36 +197,129 @@
 
 <!-- Estilos adicionales -->
 <style>
+/* Estilos generales */
+.container {
+    max-width: 1200px;
+}
+
+/* Estilos de las tarjetas */
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08);
+}
+
+/* Estilos del sidebar */
 .profile-image {
-    transition: filter 0.3s;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
 .profile-image:hover {
-    filter: brightness(0.9);
+    transform: scale(1.02);
+    filter: brightness(0.95);
 }
 
+.camera-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: white;
+    border-radius: 50%;
+    padding: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.camera-button:hover {
+    background: #f8f9fa;
+    transform: scale(1.1);
+}
+
+/* Estilos de la navegación */
 .list-group-item {
-    border-radius: 0;
-    border-left: 3px solid transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0.5rem !important;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
 }
 
 .list-group-item.active {
-    border-left-color: #0d6efd;
-    background-color: #f8f9fa;
+    background-color: #e3f2fd;
     color: #0d6efd;
     font-weight: 500;
+    border-left: 4px solid #0d6efd;
 }
 
+/* Estilos de las tarjetas de información */
+.info-card {
+    background-color: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.info-card:hover {
+    background-color: #ffffff;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+/* Badges y estados */
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+    border-radius: 2rem;
+}
+
+/* Modal de edición */
+.modal-content {
+    border-radius: 1rem;
+    border: none;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-radius: 0 0 1rem 1rem;
+}
+
+/* Estilos para los inputs deshabilitados */
 .form-control:disabled {
     background-color: #fff;
     opacity: 0.8;
+    cursor: not-allowed;
 }
 
-/* Estilo para el prefijo del teléfono */
+/* Estilos para el prefijo del teléfono */
 .input-group-text {
     background-color: #f8f9fa;
     color: #6c757d;
     font-weight: 500;
+    border-radius: 0.5rem 0 0 0.5rem;
 }
 </style>
 
@@ -283,6 +419,166 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = valor;
         });
     }
+
+    // Manejo del toggle de veterinario
+    const toggleVeterinario = document.getElementById('toggleVeterinario');
+    
+    toggleVeterinario.addEventListener('change', function(e) {
+        const willBeVeterinario = this.checked;
+        
+        // Prevenir el cambio inmediato del toggle
+        e.preventDefault();
+        
+        const mensaje = willBeVeterinario ? 
+            'Podrás ofrecer tus servicios veterinarios en la plataforma.' : 
+            'Ya no podrás ofrecer servicios veterinarios y tu perfil veterinario será desactivado.';
+
+        Swal.fire({
+            title: willBeVeterinario ? '¿Deseas convertirte en veterinario?' : '¿Deseas dejar de ser veterinario?',
+            text: mensaje,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: willBeVeterinario ? 'Sí, quiero ser veterinario' : 'Sí, dejar de ser veterinario',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('{% url "toggle_veterinario" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        is_veterinario: willBeVeterinario,
+                        desactivar_perfil: !willBeVeterinario
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        toggleVeterinario.checked = willBeVeterinario;
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Completado!',
+                            text: data.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        throw new Error(data.error || 'Error al procesar la solicitud');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', error.message, 'error');
+                    toggleVeterinario.checked = !willBeVeterinario;
+                });
+            } else {
+                toggleVeterinario.checked = !willBeVeterinario;
+            }
+        });
+    });
+
+    // Manejo del cambio de contraseña
+    const changePasswordBtn = document.getElementById('change-password-btn');
+    const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+    const passwordForm = document.getElementById('password-form');
+    const savePasswordBtn = document.getElementById('save-password-btn');
+    
+    changePasswordBtn.addEventListener('click', function() {
+        passwordModal.show();
+    });
+    
+    savePasswordBtn.addEventListener('click', function() {
+        const formData = {
+            password_actual: document.querySelector('input[name="password_actual"]').value,
+            password_nuevo: document.querySelector('input[name="password_nuevo"]').value,
+            password_confirmacion: document.querySelector('input[name="password_confirmacion"]').value
+        };
+        
+        fetch('{% url "cambiar_password" %}', {
+            method: 'POST',
+            body: JSON.stringify(formData),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                passwordModal.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: data.message
+                }).then(() => {
+                    document.getElementById('password-form').reset();
+                });
+            } else {
+                // Mostrar error sin cerrar el modal
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error,
+                    didClose: () => {
+                        // Mantener el modal de cambio de contraseña abierto
+                        document.getElementById('passwordModal').classList.add('show');
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al procesar la solicitud'
+            });
+        });
+    });
 });
 </script>
+
+<!-- Añadir el modal de cambio de contraseña -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordModalLabel">Cambiar Contraseña</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="password-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña actual</label>
+                        <input type="password" class="form-control" name="password_actual" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nueva contraseña</label>
+                        <input type="password" class="form-control" name="password_nuevo" required>
+                        <small class="form-text text-muted">
+                            La contraseña debe contener:
+                            <ul>
+                                <li>Al menos 8 caracteres</li>
+                                <li>Al menos un número</li>
+                            </ul>
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirmar nueva contraseña</label>
+                        <input type="password" class="form-control" name="password_confirmacion" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="save-password-btn">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

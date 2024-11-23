@@ -1,0 +1,395 @@
+<div class="profile-section mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h6 class="section-title mb-0">
+            <i class="fas fa-stethoscope me-2"></i>
+            Mis Servicios
+        </h6>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addServicioModal">
+            <i class="fas fa-plus me-2"></i>
+            Agregar Servicio
+        </button>
+    </div>
+
+    <!-- Tabla de servicios con estilos mejorados -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Precio</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servicio in servicios_personalizados %}
+                <tr>
+                    <td>{{ servicio.servicio_base.NombreServicio }}</td>
+                    <td>
+                        <span class="badge bg-primary">
+                            {{ servicio.servicio_base.get_TipoServicio_display }}
+                        </span>
+                    </td>
+                    <td>${{ servicio.Precio|floatformat:0 }}</td>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input toggle-servicio" 
+                                   type="checkbox" 
+                                   {% if servicio.EstaActivo %}checked{% endif %}
+                                   {% if not servicio.servicio_base.EstaActivo %}disabled{% endif %}
+                                   data-servicio-id="{{ servicio.servicio_base.CodigoServicio }}"
+                                   data-nombre="{{ servicio.servicio_base.NombreServicio }}">
+                            <label class="form-check-label">
+                                {% if servicio.EstaActivo %}
+                                    Activo
+                                {% else %}
+                                    Inactivo
+                                {% endif %}
+                            </label>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-warning btn-edit" 
+                                data-servicio-id="{{ servicio.servicio_base.CodigoServicio }}"
+                                data-precio="{{ servicio.Precio }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger btn-delete"
+                                data-servicio-id="{{ servicio.servicio_base.CodigoServicio }}"
+                                data-nombre="{{ servicio.servicio_base.NombreServicio }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        <p class="text-muted mb-0">No tienes servicios registrados</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para agregar servicio -->
+<div class="modal fade" id="addServicioModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2 text-primary"></i>
+                    Agregar Servicio
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addServicioForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Servicio Base</label>
+                        <select name="servicio_id" class="form-select" required>
+                            <option value="">Seleccione un servicio...</option>
+                            {% for servicio in servicios_base_disponibles %}
+                            <option value="{{ servicio.CodigoServicio }}" 
+                                    data-precio-base="{{ servicio.Precio }}">
+                                {{ servicio.NombreServicio }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Precio Personalizado</label>
+                        <input type="number" name="precio" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos específicos para la sección de servicios */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    margin: 0 0.25rem;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    font-weight: normal;
+}
+
+/* Estilos para el toggle switch */
+.form-switch .form-check-input {
+    width: 2.5em;
+    margin-left: -2.8em;
+    cursor: pointer;
+}
+
+.form-switch .form-check-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-check-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Actualizar precio base al seleccionar servicio
+    $('select[name="servicio_id"]').change(function() {
+        const precioBase = $(this).find(':selected').data('precio-base');
+        $('input[name="precio"]').val(precioBase);
+    });
+
+    // Manejar envío del formulario
+    $('#addServicioForm').submit(function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            servicio_id: $('select[name="servicio_id"]').val(),
+            precio: $('input[name="precio"]').val(),
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        };
+
+        $.ajax({
+            url: '{% url "servicio_personalizado_api" %}',
+            method: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': formData.csrfmiddlewaretoken
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: 'Servicio agregado correctamente',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.error || 'Ocurrió un error al guardar el servicio'
+                    });
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error al guardar el servicio';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch(e) {}
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage
+                });
+            }
+        });
+    });
+
+    // También actualizar el manejo de edición para usar SweetAlert2
+    $('.btn-edit').click(function() {
+        const servicioId = $(this).data('servicio-id');
+        const precioActual = $(this).data('precio');
+        
+        Swal.fire({
+            title: 'Editar precio',
+            input: 'number',
+            inputValue: precioActual,
+            inputLabel: 'Nuevo precio',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (!value || value <= 0) {
+                    return 'Por favor ingrese un precio válido';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/veterinario/servicios/${servicioId}/edit/`,
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val(),
+                        'precio': result.value
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'Precio actualizado correctamente',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.error || 'Error al actualizar el precio'
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Error al actualizar el precio';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            errorMessage = response.error || errorMessage;
+                        } catch(e) {}
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Manejar eliminación de servicio
+    $('.btn-delete').click(function() {
+        const servicioId = $(this).data('servicio-id');
+        const nombreServicio = $(this).data('nombre');
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: `¿Deseas eliminar el servicio "${nombreServicio}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/veterinario/servicios/${servicioId}/delete/`,
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Eliminado!',
+                            text: 'El servicio ha sido eliminado correctamente',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Error al eliminar el servicio';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            errorMessage = response.error || errorMessage;
+                        } catch(e) {}
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Manejar toggle de estado del servicio
+    $('.toggle-servicio').change(function() {
+        const servicioId = $(this).data('servicio-id');
+        const nombreServicio = $(this).data('nombre');
+        const nuevoEstado = $(this).prop('checked');
+        const label = $(this).siblings('label');
+
+        $.ajax({
+            url: '{% url "servicio_personalizado_api" %}',
+            method: 'POST',
+            data: JSON.stringify({
+                accion: 'toggle_estado',
+                servicio_id: servicioId,
+                estado: nuevoEstado,
+                csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+            }),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    label.text(nuevoEstado ? 'Activo' : 'Inactivo');
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Estado actualizado!',
+                        text: `El servicio "${nombreServicio}" ha sido ${nuevoEstado ? 'activado' : 'desactivado'}`,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                } else {
+                    // Revertir el cambio en caso de error
+                    $(this).prop('checked', !nuevoEstado);
+                    label.text(!nuevoEstado ? 'Activo' : 'Inactivo');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.error || 'Error al actualizar el estado'
+                    });
+                }
+            },
+            error: function(xhr) {
+                // Revertir el cambio en caso de error
+                $(this).prop('checked', !nuevoEstado);
+                label.text(!nuevoEstado ? 'Activo' : 'Inactivo');
+                
+                let errorMessage = 'Error al actualizar el estado';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch(e) {}
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage
+                });
+            }
+        });
+    });
+});
+</script>

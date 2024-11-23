@@ -5,12 +5,29 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views 
 from django.contrib.auth.views import LogoutView
 from . import views
-from .views import  Product_ListView, Product_CreateView, RegistroUsuarioView, CustomLoginView,CalendarView
 from .views import (
-    VeterinariaListView, VeterinariaCreateView, VeterinariaUpdateView, VeterinariaDeleteView,
-    VeterinarioListView, VeterinarioCreateView, VeterinarioUpdateView, VeterinarioDeleteView,
-    ServicioListView, ServicioCreateView, ServicioUpdateView, ServicioDeleteView,
-    CitaVeterinariaListView)
+    RegistroUsuarioView,
+    CustomLoginView,
+    Product_CreateView,
+    PerfilVeterinarioView,
+    PrecioPersonalizadoView,
+    DisponibilidadVeterinarioView,
+    DisponibilidadAPIView,
+    DisponibilidadDetailAPIView,
+    DisponibilidadClonarAPIView,
+    DisponibilidadEventosAPIView,
+    ServicioView,
+    ServicioPersonalizadoView,
+    GestionServiciosView,
+    GestionServiciosAPIView,
+    VeterinarioPerfilUpdateView,
+    VeterinarioImagenUpdateView,
+    ResenasVeterinarioView,
+    ServiciosVeterinarioView,
+    ServicioDeleteView,
+    ServicioToggleEstadoView,
+    # Otras vistas que necesites...
+)
 
 """
 URL configuration for Petnco project.
@@ -36,20 +53,24 @@ Including another URLconf
 
 
 urlpatterns = [
-    path('',views.home_view, name='home'),
-    path('late_registration',RegistroUsuarioView.as_view(), name='registeruser'),
-    path('late_login',CustomLoginView.as_view(), name='loginuser'),
+    path('', views.home_view, name='home'),
+    path('late_registration', RegistroUsuarioView.as_view(), name='registeruser'),
+    path('late_login', CustomLoginView.as_view(), name='loginuser'),
     path('late_logout', LogoutView.as_view(next_page='loginuser'), name='logout'),
 
+    # Productos
     path('productos/', views.catalogo_view, name='productos'),  
     path('productos/add/', Product_CreateView.as_view(), name='product_add'), 
     path('productos/<int:sku>/', views.producto_detalle_modal, name='producto-modal'),
+    
+    # Carrito
     path('agregar/<int:sku>/', views.agregar_al_carrito, name='agregar_al_carrito'),
     path('eliminar/<int:sku>/', views.eliminar_del_carrito, name='eliminar_del_carrito'),
     path('limpiar/', views.limpiar_carrito, name='limpiar_carrito'),
-
     path('carrito/actualizar-cantidad/', views.actualizar_cantidad, name='actualizar_cantidad'),
     path('carrito/', views.carrito_view, name='carrito'),
+
+    # Checkout y pagos
     path('pago/', views.checkout_view, name='checkout'),
     path('checkout/webpay/return/', views.webpay_return, name='webpay_return'),
     path('orden/confirmada/<int:orden_id>/', views.orden_confirmada, name='orden_confirmada'),
@@ -59,35 +80,40 @@ urlpatterns = [
     path('limpiar-sesion/', views.limpiar_sesion_view, name='limpiar_sesion'),
     path('webpay/retorno/', views.webpay_retorno_view, name='webpay_retorno'),
     
-    path('veterinarias/',views.clinica_view, name='veterinaria'),
-    path('veterinarias/add/', VeterinariaCreateView.as_view(), name='veterinaria_add'),
-    path('veterinarias/edit/<int:pk>/', VeterinariaUpdateView.as_view(), name='veterinaria_edit'),
-    path('veterinarias/delete/<int:pk>/', VeterinariaDeleteView.as_view(), name='veterinaria_delete'),
-    
-    path('veterinarios/', views.veterinario_list_view, name='veterinario'),
-    path('veterinarios/', views.veterinario_view, name='veterinario'),
-    path('veterinarios/add/', VeterinarioCreateView.as_view(), name='veterinario_add'),
-    path('veterinarios/edit/<int:pk>/', VeterinarioUpdateView.as_view(), name='veterinario_edit'),
-    path('veterinarios/delete/<int:pk>/', VeterinarioDeleteView.as_view(), name='veterinario_delete'),
-
-    path('servicios/', views.servicio_view, name='servicio'),
-    path('servicios/add/', ServicioCreateView.as_view(), name='servicio_add'),
-    path('servicios/edit/<int:pk>/', ServicioUpdateView.as_view(), name='servicio_edit'),
-    path('servicios/delete/<int:pk>/', ServicioDeleteView.as_view(), name='servicio_delete'),
-
-
-   # URLs para renderizar el calendario y obtener datos de citas
-    path('calendar/', views.CalendarView.as_view(), name='calendar'),  # Renderiza la vista del calendario
-    path('api/citas/', views.CitaVeterinariaCalendarAPI.as_view(), name='citas_api'),  # API que provee los datos de las citas
-    path('api/horarios-disponibles/<int:veterinario_id>/<str:fecha>/', views.HorariosDisponiblesAPI.as_view(), name='horarios_disponibles'),  # API para obtener horarios disponibles
-    path('citas/agendar/', views.AgendarCitaView.as_view(), name='agendar_cita'),  # Vista para agendar citas
-    path('citas/cancelar/<int:pk>/', views.CancelarCitaView.as_view(), name='cancelar_cita'),  # Vista para cancelar citas
-
-    path('citas/', views.vetcita_list_view, name='registro'),
-    
+    # Perfil y gestión de usuario
     path('perfil/', views.perfil_usuario_view, name='perfil'),
     path('mis-ordenes/', views.mis_ordenes_view, name='mis_ordenes'),
     path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('actualizar-imagen-perfil/', views.actualizar_imagen_perfil, name='actualizar_imagen_perfil'),
+    path('toggle-veterinario/', views.toggle_veterinario, name='toggle_veterinario'),
+    path('cambiar-password/', views.cambiar_password, name='cambiar_password'),
+
+    # Veterinarios
+    path('veterinario/perfil/', PerfilVeterinarioView.as_view(), name='perfil_veterinario'),
+    path('veterinario/disponibilidad/', DisponibilidadVeterinarioView.as_view(), name='disponibilidad_veterinario'),
+    path('veterinario/servicios/', ServiciosVeterinarioView.as_view(), name='servicios_veterinario'),
+    path('veterinario/resenas/', ResenasVeterinarioView.as_view(), name='resenas_veterinario'),
+    path('veterinario/servicios/<int:pk>/edit/', views.ServicioEditView.as_view(), name='servicio_edit'),
+    path('veterinario/servicios/<int:pk>/delete/', ServicioDeleteView.as_view(), name='servicio_delete'),
+    path('veterinario/servicios/toggle-estado/', ServicioToggleEstadoView.as_view(), name='servicio_toggle_estado'),
+
+    # APIs de veterinario
+    path('api/disponibilidad/', DisponibilidadAPIView.as_view(), name='api_disponibilidad'),
+    path('api/disponibilidad/<int:pk>/', DisponibilidadDetailAPIView.as_view(), name='api_disponibilidad_detail'),
+    path('api/disponibilidad/clonar/', DisponibilidadClonarAPIView.as_view(), name='api_disponibilidad_clonar'),
+    path('api/disponibilidad/eventos/', DisponibilidadEventosAPIView.as_view(), name='api_disponibilidad_eventos'),
+
+    # APIs de servicios
+    path('api/servicios/', ServicioView.as_view(), name='servicios_api'),
+    path('api/servicios/personalizado/', ServicioPersonalizadoView.as_view(), name='servicio_personalizado_api'),
+    path('api/servicios/gestion/', GestionServiciosAPIView.as_view(), name='gestion_servicios_api'),
+    path('servicios/gestion/', GestionServiciosView.as_view(), name='gestion_servicios'),
+
+    path('veterinarios/', views.lista_veterinarios, name='lista_veterinarios'),
+    path('api/veterinarios/filtrar/', views.filtrar_veterinarios, name='filtrar_veterinarios'),
+    path('api/veterinario/actualizar-imagen/', VeterinarioImagenUpdateView.as_view(), name='api_veterinario_actualizar_imagen'),
+    path('veterinario/perfil/actualizar/', VeterinarioPerfilUpdateView.as_view(), name='actualizar_perfil_veterinario'),
+    path('api/veterinario/toggle/', views.toggle_veterinario, name='toggle_veterinario'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

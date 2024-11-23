@@ -3,7 +3,7 @@ import json
 import uuid
 import random
 import logging
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, time
 
 # Django
 from django.shortcuts import render, get_object_or_404, redirect
@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -21,7 +21,7 @@ from django.core.serializers import serialize
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Avg, Count
 from django.views import View
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, FormView
 from django.views.decorators.http import require_http_methods, require_POST
@@ -32,6 +32,7 @@ from django.utils.decorators import method_decorator
 import json
 from datetime import datetime
 
+from django.contrib.auth import update_session_auth_hash
 
 # Transbank
 from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions
@@ -44,24 +45,21 @@ from django.conf import settings
 from .models import (
     Producto, 
     CustomUser, 
-    Veterinaria, 
-    Veterinario, 
-    Servicio, 
-    CitaVeterinaria, 
     Orden, 
     OrdenItem,
-    validate_image_file_extension  # Importar la función de validación
+    PerfilVeterinario,
+    ServicioBase,
+    ServicioPersonalizado,
+    DisponibilidadVeterinario,
+    validate_image_file_extension,  # Importar la función de validación
 )
 from .forms import (
     ProductoForm, 
     RegistroUsuarioForm, 
     CustomLoginForm, 
-    VeterinariaForm, 
-    VeterinarioForm, 
-    ServicioForm, 
-    CitaVeterinariaForm
 )
 
+from PIL import Image  # Añade este import al inicio del archivo
 
 logger = logging.getLogger(__name__)
 
@@ -245,6 +243,219 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         return reverse_lazy('home')  # Redirige a la página de inicio después del login
+    
+@login_required
+def perfil_usuario_view(request):
+    if request.method == 'POST':
+        user = request.user
+        user.NombreUsuario = request.POST.get('nombre')
+        user.ApellidoUsuario = request.POST.get('apellido')
+        user.EmailUsuario = request.POST.get('email')
+        
+        # Manejar el teléfono
+        telefono = request.POST.get('telefono', '')
+        # Remover el prefijo si existe
+        if telefono.startswith('+56'):
+            telefono = telefono[3:]
+        # Limpiar cualquier espacio o carácter no numérico
+        telefono = ''.join(filter(str.isdigit, telefono))
+        # Agregar el prefijo si no está vacío
+        user.TelefonoUsuario = f'+56{telefono}' if telefono else None
+        
+        user.DomicilioUsuario = request.POST.get('direccion')
+        
+        # Manejar el tipo de animal
+        tipo_animal = request.POST.get('tipo_animal')
+        if tipo_animal:
+            try:
+                # Reemplazar la coma por punto y convertir a float
+                tipo_animal = float(tipo_animal.replace(',', '.'))
+                user.TipoAnimal = tipo_animal
+            except ValueError:
+                messages.error(request, 'Valor inválido para el tipo de animal')
+                return redirect('perfil')
+        else:
+            user.TipoAnimal = None
+        
+        try:
+            user.save()
+            messages.success(request, 'Perfil actualizado correctamente')
+        except Exception as e:
+            messages.error(request, f'Error al actualizar el perfil: {str(e)}')
+        
+        return redirect('perfil')
+
+    return render(request, 'usuario/perfil.html')
+    
+    
+    
+
+@login_required
+def mis_ordenes_view(request):
+    # Obtener todas las órdenes del usuario actual, ordenadas por fecha descendente
+    ordenes = Orden.objects.filter(usuario=request.user).order_by('-FechaOrden')
+    
+    # Obtener filtros de la URL
+    estado = request.GET.get('estado')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    
+    # Aplicar filtros si existen
+    if estado:
+        ordenes = ordenes.filter(EstadoOrden=estado)
+    if fecha_desde:
+        ordenes = ordenes.filter(FechaOrden__gte=fecha_desde)
+    if fecha_hasta:
+        ordenes = ordenes.filter(FechaOrden__lte=fecha_hasta)
+    
+    context = {
+        'ordenes': ordenes,
+        'filtro_estado': estado,
+        'filtro_fecha_desde': fecha_desde,
+        'filtro_fecha_hasta': fecha_hasta
+    }
+    return render(request, 'usuario/mis_ordenes.html', context)
+    
+    
+    
+
+@login_required
+def actualizar_imagen_perfil(request):
+    if request.method == 'POST' and request.FILES.get('imagen'):
+        imagen = request.FILES['imagen']
+        
+        # Validar extensión usando la función del modelo
+        try:
+            validate_image_file_extension(imagen)
+        except ValidationError as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+        
+        # Actualizar imagen
+        try:
+            user = request.user
+            user.ImagenPerfil = imagen
+            user.save()
+            
+            return JsonResponse({
+                'success': True,
+                'image_url': user.ImagenPerfil.url
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al actualizar la imagen: {str(e)}'
+            })
+            
+    return JsonResponse({
+        'success': False,
+        'error': 'No se proporcionó ninguna imagen'
+    })
+
+@login_required
+@require_POST
+def toggle_veterinario(request):
+    """
+    Vista para activar/desactivar el rol de veterinario de un usuario y su perfil asociado.
+    Requiere autenticación y método POST.
+    """
+    try:
+        data = json.loads(request.body)
+        is_veterinario = data.get('is_veterinario')
+        desactivar_perfil = data.get('desactivar_perfil', False)
+        
+        usuario = request.user
+        usuario.is_veterinario = is_veterinario
+        usuario.save()
+        
+        mensaje = "Tu estado de veterinario ha sido actualizado"
+        
+        # Si se está desactivando el rol de veterinario, desactivar también el perfil
+        if desactivar_perfil:
+            perfil_veterinario = get_object_or_404(PerfilVeterinario, usuario=usuario)
+            perfil_veterinario.EstaActivo = False
+            perfil_veterinario.save()
+            mensaje = "Has dejado de ser veterinario y tu perfil ha sido desactivado"
+        
+        return JsonResponse({
+            'success': True,
+            'message': mensaje
+        })
+        
+    except PerfilVeterinario.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Perfil veterinario no encontrado'
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Error en toggle_veterinario: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Error al procesar la solicitud'
+        }, status=400)
+
+@login_required
+@require_POST
+def cambiar_password(request):
+    try:
+        # Obtener los datos del formulario
+        data = json.loads(request.body)
+        password_actual = data.get('password_actual')
+        password_nuevo = data.get('password_nuevo')
+        password_confirmacion = data.get('password_confirmacion')
+
+        # Verificar que todos los campos estén presentes
+        if not all([password_actual, password_nuevo, password_confirmacion]):
+            return JsonResponse({
+                'success': False,
+                'error': 'Todos los campos son requeridos'
+            })
+
+        # Verificar contraseña actual usando el método de AbstractBaseUser
+        if not request.user.check_password(password_actual):
+            return JsonResponse({
+                'success': False,
+                'error': 'La contraseña actual es incorrecta'
+            })
+
+        # Verificar que las contraseñas nuevas coincidan
+        if password_nuevo != password_confirmacion:
+            return JsonResponse({
+                'success': False,
+                'error': 'Las contraseñas nuevas no coinciden'
+            })
+
+        # Validar requisitos mínimos de la nueva contraseña
+        if len(password_nuevo) < 8:
+            return JsonResponse({
+                'success': False,
+                'error': 'La contraseña debe tener al menos 8 caracteres'
+            })
+
+        # Cambiar la contraseña
+        request.user.set_password(password_nuevo)
+        request.user.save()
+
+        # Actualizar la sesión para que el usuario no sea desconectado
+        update_session_auth_hash(request, request.user)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Contraseña actualizada correctamente'
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Datos inválidos'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 #-----------Fin de usuarios 
 
 
@@ -466,8 +677,9 @@ class Product_CreateView(CreateView):
             return render(request, self.template_name, context)
 
         return render(request, self.template_name, context)
-#----------------CRUD de Producto
+#----------------Fin CRUD de Producto
 
+#----------------Checkout
 def checkout_view(request):
     try:
         # Obtener carrito y calcular totales
@@ -828,818 +1040,915 @@ def webpay_retorno_view(request):
         logger.error(f"Error en retorno WebPay: {str(e)}")
         messages.error(request, 'Error procesando el pago')
         return redirect('checkout')
+#----------------Fin Checkout
 
-
-
-#CRUD CLINICA VETERINARIA 
-class VeterinariaListView(LoginRequiredMixin, ListView):
-    model = Veterinaria
-    template_name = 'clinica.html'
-    context_object_name = 'veterinarias'
-  
-
-def clinica_view(request):
-    # Carga inicial de todas las clínicas
-    veterinarias = Veterinaria.objects.all()
-
-    # Filtro de búsqueda por nombre de clínica
-    query = request.GET.get('q')
-    if query:
-        veterinarias = veterinarias.filter(NombreVeterinaria__icontains=query)
-
-    # Filtro por localidad
-    localidad = request.GET.get('localidad', '')
-    if localidad:
-        veterinarias = veterinarias.filter(LocalidadVeterinaria__icontains=localidad)
-
-    # Filtro por horarios
-    horario_inicio = request.GET.get('horario_inicio')
-    if horario_inicio:
-        veterinarias = veterinarias.filter(HorarioInicioVeterinaria__gte=horario_inicio)
-
-    horario_fin = request.GET.get('horario_fin')
-    if horario_fin:
-        veterinarias = veterinarias.filter(HorarioCierreVeterinaria__lte=horario_fin)
-
-    
-
-    # Verificar si es una solicitud AJAX
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Obtener solo los campos necesarios y convertir a una lista de diccionarios
-        data = list(veterinarias.values(
-            'NombreVeterinaria',
-            'LocalidadVeterinaria',
-            'HorarioInicioVeterinaria',
-            'HorarioCierreVeterinaria',
-        ))
-        return JsonResponse({'veterinarias': data})  # Responder con los datos en formato JSON
-
-    # Contexto normal para renderizado en la página (no es una solicitud AJAX)
-    context = {
-        'veterinarias': veterinarias,
-        'localidad': localidad,  # Asegúrate de que 'localidad' esté disponible en el template
-        'horario_inicio': request.GET.get('horario_inicio', ''),
-        'horario_fin': request.GET.get('horario_fin', '')
-    }
-
-    return render(request, 'clinica.html', context)
-
-
-class VeterinariaCreateView(LoginRequiredMixin, CreateView):
-      
-    model = Veterinaria
-    form_class = VeterinariaForm
-    template_name = 'clinica.html'
-
-    def form_valid(self, form):
-        # Verificar si ya existe una veterinaria con el mismo nombre
-        nombre_veterinaria = form.cleaned_data.get('NombreVeterinaria')
-        correo_veterinaria = form.cleaned_data.get('CorreoVeterinaria')  # Suponiendo que el campo de correo está en el formulario
-        
-        # Validar que no exista una veterinaria con el mismo nombre o correo
-        if Veterinaria.objects.filter(NombreVeterinaria=nombre_veterinaria).exists():
-            return JsonResponse({
-                'success': False,
-                'errors': {'NombreVeterinaria': 'Ya existe una veterinaria con ese nombre.'}
-            })
-        
-        if Veterinaria.objects.filter(email=correo_veterinaria).exists():
-            return JsonResponse({
-                'success': False,
-                'errors': {'CorreoVeterinaria': 'Ya existe una veterinaria con ese correo.'}
-            })
-        
-        # Si no hay duplicados, guardar la veterinaria
-        veterinaria = form.save()
-        return JsonResponse({
-            'success': True,'reload': True,
-            'veterinaria': {
-                'id': veterinaria.CodigoVeterinaria,
-                'NombreVeterinaria': veterinaria.NombreVeterinaria,
-                'LocalidadVeterinaria': veterinaria.LocalidadVeterinaria,
-            }
-        })
-
-    def form_invalid(self, form):
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-  
-class VeterinariaUpdateView(LoginRequiredMixin, UpdateView):
-    model = Veterinaria
-    form_class = VeterinariaForm
-    template_name = 'clinica.html'
-    success_url = reverse_lazy('veterinaria')
-
-    def validar_duplicados(self, form):
-        errores = {}
-        nombre_veterinaria = form.cleaned_data.get('NombreVeterinaria')
-        correo_veterinaria = form.cleaned_data.get('CorreoVeterinaria')
-
-        if Veterinaria.objects.filter(NombreVeterinaria=nombre_veterinaria).exclude(pk=self.object.pk).exists():
-            errores['NombreVeterinaria'] = 'Ya existe una veterinaria con ese nombre.'
-
-        if Veterinaria.objects.filter(email=correo_veterinaria).exclude(pk=self.object.pk).exists():
-            errores['CorreoVeterinaria'] = 'Ya existe una veterinaria con ese correo.'
-
-        return errores
-
-    def form_valid(self, form):
-        errores = self.validar_duplicados(form)
-        if errores:
-            return JsonResponse({'success': False, 'errors': errores})
-        # Guardar y responder con éxito y señal de recarga
-        response = super().form_valid(form)
-        return JsonResponse({'success': True, 'reload': True})
-
-    def form_invalid(self, form):
-        return JsonResponse({'success': False, 'errors': form.errors})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.GET.get('error'):
-            context['error_message'] = 'Hubo un problema al guardar los cambios. Por favor, intente de nuevo.'
-        return context
-
-class VeterinariaDeleteView(DeleteView):
-    model = Veterinaria
-    template_name = 'veterinaria_confirm_delete.html'
-    success_url = reverse_lazy('veterinaria_list')
-
-    def form_valid(self, form):
-        # Lógica personalizada para eliminación
-        veterinaria = self.get_object()
-
-        try:
-           
-
-            # Eliminar la veterinaria
-            veterinaria.delete()
-
-            # Retornar éxito para recargar la página
-            return JsonResponse({'success': True, 'reload': True})
-
-        except Exception as e:
-            return JsonResponse({'error': f'Error al eliminar: {str(e)}'}, status=500)
-
-    def form_invalid(self, form):
-        return JsonResponse({'error': 'Error al eliminar la veterinaria'}, status=400)
-
-    
-#CRUD VETERINARIO
-class VeterinarioListView(LoginRequiredMixin, ListView):
-    model = Veterinario
-    template_name = 'veterinario.html'
-    context_object_name = 'veterinarios'
-
-# Vista basada en función para crear veterinario
-def veterinario_view(request):
-    # Obtener todas las veterinarias para el select
-    veterinarias = Veterinaria.objects.all()
-    if not veterinarias.exists():
-        return JsonResponse({
-            'success': False,
-            'errors': {'veterinaria': 'No hay veterinarias registradas. Por favor, registre al menos una.'}
-        })
-    if request.method == 'POST':
-        form = VeterinarioForm(request.POST)
-        
-        if form.is_valid():
-            # Obtener los datos del formulario
-            codigo_veterinario = form.cleaned_data.get('codigo_veterinario')
-            usuario = form.cleaned_data.get('usuario')
-            veterinaria = form.cleaned_data.get('veterinaria')
-
-            # Verificar si ya existe un veterinario con el mismo código
-            if Veterinario.objects.filter(codigo_veterinario=codigo_veterinario).exists():
-                return JsonResponse({
-                    'success': False,
-                    'errors': {'codigo_veterinario': 'Este código de veterinario ya está registrado.'}
-                })
+@method_decorator(login_required, name='dispatch')
+class PerfilVeterinarioView(LoginRequiredMixin, View):
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_veterinario:
+            messages.warning(request, 'No tienes acceso al perfil veterinario')
+            return redirect('home')
             
-            # Verificar si ya existe un veterinario con el mismo usuario
-            if Veterinario.objects.filter(usuario=usuario).exists():
-                return JsonResponse({
-                    'success': False,
-                    'errors': {'usuario': 'Este usuario ya está registrado como veterinario.'}
-                })
-
-            # Verificar si ya existe un veterinario con el mismo nombre
-            if Veterinario.objects.filter(usuario__NombreUsuario=form.cleaned_data['usuario'].NombreUsuario).exists():
-                return JsonResponse({
-                    'success': False,
-                    'errors': {'usuario': 'Ya existe un veterinario con el mismo nombre.'}
-                })
-
-            # Si todas las validaciones pasan, guardar el nuevo veterinario
-            veterinario = form.save()
-
-            return JsonResponse({
-                'success': True,
-                'reload': True,
-                'veterinario': {
-                    'codigo_veterinario': veterinario.codigo_veterinario,
-                    'nombre': str(veterinario.usuario.NombreUsuario),
-                    'especialidad': veterinario.especialidad,
-                    'veterinaria': veterinario.veterinaria.NombreVeterinaria if veterinario.veterinaria else 'No asociada',
-                }
-            })
-
-        else:
-            # Si el formulario no es válido, devolver los errores
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            })
-
-    else:
-        # Si el método no es POST, mostrar el formulario vacío
-        form = VeterinarioForm()
-    
-    return render(request, 'veterinario.html', {
-        'form': form,
-        'veterinarias': veterinarias
-    })
-
-def vetcita_list_view(request):
-    # Obtener todos los veterinarios
-    veterinarios = Veterinario.objects.all()
-
-    # Filtro de búsqueda por nombre de veterinario
-    query = request.GET.get('q')
-    if query:
-        veterinarios = veterinarios.filter(nombre_veterinario__icontains=query)
-
-    # Filtro por especialidad
-    especialidad = request.GET.get('especialidad', '')
-    if especialidad:
-        veterinarios = veterinarios.filter(especialidad__icontains=especialidad)
-
-    # Filtro por veterinaria
-    veterinaria_id = request.GET.get('veterinaria')
-    if veterinaria_id:
-        try:
-            veterinaria_id = int(veterinaria_id)
-            veterinarios = veterinarios.filter(veterinaria_id=veterinaria_id)
-        except ValueError:
-            pass  # Ignorar si no se puede convertir a entero
-
-    # Contexto para renderizar en la página
-    context = {
-        'query': query,
-        'especialidad': especialidad,
-        'veterinarios': veterinarios,  # Lista de veterinarios
-    }
-
-    return render(request, 'cita.html', context)
-
-
-def veterinario_list_view(request):
-    # Obtener todos los veterinarios
-    veterinarios = Veterinario.objects.all()
-
-    # Filtro de búsqueda por nombre de veterinario
-    query = request.GET.get('q')
-    if query:
-        veterinarios = veterinarios.filter(usuario__NombreUsuario__icontains=query)
-
-    # Filtro por especialidad (si existe)
-    especialidad = request.GET.get('especialidad', '')
-    if especialidad:
-        veterinarios = veterinarios.filter(especialidad__icontains=especialidad)
-
-    # Filtro por veterinaria (si existe)
-    veterinaria_id = request.GET.get('veterinaria')
-    if veterinaria_id:
-        veterinarios = veterinarios.filter(veterinaria_id=veterinaria_id)
-
-    # Verificar si es una solicitud AJAX
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Obtener solo los campos necesarios y convertir a una lista de diccionarios
-        data = list(veterinarios.values(
-            'codigo_veterinario',
-            'usuario__NombreUsuario',
-            'especialidad',
-            'veterinaria__NombreVeterinaria',
-        ))
-        return JsonResponse({'veterinarios': data})  # Responder con los datos en formato JSON
-
-    # Contexto normal para renderizado en la página (no es una solicitud AJAX)
-    context = {
-        'query': query,
-        'especialidad': especialidad,
-        'veterinarias': Veterinaria.objects.all(),  # Para el filtro de veterinaria
-        'veterinarios': veterinarios,  # Lista de veterinarios para mostrar en la vista
-    }
-
-    return render(request, 'veterinario.html', context)
-
-
-class VeterinarioCreateView(LoginRequiredMixin, CreateView):
-    model = Veterinario
-    form_class = VeterinarioForm
-    template_name = 'veterinario.html'
-
-    def form_valid(self, form):
-        # Verificar si ya existe un veterinario con el mismo usuario
-        usuario = form.cleaned_data['usuario']
-        
-
-        # Si no hay duplicados, guardar el veterinario
-        veterinario = form.save()
-        return JsonResponse({
-            'success': True,
-            'reload': True,
-            'veterinario': {
-                'id': veterinario.id,
-                'nombre': veterinario.nombre_veterinario or veterinario.usuario.NombreUsuario,
-                'especialidad': veterinario.especialidad,
-                'telefono': veterinario.telefono,
-                'email': veterinario.email,
-                'veterinaria': veterinario.veterinaria.NombreVeterinaria if veterinario.veterinaria else None,
-            }
-        })
-
-    def form_invalid(self, form):
-        # Si el formulario no es válido, devolver los errores
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-
-
-class VeterinarioUpdateView(LoginRequiredMixin, UpdateView):
-    model = Veterinario
-    form_class = VeterinarioForm
-    template_name = 'veterinario.html'
-    success_url = reverse_lazy('veterinario_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['veterinarios'] = Veterinario.objects.all()
-        context['veterinarias'] = Veterinaria.objects.all()
-        context['is_update'] = True
-        return context
-
-    def form_valid(self, form):
-        try:
-            veterinario = form.save(commit=False)
-            
-            # Validar que no exista otro veterinario con el mismo código
-            if Veterinario.objects.filter(codigo_veterinario=veterinario.codigo_veterinario).exclude(pk=self.object.pk).exists():
-                return JsonResponse({
-                    'success': False,
-                    'errors': {'codigo_veterinario': ['Ya existe un veterinario con este código.']}
-                })
-
-            # Validar que no exista otro veterinario con el mismo usuario
-            if Veterinario.objects.filter(usuario=veterinario.usuario).exclude(pk=self.object.pk).exists():
-                return JsonResponse({
-                    'success': False, 
-                    'errors': {'usuario': ['Este usuario ya está asignado a otro veterinario.']}
-                })
-
-            veterinario.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Veterinario actualizado exitosamente',
-                'veterinario': {
-                    'id': veterinario.id,
-                    'nombre': veterinario.nombre_veterinario,
-                    'especialidad': veterinario.especialidad,
-                    'veterinaria': veterinario.veterinaria.NombreVeterinaria if veterinario.veterinaria else None,
-                    'horario_inicio': veterinario.horario_inicio.strftime('%H:%M') if veterinario.horario_inicio else None,
-                    'horario_fin': veterinario.horario_fin.strftime('%H:%M') if veterinario.horario_fin else None,
-                    'telefono': veterinario.telefono,
-                    'email': veterinario.email
-                }
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'errors': {'__all__': [f'Error al actualizar: {str(e)}']}
-            })
-
-    def form_invalid(self, form):
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-
-class VeterinarioDeleteView(LoginRequiredMixin, DeleteView):
-    model = Veterinario
-    success_url = reverse_lazy('veterinario_list')
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            veterinario = self.get_object()
-            
-            # Verificar si tiene citas pendientes
-            if CitaVeterinaria.objects.filter(veterinario=veterinario, estado='pendiente').exists():
-                return JsonResponse({
-                    'success': False,
-                    'error': 'No se puede eliminar el veterinario porque tiene citas pendientes'
-                })
-                
-            veterinario.delete()
-            return JsonResponse({
-                'success': True,
-                'message': 'Veterinario eliminado exitosamente'
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False, 
-                'error': f'Error al eliminar el veterinario: {str(e)}'
-            })
-    
-#CRUD CITAS
-class CitaVeterinariaListView(LoginRequiredMixin, ListView):
-    model = CitaVeterinaria
-    template_name = 'cita.html'
-    context_object_name = 'citas'
-
-    def get_queryset(self):
-        queryset = super().get_queryset().filter(usuario=self.request.user)
-        estado = self.request.GET.get('estado')
-        fecha_desde = self.request.GET.get('fecha_desde')
-        fecha_hasta = self.request.GET.get('fecha_hasta')
-        veterinaria = self.request.GET.get('veterinaria')
-
-        if estado:
-            queryset = queryset.filter(estado=estado)
-        if fecha_desde:
-            queryset = queryset.filter(fecha_inicio__gte=fecha_desde)
-        if fecha_hasta:
-            queryset = queryset.filter(fecha_inicio__lte=fecha_hasta)
-        if veterinaria:
-            queryset = queryset.filter(veterinaria_id=veterinaria)
-
-        return queryset.order_by('-fecha_inicio')
-
-def cita_view(request):
-    veterinarios = Veterinario.objects.all()
-    context = {
-        'veterinarios': veterinarios
-    }
-    return render(request, 'cita.html', context)
-
-class CalendarView(LoginRequiredMixin, TemplateView):
-    template_name = 'calendar.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['veterinarias'] = Veterinaria.objects.all()
-        context['veterinarios'] = Veterinario.objects.all()
-        context['servicios'] = Servicio.objects.all()
-        return context
-
-class HorariosDisponiblesAPI(LoginRequiredMixin, View):
-    def get(self, request, veterinario_id, fecha, *args, **kwargs):
-        try:
-            veterinario = Veterinario.objects.get(id=veterinario_id)
-            fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
-            
-            # Generar horarios disponibles entre horario_inicio y horario_fin
-            horarios = []
-            hora_actual = veterinario.horario_inicio
-            while hora_actual <= veterinario.horario_fin:
-                fecha_hora = datetime.combine(fecha_obj, hora_actual)
-                disponible = not CitaVeterinaria.objects.filter(
-                    veterinario=veterinario,
-                    fecha_inicio=fecha_hora
-                ).exists()
-                
-                horarios.append({
-                    'hora': hora_actual.strftime('%H:%M'),
-                    'disponible': disponible
-                })
-                hora_actual = (datetime.combine(date.today(), hora_actual) + 
-                             timedelta(minutes=30)).time()
-            
-            return JsonResponse({'horarios': horarios})
-            
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-class AgendarCitaView(LoginRequiredMixin, View):
-    def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        try:
-            fecha = data['fecha']
-            hora = data['hora']
-            veterinario_id = data['veterinario_id']
-            
-            fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
-            
-            # Verificar disponibilidad
-            if CitaVeterinaria.objects.filter(
-                veterinario_id=veterinario_id,
-                fecha_inicio=fecha_hora
-            ).exists():
-                return JsonResponse({
-                    'success': False,
-                    'error': 'El horario seleccionado ya no está disponible'
-                }, status=400)
-            
-            # Crear la cita
-            cita = CitaVeterinaria.objects.create(
+        # Crear perfil veterinario si no existe
+        if not hasattr(request.user, 'perfil_veterinario'):
+            PerfilVeterinario.objects.create(
                 usuario=request.user,
-                veterinario_id=veterinario_id,
-                servicio_id=data['servicio'],
-                fecha_inicio=fecha_hora,
-                fecha_fin=fecha_hora + timedelta(minutes=30),
-                descripcion=data.get('descripcion', ''),
-                estado='PENDIENTE'
+                NombreCompletoVeterinario=f"{request.user.NombreUsuario} {request.user.ApellidoUsuario}",
+                EmailVeterinario=request.user.EmailUsuario,
+                TelefonoVeterinario=int(request.user.get_phone_without_prefix()) if request.user.TelefonoUsuario else None,
+                Especialidad="General",  # Valor por defecto
+                NumeroRegistro="Pendiente",  # Valor por defecto
+                Descripcion="Por favor, actualiza tu descripción profesional.",
             )
+            messages.success(request, 'Se ha creado tu perfil veterinario. Por favor, completa tu información.')
             
-            return JsonResponse({
-                'success': True,
-                'message': 'Cita agendada exitosamente'
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
+        return super().dispatch(request, *args, **kwargs)
 
-class CitaVeterinariaCalendarAPI(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        start = request.GET.get('start')
-        end = request.GET.get('end')
-        veterinario_id = request.GET.get('veterinario_id')
-        
-        citas = CitaVeterinaria.objects.filter(
-            fecha_inicio__range=[start, end]
-        )
-        
-        if veterinario_id:
-            citas = citas.filter(veterinario_id=veterinario_id)
-            
-        events = [cita.get_event_data() for cita in citas]
-        return JsonResponse(events, safe=False)
+    def get(self, request):
+        context = {
+            'perfil': request.user.perfil_veterinario,
+            'seccion': request.GET.get('seccion', None)
+        }
+        return render(request, 'veterinaria/perfil_veterinario.html', context)
 
-    def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        try:
-            # Validar disponibilidad del horario
-            fecha = data['fecha']
-            hora = data['hora']
-            veterinario_id = data['veterinario_id']
-            
-            fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
-            
-            # Verificar si ya existe una cita en ese horario
-            if CitaVeterinaria.objects.filter(
-                veterinario_id=veterinario_id,
-                fecha_inicio=fecha_hora
-            ).exists():
-                return JsonResponse({
-                    'success': False,
-                    'error': 'El horario seleccionado ya no está disponible'
-                }, status=400)
-            
-            # Crear la cita
-            cita = CitaVeterinaria.objects.create(
-                usuario=request.user,
-                veterinario_id=veterinario_id,
-                servicio_id=data['servicio'],
-                fecha_inicio=fecha_hora,
-                fecha_fin=fecha_hora + timedelta(minutes=30),
-                descripcion=data.get('descripcion', ''),
-                estado='PENDIENTE'
-            )
-            
-            return JsonResponse({
-                'success': True,
-                'event': cita.get_event_data()
-            })
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
-
-    def put(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        try:
-            cita = CitaVeterinaria.objects.get(id=data['id'])
-            
-            # Verificar permisos
-            if not request.user.is_staff and cita.usuario != request.user:
-                raise PermissionDenied
-                
-            # Actualizar campos permitidos
-            if 'estado' in data:
-                cita.estado = data['estado']
-            if 'descripcion' in data:
-                cita.descripcion = data['descripcion']
-                
-            cita.save()
-            
-            return JsonResponse({
-                'success': True,
-                'event': cita.get_event_data()
-            })
-        except CitaVeterinaria.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'error': 'Cita no encontrada'
-            }, status=404)
-        except PermissionDenied:
-            return JsonResponse({
-                'success': False,
-                'error': 'No tiene permisos para modificar esta cita'
-            }, status=403)
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
-
-class CancelarCitaView(LoginRequiredMixin, View):
-    def post(self, request, pk, *args, **kwargs):
-        try:
-            cita = CitaVeterinaria.objects.get(id=pk)
-            
-            # Verificar permisos
-            if not request.user.is_staff and cita.usuario != request.user:
-                raise PermissionDenied
-                
-            # Solo permitir cancelar citas pendientes
-            if cita.estado != 'PENDIENTE':
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Solo se pueden cancelar citas pendientes'
-                }, status=400)
-                
-            cita.delete()
-            return JsonResponse({'success': True})
-        except CitaVeterinaria.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'error': 'Cita no encontrada'
-            }, status=404)
-        except PermissionDenied:
-            return JsonResponse({
-                'success': False,
-                'error': 'No tiene permisos para cancelar esta cita'
-            }, status=403)
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
-    
-class ServicioListView(LoginRequiredMixin, ListView):
-    model = Servicio
-    template_name = 'servicios.html'
-    context_object_name = 'servicios'
-  
-    
-    
-def servicio_view(request):
-    #carga incial de todas las servicios
-    servicios = Servicio.objects.all()
-    
-    # Filtro de búsqueda por especialidad de servicios
-    query = request.GET.get('q')
-    if query:
-        servicios = Servicio.filter( TipoServicio__icontains=query)
-    context={
-        'servicios':servicios
-    }
-    return render(request, 'servicios.html', context)
-
-
-class ServicioCreateView(LoginRequiredMixin, CreateView):
-    model = Servicio
-    form_class = ServicioForm
-    template_name = 'servicios.html'
-    success_url = reverse_lazy('servicio_list')
-
-class ServicioUpdateView(LoginRequiredMixin, UpdateView):
-    model = Servicio
-    form_class = ServicioForm
-    template_name = 'servicios.html'
-    success_url = reverse_lazy('servicio_list')
-
-class ServicioDeleteView(LoginRequiredMixin, DeleteView):
-    model = Servicio
-    template_name = 'servicio_confirm_delete.html'
-    success_url = reverse_lazy('servicio_list')
-    
-@login_required
-def perfil_usuario_view(request):
-    if request.method == 'POST':
-        user = request.user
-        user.NombreUsuario = request.POST.get('nombre')
-        user.ApellidoUsuario = request.POST.get('apellido')
-        user.EmailUsuario = request.POST.get('email')
-        
-        # Manejar el teléfono
-        telefono = request.POST.get('telefono', '')
-        # Remover el prefijo si existe
-        if telefono.startswith('+56'):
-            telefono = telefono[3:]
-        # Limpiar cualquier espacio o carácter no numérico
-        telefono = ''.join(filter(str.isdigit, telefono))
-        # Agregar el prefijo si no está vacío
-        user.TelefonoUsuario = f'+56{telefono}' if telefono else None
-        
-        user.DomicilioUsuario = request.POST.get('direccion')
-        
-        # Manejar el tipo de animal
-        tipo_animal = request.POST.get('tipo_animal')
-        if tipo_animal:
-            try:
-                # Reemplazar la coma por punto y convertir a float
-                tipo_animal = float(tipo_animal.replace(',', '.'))
-                user.TipoAnimal = tipo_animal
-            except ValueError:
-                messages.error(request, 'Valor inválido para el tipo de animal')
-                return redirect('perfil')
+    def post(self, request):
+        if request.content_type == 'application/json':
+            return self.handle_ajax(request)
         else:
-            user.TipoAnimal = None
-        
+            return self.handle_form(request)
+
+    def handle_form(self, request):
+        perfil = request.user.perfil_veterinario
         try:
-            user.save()
+            # Actualizar datos del perfil desde form
+            perfil.NombreVeterinario = request.POST.get('nombre')
+            perfil.ApellidoVeterinario = request.POST.get('apellido')
+            perfil.EmailVeterinario = request.POST.get('email')
+            perfil.Telefono = request.POST.get('telefono')
+            perfil.Especialidad = request.POST.get('especialidad')
+            perfil.NumeroRegistro = request.POST.get('numero_registro')
+            perfil.Descripcion = request.POST.get('descripcion')
+            perfil.save()
+            
             messages.success(request, 'Perfil actualizado correctamente')
         except Exception as e:
             messages.error(request, f'Error al actualizar el perfil: {str(e)}')
         
-        return redirect('perfil')
+        return redirect('perfil_veterinario')
 
-    return render(request, 'usuario/perfil.html')
-    
-    
-    
-
-@login_required
-def mis_ordenes_view(request):
-    # Obtener todas las órdenes del usuario actual, ordenadas por fecha descendente
-    ordenes = Orden.objects.filter(usuario=request.user).order_by('-FechaOrden')
-    
-    # Obtener filtros de la URL
-    estado = request.GET.get('estado')
-    fecha_desde = request.GET.get('fecha_desde')
-    fecha_hasta = request.GET.get('fecha_hasta')
-    
-    # Aplicar filtros si existen
-    if estado:
-        ordenes = ordenes.filter(EstadoOrden=estado)
-    if fecha_desde:
-        ordenes = ordenes.filter(FechaOrden__gte=fecha_desde)
-    if fecha_hasta:
-        ordenes = ordenes.filter(FechaOrden__lte=fecha_hasta)
-    
-    context = {
-        'ordenes': ordenes,
-        'filtro_estado': estado,
-        'filtro_fecha_desde': fecha_desde,
-        'filtro_fecha_hasta': fecha_hasta
-    }
-    return render(request, 'usuario/mis_ordenes.html', context)
-    
-    
-    
-
-@login_required
-def actualizar_imagen_perfil(request):
-    if request.method == 'POST' and request.FILES.get('imagen'):
-        imagen = request.FILES['imagen']
-        
-        # Validar extensión usando la función del modelo
+    def handle_ajax(self, request):
         try:
-            validate_image_file_extension(imagen)
+            perfil = request.user.perfil_veterinario
+            data = json.loads(request.body)
+            accion = data.get('accion')
+            
+            if accion == 'actualizar_imagen':
+                if 'imagen' in request.FILES:
+                    imagen = request.FILES['imagen']
+                    try:
+                        validate_image_file_extension(imagen)
+                        perfil.ImagenPerfil = imagen
+                        perfil.save()
+                        return JsonResponse({
+                            'success': True,
+                            'imagen_url': perfil.ImagenPerfil.url
+                        })
+                    except ValidationError as e:
+                        return JsonResponse({'error': str(e)}, status=400)
+                return JsonResponse({'error': 'No se proporcionó imagen'}, status=400)
+            
+            elif accion == 'actualizar_perfil':
+                campos_permitidos = [
+                    'NombreVeterinario', 'ApellidoVeterinario', 'EmailVeterinario',
+                    'Telefono', 'Especialidad', 'NumeroRegistro', 'Descripcion'
+                ]
+                
+                for campo in campos_permitidos:
+                    if campo in data:
+                        setattr(perfil, campo, data[campo])
+                
+                perfil.save()
+                return JsonResponse({'success': True})
+            
+            return JsonResponse({'error': 'Acción no válida'}, status=400)
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+@method_decorator(login_required, name='dispatch')
+class ServiciosVeterinarioView(View):
+    def get(self, request):
+        if not request.user.is_veterinario:
+            messages.warning(request, 'No tienes acceso al perfil veterinario')
+            return redirect('home')
+            
+        try:
+            perfil = request.user.perfil_veterinario
+            servicios_personalizados = ServicioPersonalizado.objects.filter(
+                veterinario=perfil
+            )
+            servicios_base_disponibles = ServicioBase.objects.exclude(
+                CodigoServicio__in=servicios_personalizados.values_list('servicio_base__CodigoServicio', flat=True)
+            )
+            
+            context = {
+                'perfil': perfil,
+                'servicios_personalizados': servicios_personalizados,
+                'servicios_base_disponibles': servicios_base_disponibles,
+                'seccion': 'servicios'
+            }
+            
+            return render(request, 'veterinaria/perfil_veterinario.html', context)
+            
+        except Exception as e:
+            messages.error(request, f'Error al cargar los servicios: {str(e)}')
+            return redirect('perfil_veterinario')
+
+@method_decorator(login_required, name='dispatch')
+class ServicioDeleteView(View):
+    def post(self, request, pk):
+        if not request.user.is_staff:
+            return JsonResponse({
+                'error': 'No tienes permisos para realizar esta acción'
+            }, status=403)
+            
+        try:
+            servicio = get_object_or_404(ServicioBase, CodigoServicio=pk)
+            
+            # Eliminar primero los servicios personalizados asociados
+            ServicioPersonalizado.objects.filter(servicio_base=servicio).delete()
+                
+            # Luego eliminar el servicio base
+            servicio.delete()
+            return JsonResponse({'success': True})
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': str(e)
+            }, status=400)
+
+@method_decorator(login_required, name='dispatch')
+class PrecioPersonalizadoView(View):
+    def post(self, request):
+        if not request.user.is_veterinario:
+            return JsonResponse({
+                'success': False,
+                'error': 'No tienes permisos para realizar esta acción'
+            }, status=403)
+        
+        perfil = get_object_or_404(PerfilVeterinario, usuario=request.user)
+        servicio_id = request.POST.get('servicio')
+        precio = request.POST.get('precio')
+        
+        try:
+            precio_personalizado, created = PrecioPersonalizado.objects.update_or_create(
+                veterinario=perfil,
+                servicio_id=servicio_id,
+                defaults={'Precio': precio}
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Precio actualizado exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+class DisponibilidadVeterinarioView(LoginRequiredMixin, View):
+    def get(self, request):
+        if not hasattr(request.user, 'perfil_veterinario'):
+            return redirect('perfil_usuario')
+        
+        context = {
+            'perfil': request.user.perfil_veterinario,
+            'seccion': 'disponibilidad'
+        }
+        return render(request, 'veterinaria/perfil_veterinario.html', context)
+
+class DisponibilidadAPIView(LoginRequiredMixin, View):
+    def get(self, request):
+        """Obtener disponibilidades por fecha"""
+        fecha = request.GET.get('fecha')
+        if not fecha:
+            return JsonResponse({'error': 'Fecha requerida'}, status=400)
+
+        disponibilidades = DisponibilidadVeterinario.objects.filter(
+            veterinario=request.user.perfil_veterinario,
+            Fecha=fecha
+        ).values('id', 'HorarioInicio', 'HorarioFin', 'EstaDisponible')
+
+        return JsonResponse(list(disponibilidades), safe=False)
+
+    def post(self, request):
+        """Crear nueva disponibilidad"""
+        try:
+            data = json.loads(request.body)
+            fecha = datetime.strptime(data['fecha'], '%Y-%m-%d').date()
+            horario_inicio = datetime.strptime(data['horario_inicio'], '%H:%M').time()
+            horario_fin = datetime.strptime(data['horario_fin'], '%H:%M').time()
+
+            # Verificar si ya existe un horario que se solape
+            if DisponibilidadVeterinario.objects.filter(
+                veterinario=request.user.perfil_veterinario,
+                Fecha=fecha,
+                HorarioInicio__lt=horario_fin,
+                HorarioFin__gt=horario_inicio
+            ).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Ya existe un horario que se solapa con el ingresado'
+                }, status=400)
+
+            DisponibilidadVeterinario.objects.create(
+                veterinario=request.user.perfil_veterinario,
+                Fecha=fecha,
+                HorarioInicio=horario_inicio,
+                HorarioFin=horario_fin
+            )
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+class DisponibilidadDetailAPIView(LoginRequiredMixin, View):
+    def put(self, request, pk):
+        """Actualizar disponibilidad existente"""
+        if not request.user.is_veterinario:
+            return JsonResponse({'error': 'No autorizado'}, status=403)
+
+        try:
+            disponibilidad = get_object_or_404(
+                DisponibilidadVeterinario, 
+                id=pk, 
+                veterinario__usuario=request.user
+            )
+            data = json.loads(request.body)
+
+            # Actualizar campos
+            if 'horario_inicio' in data:
+                disponibilidad.HorarioInicio = datetime.strptime(
+                    data['horario_inicio'], '%H:%M'
+                ).time()
+            if 'horario_fin' in data:
+                disponibilidad.HorarioFin = datetime.strptime(
+                    data['horario_fin'], '%H:%M'
+                ).time()
+            if 'esta_disponible' in data:
+                disponibilidad.EstaDisponible = data['esta_disponible']
+
+            disponibilidad.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Disponibilidad actualizada exitosamente'
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+    def delete(self, request, pk):
+        """Eliminar disponibilidad"""
+        if not request.user.is_veterinario:
+            return JsonResponse({'error': 'No autorizado'}, status=403)
+
+        try:
+            disponibilidad = get_object_or_404(
+                DisponibilidadVeterinario, 
+                id=pk, 
+                veterinario__usuario=request.user
+            )
+            disponibilidad.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Disponibilidad eliminada exitosamente'
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+class DisponibilidadClonarAPIView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            horario_original = get_object_or_404(
+                DisponibilidadVeterinario, 
+                id=data['horario_id'],
+                veterinario__usuario=request.user
+            )
+            
+            tipo_clon = data['tipo_clon']
+            fechas_destino = []
+            
+            if tipo_clon == 'siguiente':
+                fecha = horario_original.Fecha + timedelta(days=1)
+                fechas_destino = [fecha]
+            elif tipo_clon == 'semana':
+                fecha_base = horario_original.Fecha
+                fechas_destino = [
+                    fecha_base + timedelta(days=i) 
+                    for i in range(1, 8)
+                ]
+            elif tipo_clon == 'especifico':
+                fechas_destino = [datetime.strptime(data['fecha_destino'], '%Y-%m-%d').date()]
+            
+            for fecha in fechas_destino:
+                DisponibilidadVeterinario.objects.create(
+                    veterinario=horario_original.veterinario,
+                    Fecha=fecha,
+                    HorarioInicio=horario_original.HorarioInicio,
+                    HorarioFin=horario_original.HorarioFin
+                )
+            
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+class DisponibilidadEventosAPIView(LoginRequiredMixin, View):
+    def get(self, request):
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        
+        disponibilidades = DisponibilidadVeterinario.objects.filter(
+            veterinario=request.user.perfil_veterinario,
+            Fecha__range=[start[:10], end[:10]]  # Tomamos solo la fecha YYYY-MM-DD
+        )
+        
+        eventos = []
+        for disp in disponibilidades:
+            eventos.append({
+                'id': disp.id,
+                'title': f'{disp.HorarioInicio.strftime("%H:%M")} - {disp.HorarioFin.strftime("%H:%M")}',
+                'start': disp.Fecha.isoformat(),
+                'display': 'background'
+            })
+        
+        return JsonResponse(eventos, safe=False)
+
+@method_decorator(login_required, name='dispatch')
+class ServicioView(View):
+    def get(self, request):
+        # Todos pueden ver los servicios
+        servicios = ServicioBase.objects.all()
+        return JsonResponse({
+            'servicios': list(servicios.values())
+        })
+
+    def post(self, request):
+        # Solo staff puede crear/editar servicios base
+        if not request.user.is_staff:
+            return JsonResponse({'error': 'No autorizado'}, status=403)
+        
+        try:
+            data = json.loads(request.body)
+            servicio = ServicioBase.objects.create(
+                NombreServicio=data['nombre'],
+                Descripcion=data['descripcion'],
+                TipoServicio=data['tipo'],
+                DuracionEstimada=data['duracion'],
+                EstaActivo=True
+            )
+            return JsonResponse({
+                'success': True,
+                'servicio': {
+                    'id': servicio.CodigoServicio,
+                    'nombre': servicio.NombreServicio,
+                    'tipo': servicio.get_TipoServicio_display()
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+@method_decorator(login_required, name='dispatch')
+class ServicioPersonalizadoView(View):
+    def post(self, request):
+        if not request.user.is_veterinario:
+            return JsonResponse({'error': 'No autorizado'}, status=403)
+        
+        try:
+            data = json.loads(request.body)
+            perfil = request.user.perfil_veterinario
+            accion = data.get('accion')
+            
+            if accion == 'eliminar':
+                servicio_id = data.get('servicio_id')
+                try:
+                    servicio = ServicioPersonalizado.objects.get(
+                        veterinario=perfil,
+                        servicio_base__CodigoServicio=servicio_id
+                    )
+                    servicio.delete()
+                    return JsonResponse({
+                        'success': True,
+                        'mensaje': 'Servicio eliminado correctamente'
+                    })
+                except ServicioPersonalizado.DoesNotExist:
+                    return JsonResponse({
+                        'error': 'Servicio no encontrado'
+                    }, status=404)
+            
+            elif accion == 'agregar_multiples':
+                servicios = data.get('servicios', [])
+                
+                for servicio_data in servicios:
+                    servicio_base = ServicioBase.objects.get(
+                        CodigoServicio=servicio_data['servicio_id']
+                    )
+                    
+                    ServicioPersonalizado.objects.update_or_create(
+                        veterinario=perfil,
+                        servicio_base=servicio_base,
+                        defaults={
+                            'Precio': servicio_data['precio'],
+                            'EstaActivo': servicio_data.get('esta_activo', True),
+                            'Notas': servicio_data.get('notas', '')
+                        }
+                    )
+                
+                return JsonResponse({
+                    'success': True,
+                    'mensaje': 'Servicios actualizados correctamente'
+                })
+            
+            elif accion == 'toggle_estado':
+                servicio_id = data.get('servicio_id')
+                nuevo_estado = data.get('estado')
+                
+                servicio = get_object_or_404(
+                    ServicioPersonalizado,
+                    veterinario=perfil,
+                    servicio_base__CodigoServicio=servicio_id
+                )
+                
+                # Verificar si el servicio base está activo
+                if nuevo_estado and not servicio.servicio_base.EstaActivo:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'No se puede activar el servicio porque el servicio base está desactivado'
+                    }, status=400)
+                
+                servicio.EstaActivo = nuevo_estado
+                servicio.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'mensaje': 'Estado actualizado correctamente'
+                })
+            
+            else:  # Caso de un solo servicio
+                servicio_base = ServicioBase.objects.get(
+                    CodigoServicio=data['servicio_id']
+                )
+                
+                ServicioPersonalizado.objects.update_or_create(
+                    veterinario=perfil,
+                    servicio_base=servicio_base,
+                    defaults={
+                        'Precio': data['precio'],
+                        'EstaActivo': data.get('esta_activo', True),
+                        'Notas': data.get('notas', '')
+                    }
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'mensaje': 'Servicio actualizado correctamente'
+                })
+                
+        except ServicioPersonalizado.DoesNotExist:
+            return JsonResponse({
+                'error': 'Servicio no encontrado'
+            }, status=404)
+        except (KeyError, ValueError) as e:
+            return JsonResponse({
+                'error': f'Datos inválidos: {str(e)}'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error al procesar la solicitud: {str(e)}'
+            }, status=500)
+
+
+class GestionServiciosView(UserPassesTestMixin, TemplateView):
+    template_name = 'veterinaria/gestion_servicios.html'
+    
+    def test_func(self):
+        return self.request.user.is_staff
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Obtener parámetros de ordenamiento
+        order_by = self.request.GET.get('order_by', 'CodigoServicio')
+        order_dir = self.request.GET.get('dir', 'asc')
+
+        # Validar campo de ordenamiento
+        valid_fields = ['CodigoServicio', 'NombreServicio', 'TipoServicio', 'EstaActivo']
+        if order_by not in valid_fields:
+            order_by = 'CodigoServicio'
+
+        # Construir el ordenamiento
+        order_string = f"{'-' if order_dir == 'desc' else ''}{order_by}"
+        
+        # Obtener servicios ordenados
+        context['servicios'] = ServicioBase.objects.all().order_by(order_string)
+        context['tipos_servicio'] = ServicioBase.TIPO_CHOICES
+        context['order_by'] = order_by
+        context['order_dir'] = order_dir
+        return context
+
+class GestionServiciosAPIView(UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get(self, request):
+        servicio_id = request.GET.get('id')
+        if servicio_id:
+            servicio = get_object_or_404(ServicioBase, CodigoServicio=servicio_id)
+            return JsonResponse({
+                'servicio': {
+                    'id': servicio.CodigoServicio,
+                    'nombre': servicio.NombreServicio,
+                    'tipo': servicio.TipoServicio,
+                }
+            })
+        return JsonResponse({'error': 'ID de servicio no proporcionado'}, status=400)
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            accion = data.get('accion')
+            
+            if accion == 'crear':
+                servicio = ServicioBase.objects.create(
+                    NombreServicio=data['nombre'],
+                    TipoServicio=data['tipo'],
+                    EstaActivo=True
+                )
+                return JsonResponse({
+                    'success': True,
+                    'servicio': {
+                        'id': servicio.CodigoServicio,
+                        'nombre': servicio.NombreServicio,
+                        'tipo': servicio.get_TipoServicio_display()
+                    }
+                })
+                
+            elif accion == 'editar':
+                servicio = ServicioBase.objects.get(CodigoServicio=data['servicio_id'])
+                servicio.NombreServicio = data['nombre']
+                servicio.TipoServicio = data['tipo']
+                servicio.save()
+                return JsonResponse({'success': True})
+                
+            elif accion == 'toggle_estado':
+                servicio = ServicioBase.objects.get(CodigoServicio=data['servicio_id'])
+                servicio.EstaActivo = data['estado']
+                servicio.save()
+                return JsonResponse({'success': True})
+                
+            return JsonResponse({'error': 'Acción no válida'}, status=400)
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+def lista_veterinarios(request):
+    # Obtener todos los veterinarios activos con sus calificaciones
+    veterinarios = PerfilVeterinario.objects.filter(EstaActivo=True).annotate(
+        promedio_rating=Avg('resenas__Calificacion'),
+        total_reviews=Count('resenas'),
+    )
+
+    # Obtener lista única de especialidades
+    especialidades = PerfilVeterinario.objects.values_list(
+        'Especialidad', flat=True).distinct()
+
+    context = {
+        'veterinarios': veterinarios,
+        'especialidades': especialidades,
+    }
+    
+    return render(request, 'veterinaria/veterinarios_lista.html', context)
+
+def filtrar_veterinarios(request):
+    query = request.GET.get('query', '')
+    tipo_atencion = request.GET.get('tipo_atencion', '')
+    especialidad = request.GET.get('especialidad', '')
+
+    # Iniciar con todos los veterinarios activos
+    veterinarios = PerfilVeterinario.objects.filter(EstaActivo=True)
+
+    # Aplicar filtros
+    if query:
+        veterinarios = veterinarios.filter(
+            NombreVeterinario__icontains=query
+        )
+
+    if especialidad:
+        veterinarios = veterinarios.filter(
+            Especialidad__iexact=especialidad
+        )
+
+    if tipo_atencion:
+        servicios_tipo = ServicioPersonalizado.objects.filter(
+            servicio_base__TipoServicio=tipo_atencion,
+            EstaActivo=True
+        ).values_list('veterinario_id', flat=True)
+        veterinarios = veterinarios.filter(id__in=servicios_tipo)
+
+    # Agregar anotaciones para ratings
+    veterinarios = veterinarios.annotate(
+        promedio_rating=Avg('resenas__Calificacion'),
+        total_reviews=Count('resenas')
+    )
+
+    # Preparar datos para JSON
+    veterinarios_data = []
+    for vet in veterinarios:
+        servicios = ServicioPersonalizado.objects.filter(
+            veterinario=vet,
+            EstaActivo=True
+        ).select_related('servicio_base')
+
+        veterinarios_data.append({
+            'id': vet.id,
+            'nombre': vet.NombreVeterinario,
+            'especialidad': vet.Especialidad,
+            'imagen_url': vet.ImagenPerfil.url if vet.ImagenPerfil else None,
+            'ubicacion': vet.Ubicacion,
+            'promedio_rating': float(vet.promedio_rating) if vet.promedio_rating else 0,
+            'total_reviews': vet.total_reviews,
+            'servicios': [
+                {
+                    'nombre': s.servicio_base.NombreServicio,
+                    'tipo': s.servicio_base.TipoServicio,
+                    'precio': float(s.Precio)
+                } for s in servicios
+            ]
+        })
+
+    return JsonResponse({'veterinarios': veterinarios_data})
+
+class VeterinarioPerfilUpdateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            perfil = request.user.perfil_veterinario
+            
+            # Actualizar campos existentes
+            perfil.NombreCompletoVeterinario = request.POST.get('nombre_completo')
+            perfil.EmailVeterinario = request.POST.get('email')
+            perfil.TelefonoVeterinario = request.POST.get('telefono')
+            perfil.Especialidad = request.POST.get('especialidad')
+            perfil.NumeroRegistro = request.POST.get('numero_registro')
+            perfil.Ubicacion = request.POST.get('ubicacion')
+            perfil.MostrarUbicacion = request.POST.get('mostrar_ubicacion') == 'on'
+            perfil.Descripcion = request.POST.get('descripcion')
+            
+            # Manejar el estado activo
+            perfil.EstaActivo = request.POST.get('esta_activo') == 'on'
+            
+            perfil.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Perfil actualizado correctamente',
+                    'esta_activo': perfil.EstaActivo
+                })
+            
+            messages.success(request, 'Perfil actualizado correctamente')
+            return redirect('perfil_veterinario')
+            
+        except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=400)
+            
+            messages.error(request, f'Error al actualizar el perfil: {str(e)}')
+            return redirect('perfil_veterinario')
+
+class VeterinarioImagenUpdateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            if not hasattr(request.user, 'perfil_veterinario'):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No se encontró el perfil veterinario'
+                }, status=404)
+
+            perfil = request.user.perfil_veterinario
+            imagen = request.FILES.get('imagen_perfil')
+
+            if not imagen:
+                raise ValidationError('No se proporcionó ninguna imagen')
+
+            # Validar tipo de archivo
+            if not imagen.content_type.lower() in ['image/jpeg', 'image/png', 'image/webp']:
+                raise ValidationError('Formato de imagen no soportado')
+
+            # Validar tamaño (5MB máximo)
+            if imagen.size > 5 * 1024 * 1024:
+                raise ValidationError('La imagen no debe superar los 5MB')
+
+            # Validar dimensiones
+            try:
+                img = Image.open(imagen)
+                width, height = img.size
+                if width < 200 or height < 200:
+                    raise ValidationError('La imagen debe ser al menos de 200x200 píxeles')
+            except Exception as e:
+                raise ValidationError('Error al procesar la imagen')
+
+            # Procesar y guardar imagen
+            try:
+                # Si ya existe una imagen, eliminarla
+                if perfil.ImagenPerfil:
+                    perfil.ImagenPerfil.delete(save=False)
+
+                # Guardar nueva imagen
+                perfil.ImagenPerfil = imagen
+                perfil.save()
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Imagen actualizada correctamente',
+                    'image_url': perfil.ImagenPerfil.url
+                })
+
+            except Exception as e:
+                raise ValidationError('Error al procesar la imagen')
+
         except ValidationError as e:
             return JsonResponse({
                 'success': False,
                 'error': str(e)
-            })
-        
-        # Actualizar imagen
-        try:
-            user = request.user
-            user.ImagenPerfil = imagen
-            user.save()
-            
-            return JsonResponse({
-                'success': True,
-                'image_url': user.ImagenPerfil.url
-            })
+            }, status=400)
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'error': f'Error al actualizar la imagen: {str(e)}'
+                'error': 'Error al actualizar la imagen'
+            }, status=500)
+
+class ResenasVeterinarioView(LoginRequiredMixin, View):
+    def get(self, request):
+        if not request.user.is_veterinario:
+            messages.warning(request, 'No tienes acceso al perfil veterinario')
+            return redirect('home')
+            
+        # Corregir el nombre del campo para ordenar
+        resenas = request.user.perfil_veterinario.resenas.all().order_by('-FechaCreacion')  # Cambiado de FechaResena a FechaCreacion
+        
+        # Calcular estadísticas
+        promedio_calificacion = resenas.aggregate(Avg('Calificacion'))['Calificacion__avg'] or 0
+        total_resenas = resenas.count()
+        
+        # Contar reseñas por calificación
+        distribucion_calificaciones = {
+            5: resenas.filter(Calificacion=5).count(),
+            4: resenas.filter(Calificacion=4).count(),
+            3: resenas.filter(Calificacion=3).count(),
+            2: resenas.filter(Calificacion=2).count(),
+            1: resenas.filter(Calificacion=1).count(),
+        }
+        
+        context = {
+            'perfil': request.user.perfil_veterinario,
+            'seccion': 'resenas',
+            'resenas': resenas,
+            'promedio_calificacion': round(promedio_calificacion, 1),
+            'total_resenas': total_resenas,
+            'distribucion_calificaciones': distribucion_calificaciones,
+        }
+        
+        return render(request, 'veterinaria/perfil_veterinario.html', context)
+
+@method_decorator(login_required, name='dispatch')
+class ServicioEditView(View):
+    def post(self, request, pk):
+        if not request.user.is_veterinario:
+            return JsonResponse({
+                'success': False,
+                'error': 'No tienes permisos para realizar esta acción'
+            }, status=403)
+            
+        try:
+            precio_personalizado = get_object_or_404(
+                PrecioPersonalizado, 
+                id=pk, 
+                veterinario=request.user.perfil_veterinario
+            )
+            
+            nuevo_precio = request.POST.get('precio')
+            if not nuevo_precio:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'El precio es requerido'
+                }, status=400)
+                
+            precio_personalizado.Precio = nuevo_precio
+            precio_personalizado.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Precio actualizado exitosamente'
             })
             
-    return JsonResponse({
-        'success': False,
-        'error': 'No se proporcionó ninguna imagen'
-    })
-    
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@method_decorator(login_required, name='dispatch')
+class ServicioToggleEstadoView(LoginRequiredMixin, View):
+    def post(self, request):
+        if not request.user.is_staff:
+            messages.warning(request, 'No tienes permisos para realizar esta acción')
+            return JsonResponse({
+                'success': False,
+                'error': 'No tienes permisos para realizar esta acción'
+            }, status=403)
+            
+        try:
+            data = json.loads(request.body)
+            servicio_id = data.get('servicio_id')
+            nuevo_estado = data.get('estado')
+
+            if not servicio_id:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'ID de servicio no proporcionado'
+                }, status=400)
+
+            servicio_base = get_object_or_404(ServicioBase, CodigoServicio=servicio_id)
+            
+            # Actualizar estado del servicio base
+            servicio_base.EstaActivo = nuevo_estado
+            servicio_base.save()
+
+            # Si se está deshabilitando, deshabilitar servicios personalizados
+            servicios_afectados = 0
+            if not nuevo_estado:
+                servicios_personalizados = ServicioPersonalizado.objects.filter(
+                    servicio_base=servicio_base
+                )
+                servicios_afectados = servicios_personalizados.count()
+                servicios_personalizados.update(EstaActivo=False)
+                
+                logger.info(
+                    f"Servicio {servicio_base.NombreServicio} (ID: {servicio_id}) " 
+                    f"deshabilitado junto con {servicios_afectados} servicios personalizados"
+                )
+            else:
+                logger.info(
+                    f"Servicio {servicio_base.NombreServicio} (ID: {servicio_id}) habilitado"
+                )
+
+            mensaje = (
+                f"Servicio '{servicio_base.NombreServicio}' deshabilitado y desactivado para {servicios_afectados} veterinarios"
+                if not nuevo_estado else
+                f"Servicio '{servicio_base.NombreServicio}' habilitado correctamente"
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': mensaje,
+                'servicios_afectados': servicios_afectados
+            })
+
+        except json.JSONDecodeError:
+            logger.error("Error decodificando JSON en ServicioToggleEstadoView")
+            return JsonResponse({
+                'success': False,
+                'error': 'Datos inválidos'
+            }, status=400)
+            
+        except ServicioBase.DoesNotExist:
+            logger.warning(f"Intento de toggle en servicio inexistente ID: {servicio_id}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Servicio no encontrado'
+            }, status=404)
+            
+        except Exception as e:
+            logger.error(f"Error en ServicioToggleEstadoView: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Error al actualizar el estado del servicio'
+            }, status=500)
+

@@ -1,6 +1,7 @@
 # Standard library imports
 
 from datetime import datetime, timedelta, date
+import re
 
 # Django imports
 from django import forms
@@ -12,7 +13,37 @@ from django.utils import timezone
 import os
 
 # Local application imports
-from .models import Producto, CustomUser , CitaVeterinaria, Servicio, Veterinario, Veterinaria
+from .models import Producto, CustomUser
+
+def validar_rut_chileno(rut):
+    # Limpia el RUT de puntos y guión
+    rut = rut.replace(".", "").replace("-", "").upper()
+    
+    # Verifica el formato básico
+    if not re.match(r'^[0-9]{7,8}[0-9K]$', rut):
+        raise ValidationError('Formato de RUT inválido')
+    
+    # Separa el RUT del dígito verificador
+    rut_sin_dv = rut[:-1]
+    dv = rut[-1]
+    
+    # Calcula el dígito verificador
+    multiplicador = 2
+    suma = 0
+    for d in reversed(rut_sin_dv):
+        suma += int(d) * multiplicador
+        multiplicador = multiplicador + 1 if multiplicador < 7 else 2
+    
+    dv_calculado = 11 - (suma % 11)
+    dv_esperado = {10: 'K', 11: '0'}.get(dv_calculado, str(dv_calculado))
+    
+    # Verifica que el dígito verificador sea correcto
+    if dv != dv_esperado:
+        raise ValidationError('RUT inválido')
+    
+    # Convierte K a 11 y retorna solo números
+    return int(rut_sin_dv + ('11' if dv == 'K' else dv))
+
 class ProductoForm(forms.ModelForm):
     # Validador para SKU numérico
     SKUProducto = forms.CharField(
@@ -230,12 +261,22 @@ class ProductoForm(forms.ModelForm):
         return producto
 
 class RegistroUsuarioForm(UserCreationForm):
+    RutUsuario = forms.CharField(
+        label='RUT',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ejemplo: 12.345.678-9'
+        })
+    )
+    
     class Meta:
         model = CustomUser
-        fields = ['RutUsuario', 'EmailUsuario', 'password1', 'password2']  # Incluye solo los campos que necesitas
+        fields = ['RutUsuario', 'EmailUsuario', 'password1', 'password2']
         widgets = {
-            'RutUsuario': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Si termina en K, Reemplazalo por 11'}),
-            'EmailUsuario': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Correo Electrónico'}),
+            'EmailUsuario': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Correo Electrónico'
+            }),
         }
         labels = {
             'RutUsuario' : ('RUT. Sin punto ni guion'),
@@ -255,146 +296,126 @@ class RegistroUsuarioForm(UserCreationForm):
                 'password_mismatch': "Las contraseñas no coinciden.",
             },
         }
-    
+        
+    def clean_RutUsuario(self):
+        rut = self.cleaned_data.get('RutUsuario')
+        try:
+            rut_limpio = validar_rut_chileno(rut)
+            return rut_limpio
+        except ValidationError as e:
+            raise forms.ValidationError('RUT inválido. Verifique el formato y el dígito verificador.')
 
 class CustomLoginForm(AuthenticationForm):
-    username = forms.IntegerField(
-        label="RUT Usuario",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT'}),
-        error_messages = {
-            'RutUsuario': {
-                'invalid': "El RUT es invalido.",
-                'required': "Por favor, ingresa tu RUT."
-            }
-        }
+    username = forms.CharField(
+        label='RUT',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu RUT'
+        })
     )
+    
     password = forms.CharField(
-        label="Contraseña",
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'}),
-        error_messages = {
-            'Contraseña': {
-                'invalid': "El Rut o la Contraseña no coinciden.",
-                'required': "Ingresa la contraseña."
-            }
-        }
+        label='Contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu contraseña'
+        })
     )
+
+    error_messages = {
+        'invalid_login': "RUT o contraseña incorrectos",
+        'inactive': 'Esta cuenta está inactiva.',
+        'invalid_rut': 'El RUT ingresado no es válido.'
+    }
+
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if username and password:
+            try:
+                # Limpia y valida el RUT
+                username = username.replace('.', '').replace('-', '').upper()
+                rut_limpio = validar_rut_chileno(username)
+                
+                # Intenta autenticar al usuario
+                self.user_cache = authenticate(
+                    self.request,
+                    username=str(rut_limpio),
+                    password=password
+                )
+                
+                if self.user_cache is None:
+                    # Cambio en la forma de lanzar el error
+                    self.add_error('password', self.error_messages['invalid_login'])
+                elif not self.user_cache.is_active:
+                    raise forms.ValidationError(
+                        self.error_messages['inactive'],
+                        code='inactive'
+                    )
+            except ValidationError as e:
+                if 'RUT inválido' in str(e) or 'Formato de RUT inválido' in str(e):
+                    self.add_error('username', self.error_messages['invalid_rut'])
+                else:
+                    self.add_error('password', str(e))
+                raise
+
+        return self.cleaned_data
 
     def confirm_login_allowed(self, user):
         if not user.is_active:
-            raise forms.ValidationError("Esta cuenta está inactiva.", code='inactive')
+            raise forms.ValidationError(
+                self.error_messages['inactive'],
+                code='inactive',
+            )
 
-    def clean(self):
-        cleaned_data = super().clean()
-        rut = cleaned_data.get('username')
-        password = cleaned_data.get('password')
+class CambiarPasswordForm(forms.Form):
+    password_actual = forms.CharField(
+        label="Contraseña actual",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingrese su contraseña actual'
+        })
+    )
+    password_nuevo = forms.CharField(
+        label="Nueva contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingrese su nueva contraseña'
+        })
+    )
+    password_confirmacion = forms.CharField(
+        label="Confirmar nueva contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirme su nueva contraseña'
+        })
+    )
 
-        if rut and password:
-            user = authenticate(username=rut, password=password)
-            if user is None:
-                raise forms.ValidationError("Las credenciales no son válidas.")
+    def clean_password_nuevo(self):
+        password = self.cleaned_data.get('password_nuevo')
         
-        return cleaned_data
-    
-class VeterinariaForm(forms.ModelForm):
-    class Meta:
-        model = Veterinaria
-        fields = ['NombreVeterinaria', 'LocalidadVeterinaria', 'HorarioInicioVeterinaria', 'HorarioCierreVeterinaria', 'DisponibilidadVeterinaria', 'telefono', 'email']
-        widgets = {
-            'NombreVeterinaria': forms.TextInput(attrs={'class': 'form-control'}),
-            'LocalidadVeterinaria': forms.TextInput(attrs={'class': 'form-control'}),
-            'HorarioInicioVeterinaria': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'HorarioCierreVeterinaria': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'DisponibilidadVeterinaria': forms.Select(attrs={'class': 'form-select'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-        }
-
-class VeterinarioForm(forms.ModelForm):
-    class Meta:
-        model = Veterinario
-        fields = ['usuario', 'veterinaria', 'especialidad', 'telefono', 'experiencia_años', 'horario_inicio', 'horario_fin', 'nombre_veterinario']
-        widgets = {
-            'usuario': forms.Select(attrs={'class': 'form-select'}),
-            'veterinaria': forms.Select(attrs={'class': 'form-select'}),
-            'especialidad': forms.TextInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'experiencia_años': forms.TextInput(attrs={'class': 'form-control'}),
-            'horario_inicio': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'horario_fin': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'nombre_veterinario': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'})
-        }
-
-    # Campos opcionales: Usuario y Veterinaria
-    usuario = forms.ModelChoiceField(
-        queryset=CustomUser.objects.all(), 
-        required=False, 
-        empty_label="Seleccione un usuario", 
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    veterinaria = forms.ModelChoiceField(
-        queryset=Veterinaria.objects.all(), 
-        required=False, 
-        empty_label="Seleccione una veterinaria", 
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    
-    # Validación personalizada para asegurarse de que si no se selecciona usuario, el nombre del veterinario debe ser proporcionado
-    def clean(self):
-        cleaned_data = super().clean()
-        usuario = cleaned_data.get("usuario")
-        nombre_veterinario = cleaned_data.get("nombre_veterinario")
-        veterinaria = cleaned_data.get("veterinaria")
-
-        # Si no se selecciona un usuario, nombre_veterinario debe ser obligatorio
-        if not usuario and not nombre_veterinario:
-            self.add_error('nombre_veterinario', 'Debe ingresar el nombre del veterinario si no selecciona un usuario.')
-
-        # Si no se selecciona una veterinaria, esto también podría ser validado si es necesario
-        if not veterinaria:
-            self.add_error('veterinaria', 'Debe seleccionar una veterinaria.')
-
-        return cleaned_data
-
-
-class ServicioForm(forms.ModelForm):
-    class Meta:
-        model = Servicio
-        fields = ['NombreServicio', 'TipoServicio', 'LocalidadServicio', 'HorarioInicioServicio', 'HorarioCierreServicio', 'DisponibilidadServicio', 'Precio']
-        widgets = {
-            'NombreServicio': forms.TextInput(attrs={'class': 'form-control'}),
-            'TipoServicio': forms.Select(attrs={'class': 'form-select'}),
-            'LocalidadServicio': forms.TextInput(attrs={'class': 'form-control'}),
-            'HorarioInicioServicio': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'HorarioCierreServicio': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'DisponibilidadServicio': forms.Select(attrs={'class': 'form-select'}),
-            'Precio': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
-class CitaVeterinariaForm(forms.ModelForm):
-    class Meta:
-        model = CitaVeterinaria
-        fields = ['servicio', 'veterinaria', 'veterinario', 'fecha_inicio', 'fecha_fin', 'titulo', 'descripcion', 'estado', 'todo_el_dia']
-        widgets = {
-            'servicio': forms.TextInput(attrs={'class': 'form-control'}),
-            'veterinaria': forms.Select(attrs={'class': 'form-select'}),
-            'veterinario': forms.Select(attrs={'class': 'form-select'}),
-            'fecha_inicio': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'fecha_fin': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'titulo': forms.TextInput(attrs={'class': 'form-control'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'estado': forms.Select(attrs={'class': 'form-select'}),
-            'todo_el_dia': forms.CheckboxInput(attrs={'class': 'form-check-input'})
-        }
+        # Validar longitud mínima
+        if len(password) < 8:
+            raise forms.ValidationError(
+                'La contraseña debe tener al menos 8 caracteres'
+            )
+        
+        # Validar que contenga al menos un número
+        if not any(char.isdigit() for char in password):
+            raise forms.ValidationError(
+                'La contraseña debe contener al menos un número'
+            )
+        
+        return password
 
     def clean(self):
         cleaned_data = super().clean()
-        fecha_inicio = cleaned_data.get('fecha_inicio')
-        fecha_fin = cleaned_data.get('fecha_fin')
+        password_nuevo = cleaned_data.get('password_nuevo')
+        password_confirmacion = cleaned_data.get('password_confirmacion')
 
-        if fecha_inicio and fecha_fin:
-            if fecha_inicio >= fecha_fin:
-                raise forms.ValidationError("La fecha de fin debe ser posterior a la fecha de inicio")
-
+        if password_nuevo and password_confirmacion:
+            if password_nuevo != password_confirmacion:
+                raise forms.ValidationError('Las contraseñas nuevas no coinciden')
         return cleaned_data
-
 

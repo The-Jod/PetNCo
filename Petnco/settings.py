@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_bootstrap_icons',
-    'django.contrib.admin',
+#    'django.contrib.admin',
     'bootstrap5',    
     'django.contrib.humanize',
     
@@ -137,7 +137,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 

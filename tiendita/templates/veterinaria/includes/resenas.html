@@ -1,0 +1,168 @@
+<div class="card">
+    <div class="card-body">
+        <!-- Resumen de calificaciones -->
+        <div class="row mb-4">
+            <div class="col-md-4 text-center">
+                <div class="display-4 fw-bold text-primary">{{ promedio_calificacion }}</div>
+                <div class="stars-container mb-2">
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= promedio_calificacion|add:"0.5"|floatformat:"0" %}
+                            <i class="fas fa-star text-warning"></i>
+                        {% else %}
+                            <i class="far fa-star text-warning"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <p class="text-muted">Basado en {{ total_resenas }} reseñas</p>
+            </div>
+            <div class="col-md-8">
+                <!-- Distribución de calificaciones -->
+                {% for estrellas, cantidad in distribucion_calificaciones.items reversed %}
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="stars me-2" style="width: 80px;">
+                            {{ estrellas }} <i class="fas fa-star text-warning"></i>
+                        </div>
+                        <div class="progress flex-grow-1" style="height: 10px;">
+                            <div class="progress-bar bg-warning" 
+                                 role="progressbar" 
+                                 style="width: {% widthratio cantidad total_resenas 100 %}%"
+                                 aria-valuenow="{% widthratio cantidad total_resenas 100 %}"
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100"></div>
+                        </div>
+                        <div class="ms-2" style="width: 50px;">
+                            {{ cantidad }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Lista de reseñas -->
+        <div class="resenas-list">
+            {% if resenas %}
+                {% for resena in resenas %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-0">{{ resena.usuario.get_full_name }}</h6>
+                                    <small class="text-muted">
+                                        {{ resena.FechaCreacion|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <div class="stars">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= resena.Calificacion %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="card-text">{{ resena.Comentario }}</p>
+                            {% if resena.RespuestaVeterinario %}
+                                <div class="respuesta-veterinario mt-3 ps-3 border-start">
+                                    <small class="text-muted d-block mb-1">Tu respuesta:</small>
+                                    <p class="mb-0">{{ resena.RespuestaVeterinario }}</p>
+                                </div>
+                            {% else %}
+                                <button class="btn btn-sm btn-outline-primary mt-2" 
+                                        onclick="responderResena({{ resena.id }})">
+                                    Responder
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-comment-alt fa-3x text-muted mb-3"></i>
+                    <h5>Aún no tienes reseñas</h5>
+                    <p class="text-muted">Las reseñas de tus clientes aparecerán aquí</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.stars-container {
+    font-size: 1.5rem;
+}
+
+.progress {
+    background-color: #f8f9fa;
+    border-radius: 1rem;
+}
+
+.progress-bar {
+    border-radius: 1rem;
+}
+
+.resenas-list .card {
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.resenas-list .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08);
+}
+
+.respuesta-veterinario {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border-left: 3px solid #0d6efd !important;
+}
+</style>
+
+<script>
+function responderResena(resenaId) {
+    Swal.fire({
+        title: 'Responder reseña',
+        input: 'textarea',
+        inputLabel: 'Tu respuesta',
+        inputPlaceholder: 'Escribe tu respuesta aquí...',
+        showCancelButton: true,
+        confirmButtonText: 'Responder',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes escribir una respuesta'
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Enviar respuesta al servidor
+            fetch(`/api/resenas/${resenaId}/responder/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    respuesta: result.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('¡Éxito!', 'Tu respuesta ha sido publicada', 'success')
+                    .then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(data.error);
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+        }
+    });
+}
+</script>

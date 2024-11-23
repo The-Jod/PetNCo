@@ -1,0 +1,158 @@
+.filter-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.filter-section {
+    margin-bottom: 15px;
+}
+
+.filter-section h4 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.filter-options label {
+    display: block;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.price-range {
+    margin: 10px 0;
+}
+
+.rating-filter .stars {
+    color: #ffc107;
+    margin-left: 5px;
+}
+
+.clear-filters {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.content-area {
+    padding-left: 20px;
+}
+
+@media (max-width: 768px) {
+    .content-area {
+        padding-left: 0;
+        margin-top: 20px;
+    }
+}
+
+.veterinarios-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.veterinario-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.veterinario-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.veterinario-image-container {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.veterinario-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.veterinario-rating {
+    text-align: center;
+}
+
+.veterinario-rating .stars {
+    color: #ffc107;
+    font-size: 1.1em;
+}
+
+.rating-count {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.veterinario-info {
+    padding: 0 15px;
+}
+
+.veterinario-name {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin-bottom: 5px;
+}
+
+.veterinario-specialty {
+    color: #666;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+.service-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.service-tag {
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+}
+
+.veterinario-location {
+    color: #666;
+    margin-top: 15px;
+}
+
+.veterinario-location i {
+    color: #dc3545;
+    margin-right: 5px;
+}
+
+.btn-agendar {
+    padding: 8px 20px;
+    border-radius: 25px;
+}
+
+.btn-agendar i {
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    .veterinario-card .row {
+        flex-direction: column;
+    }
+    
+    .veterinario-info {
+        padding: 15px 0 0 0;
+    }
+    
+    .veterinario-image-container {
+        height: 180px;
+    }
+}
