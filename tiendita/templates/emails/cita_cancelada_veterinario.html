@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { text-align: center; padding: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cita Cancelada</h1>
+        </div>
+        <div class="content">
+            <p>Hola Dr(a). {{ veterinario.NombreVeterinario }},</p>
+            <p>Una cita ha sido cancelada:</p>
+            
+            <h3>Detalles de la cita cancelada:</h3>
+            <ul>
+                <li><strong>Paciente:</strong> {{ usuario.get_full_name }}</li>
+                <li><strong>Fecha:</strong> {{ fecha|date:"d/m/Y" }}</li>
+                <li><strong>Hora:</strong> {{ hora|time:"H:i" }}</li>
+            </ul>
+            
+            <p>El horario ha sido liberado y está disponible nuevamente para otras citas.</p>
+        </div>
+        <div class="footer">
+            <p>Este es un mensaje automático, no es necesario responder.</p>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,148 @@
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Mis Citas Veterinarias</h2>
+
+    <!-- Citas Próximas -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Citas Próximas
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if citas_proximas %}
+                {% for cita in citas_proximas %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6 class="mb-2">Fecha y Hora</h6>
+                                    <p class="mb-0">
+                                        <i class="far fa-calendar me-2"></i>
+                                        {{ cita.fecha|date:"d/m/Y" }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="far fa-clock me-2"></i>
+                                        {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="mb-2">Veterinario</h6>
+                                    <p class="mb-0">
+                                        <i class="fas fa-user-md me-2"></i>
+                                        {{ cita.veterinario.NombreVeterinario }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-map-marker-alt me-2"></i>
+                                        {{ cita.veterinario.Ubicacion }}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="mb-2">Servicios</h6>
+                                    <ul class="list-unstyled mb-0">
+                                        {% for servicio in cita.servicios.all %}
+                                            <li>
+                                                <i class="fas fa-check me-2"></i>
+                                                {{ servicio.servicio_base.NombreServicio }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% if cita.notas %}
+                                <div class="mt-3">
+                                    <h6 class="mb-2">Notas</h6>
+                                    <p class="mb-0">{{ cita.notas }}</p>
+                                </div>
+                            {% endif %}
+                            <div class="mt-3">
+                                <span class="badge bg-{{ cita.estado|lower }}">
+                                    {{ cita.get_estado_display }}
+                                </span>
+                                {% if cita.estado == 'pendiente' or cita.estado == 'confirmada' %}
+                                    <button class="btn btn-danger btn-sm float-end" 
+                                            onclick="cancelarCita({{ cita.id }})">
+                                        <i class="fas fa-times me-1"></i>
+                                        Cancelar
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center mb-0">No tienes citas próximas programadas</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Citas Pasadas -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2"></i>
+                Historial de Citas
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if citas_pasadas %}
+                {% for cita in citas_pasadas %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <!-- Similar al contenido de citas próximas pero sin botones de acción -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6 class="mb-2">Fecha y Hora</h6>
+                                    <p class="mb-0">{{ cita.fecha|date:"d/m/Y" }}</p>
+                                    <p class="mb-0">{{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="mb-2">Veterinario</h6>
+                                    <p class="mb-0">{{ cita.veterinario.NombreVeterinario }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="mb-2">Estado</h6>
+                                    <span class="badge bg-{{ cita.estado|lower }}">
+                                        {{ cita.get_estado_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center mb-0">No tienes citas pasadas</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Script para cancelar citas -->
+<script>
+function cancelarCita(citaId) {
+    if (confirm('¿Estás seguro de que deseas cancelar esta cita?')) {
+        fetch(`/api/citas/${citaId}/cancelar/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error al cancelar la cita: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error al cancelar la cita');
+            console.error('Error:', error);
+        });
+    }
+}
+</script>
+{% endblock %} 

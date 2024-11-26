@@ -25,21 +25,31 @@ function initCalendar() {
             height: 650,
             selectable: true,
             selectConstraint: {
-                start: new Date(),
+                start: new Date().setHours(0,0,0,0),
                 end: '2100-01-01'
             },
             validRange: {
-                start: new Date()
+                start: new Date().setHours(0,0,0,0)
             },
             events: '/api/disponibilidad/eventos/',
             dateClick: function(info) {
-                const clickedDate = new Date(info.dateStr);
+                const clickedDate = new Date(info.dateStr + 'T00:00:00');
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
+                clickedDate.setHours(0, 0, 0, 0);
+
+                console.log('Fecha clickeada:', clickedDate);
+                console.log('Hoy:', today);
 
                 if (clickedDate >= today) {
                     document.getElementById('fecha').value = info.dateStr;
                     cargarHorariosDelDia(info.dateStr);
+                    
+                    const prevSelected = document.querySelector('.fc-day-selected');
+                    if (prevSelected) {
+                        prevSelected.classList.remove('fc-day-selected');
+                    }
+                    info.dayEl.classList.add('fc-day-selected');
                 }
             }
         });
@@ -130,78 +140,88 @@ function validarHorario(horaInicio, horaFin) {
 // Función para guardar horario (actualizada)
 function guardarHorario(form) {
     const formData = new FormData(form);
-    
+    const data = {
+        fecha: formData.get('fecha'),
+        horario_inicio: formData.get('hora_inicio'),
+        horario_fin: formData.get('hora_fin')
+    };
+
+    console.log('Enviando datos:', data); // Para debug
+
     fetch('/api/disponibilidad/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
-        body: JSON.stringify({
-            fecha: formData.get('fecha'),
-            horario_inicio: formData.get('hora_inicio'),
-            horario_fin: formData.get('hora_fin')
-        })
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Swal.fire('¡Éxito!', 'Horario guardado correctamente', 'success');
+            Swal.fire('¡Éxito!', data.message || 'Horario guardado correctamente', 'success');
             cargarHorariosDelDia(formData.get('fecha'));
             if (calendar) calendar.refetchEvents();
             form.reset();
         } else {
-            // Mostrar el mensaje de error limpio
-            Swal.fire('Error', data.error, 'error');
+            Swal.fire('Error', data.error || 'Error al guardar el horario', 'error');
         }
     })
     .catch(error => {
+        console.error('Error:', error);
         Swal.fire('Error', 'Error al guardar el horario', 'error');
     });
 }
 
 // Función para cargar horarios del día
 function cargarHorariosDelDia(fecha) {
-    const contenedor = document.getElementById('horariosDisponibles');
-    if (!contenedor) return;
+    if (!fecha) return;
 
-    contenedor.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+    console.log('Cargando horarios para:', fecha);  // Debug
 
     fetch(`/api/disponibilidad/?fecha=${fecha}`)
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);  // Debug
+            if (!response.ok) {
+                throw new Error('Error al cargar horarios');
+            }
+            return response.json();
+        })
         .then(horarios => {
-            if (horarios.length === 0) {
-                contenedor.innerHTML = `
-                    <div class="alert alert-info text-center m-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        No hay horarios disponibles para este día
-                    </div>`;
+            console.log('Horarios recibidos:', horarios);  // Debug
+            const contenedor = document.querySelector('#horariosDisponibles');
+            if (!contenedor) {
+                console.error('Contenedor de horarios no encontrado');
                 return;
             }
 
-            const horariosHTML = horarios.map(horario => `
-                <div class="horario-item shadow-sm">
-                    <span class="horario-tiempo">
-                        <i class="fas fa-clock"></i>
-                        ${formatearHora(horario.HorarioInicio)} - ${formatearHora(horario.HorarioFin)}
-                    </span>
-                    <div class="btn-group">
+            contenedor.innerHTML = '';
+            
+            if (!Array.isArray(horarios) || horarios.length === 0) {
+                contenedor.innerHTML = '<p class="text-muted">No hay horarios disponibles para este día</p>';
+                return;
+            }
+
+            horarios.forEach(horario => {
+                const elemento = document.createElement('div');
+                elemento.className = 'horario-item mb-2 p-3 border rounded';
+                elemento.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="horario-tiempo">
+                            <i class="fas fa-clock"></i>
+                            ${horario.inicio} - ${horario.fin}
+                        </span>
                         <button class="btn btn-danger btn-sm" onclick="eliminarHorario(${horario.id})">
-                            <i class="fas fa-trash-alt me-1"></i>
-                            Eliminar
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                </div>
-            `).join('');
-
-            contenedor.innerHTML = horariosHTML;
+                `;
+                contenedor.appendChild(elemento);
+            });
         })
         .catch(error => {
-            contenedor.innerHTML = `
-                <div class="alert alert-danger text-center m-3">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    Error al cargar los horarios
-                </div>`;
+            console.error('Error:', error);
+            Swal.fire('Error', 'No se pudieron cargar los horarios', 'error');
         });
 }
 
@@ -435,4 +455,37 @@ async function eliminarTodosLosHorarios() {
     } catch (error) {
         Swal.fire('Error', 'Error al eliminar los horarios', 'error');
     }
+}
+
+function actualizarListaHorarios(horarios) {
+    const container = document.getElementById('horariosDisponibles');
+    container.innerHTML = '';
+    
+    if (!horarios || horarios.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center py-3">No hay horarios disponibles para este día</p>';
+        return;
+    }
+    
+    horarios.forEach(horario => {
+        const estado = {
+            'disponible': 'success',
+            'reservado': 'warning',
+            'expirado': 'danger',
+            'cancelado': 'secondary'
+        }[horario.estado];
+
+        container.innerHTML += `
+            <div class="horario-row">
+                <div class="horario-content">
+                    <i class="fas fa-clock text-primary"></i>
+                    <span class="horario-text">${horario.inicio} - ${horario.fin}</span>
+                </div>
+                <div class="horario-actions">
+                    <button class="delete-button" onclick="eliminarHorario(${horario.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
 }

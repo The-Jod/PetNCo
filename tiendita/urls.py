@@ -98,7 +98,7 @@ urlpatterns = [
     path('veterinario/servicios/toggle-estado/', ServicioToggleEstadoView.as_view(), name='servicio_toggle_estado'),
 
     # APIs de veterinario
-    path('api/disponibilidad/', DisponibilidadAPIView.as_view(), name='api_disponibilidad'),
+    path('api/disponibilidad/', views.DisponibilidadAPIView.as_view(), name='api_disponibilidad'),
     path('api/disponibilidad/<int:pk>/', DisponibilidadDetailAPIView.as_view(), name='api_disponibilidad_detail'),
     path('api/disponibilidad/clonar/', DisponibilidadClonarAPIView.as_view(), name='api_disponibilidad_clonar'),
     path('api/disponibilidad/eventos/', DisponibilidadEventosAPIView.as_view(), name='api_disponibilidad_eventos'),
@@ -114,6 +114,15 @@ urlpatterns = [
     path('api/veterinario/actualizar-imagen/', VeterinarioImagenUpdateView.as_view(), name='api_veterinario_actualizar_imagen'),
     path('veterinario/perfil/actualizar/', VeterinarioPerfilUpdateView.as_view(), name='actualizar_perfil_veterinario'),
     path('api/veterinario/toggle/', views.toggle_veterinario, name='toggle_veterinario'),
+    path('veterinarios/<int:veterinario_id>/', views.detalle_veterinario, name='detalle_veterinario'),
+    path('veterinarios/<int:veterinario_id>/calificar/', views.calificar_veterinario, name='calificar_veterinario'),
+    path('api/horarios-disponibles/', views.obtener_horarios_disponibles, name='horarios_disponibles'),
+    path('api/citas/<int:cita_id>/cancelar/', views.cancelar_cita, name='cancelar_cita'),
+
+    # URLs para citas veterinarias
+    path('citas/agendar/', views.agendar_cita, name='agendar_cita'),
+    path('citas/mis-citas/', views.mis_citas, name='mis_citas'),
+    path('citas/<int:cita_id>/cancelar/', views.cancelar_cita, name='cancelar_cita'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

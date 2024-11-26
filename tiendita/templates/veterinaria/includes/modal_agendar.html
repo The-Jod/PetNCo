@@ -1,0 +1,91 @@
+<div class="modal fade" id="agendarModal" tabindex="-1" aria-labelledby="agendarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agendarModalLabel">
+                    <i class="fas fa-calendar-plus me-2"></i>Agendar Cita
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formAgendarCita" method="POST" action="{% url 'agendar_cita' %}">
+                {% csrf_token %}
+                <input type="hidden" name="veterinario_id" value="{{ veterinario.id }}">
+                
+                <div class="modal-body">
+                    <!-- Paso 1: Selección de Servicios -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">1. Selecciona los servicios</h6>
+                        <select class="form-select" name="servicios[]" multiple required>
+                            {% for servicio in servicios %}
+                                <option value="{{ servicio.id }}" 
+                                        data-duracion="{{ servicio.servicio_base.DuracionMinutos }}"
+                                        data-precio="{{ servicio.Precio }}">
+                                    {{ servicio.servicio_base.NombreServicio }} - 
+                                    ${{ servicio.Precio|floatformat:0 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Puedes seleccionar múltiples servicios
+                        </div>
+                    </div>
+
+                    <!-- Paso 2: Selección de Fecha -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">2. Selecciona la fecha</h6>
+                        <input type="date" 
+                               class="form-control" 
+                               name="fecha" 
+                               required>
+                    </div>
+
+                    <!-- Paso 3: Horarios Disponibles -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">3. Horarios disponibles</h6>
+                        <div class="row g-2" id="horariosDisponibles">
+                            <div class="col-12">
+                                <p class="text-muted text-center">
+                                    Selecciona una fecha para ver los horarios disponibles
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paso 4: Notas Adicionales -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">4. Notas adicionales (opcional)</h6>
+                        <textarea class="form-control" 
+                                  name="notas" 
+                                  rows="3" 
+                                  placeholder="Escribe aquí cualquier información adicional importante..."></textarea>
+                    </div>
+
+                    <!-- Resumen de la Cita -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">Resumen de la cita</h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Servicio:</strong> <span id="resumenServicio">--</span></p>
+                                    <p class="mb-1"><strong>Fecha:</strong> <span id="resumenFecha">--</span></p>
+                                    <p class="mb-1"><strong>Hora:</strong> <span id="resumenHora">--</span></p>
+                                </div>
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Duración:</strong> <span id="resumenDuracion">--</span></p>
+                                    <p class="mb-1"><strong>Precio:</strong> <span id="resumenPrecio">--</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-2"></i>Confirmar Cita
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 

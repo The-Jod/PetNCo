@@ -1,0 +1,438 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/stylishass.css' %}">
+<style>
+    /* Contenedor principal */
+    .profile-container {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Imagen y datos principales */
+    .profile-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-image {
+        width: 160px;
+        height: 160px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border: 4px solid white;
+    }
+
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+
+    .profile-specialty {
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .no-reviews {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    /* Secciones */
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .section-header i {
+        color: #0d6efd;
+        margin-right: 0.75rem;
+        font-size: 1.25rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2c3e50;
+    }
+
+    /* Servicios */
+    .service-item {
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .service-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .service-price {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+
+    /* Botones */
+    .btn-agendar {
+        background-color: #0d6efd;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.5rem;
+        border: none;
+        font-weight: 500;
+    }
+
+    .btn-agendar i {
+        margin-right: 0.5rem;
+    }
+
+    /* Cards laterales */
+    .side-card {
+        background: #fff;
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .side-card .card-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid #e9ecef;
+        background: transparent;
+    }
+
+    .side-card .card-body {
+        padding: 1.25rem;
+    }
+
+    /* Reseñas */
+    .rating-bar {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        margin: 0.5rem 0;
+    }
+
+    .rating-fill {
+        height: 100%;
+        background: #ffc107;
+        border-radius: 4px;
+    }
+
+    .star-rating {
+        color: #ffc107;
+    }
+
+    .specialty-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .verified-badge {
+        background-color: #28a745;
+        color: white;
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .contact-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+
+    .contact-info i {
+        width: 20px;
+        color: #0d6efd;
+    }
+
+    .contact-info:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Ajustamos el estilo de los botones de horario */
+    .btn-outline-primary.btn-sm {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        white-space: nowrap;
+    }
+
+    /* Mejoramos el espaciado entre fechas */
+    .mb-3:not(:last-child) {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+
+    /* Estilo para el título de la fecha */
+    h6.mb-2 {
+        color: #2c3e50;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Columna Principal -->
+        <div class="col-lg-7 px-0">
+            <div class="card main-card">
+                <div class="card-body">
+                    <!-- Perfil y descripción -->
+                    <div class="row align-items-start mb-4">
+                        <div class="col-md-4 text-center">
+                            <img src="{{ veterinario.ImagenPerfil.url|default:'static/img/default-vet.png' }}" 
+                                 class="profile-image" 
+                                 alt="Foto de perfil">
+                            <h4 class="profile-name mb-2">{{ veterinario.NombreCompletoVeterinario }}</h4>
+                            <div class="specialty-container mb-3">
+                                <span class="text-muted">{{ veterinario.Especialidad }}</span>
+                                {% if veterinario.NumeroRegistro %}
+                                <span class="verified-badge">
+                                    <i class="fas fa-check-circle"></i>
+                                    Verificado
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-header border-bottom mb-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-md text-primary me-2"></i>Acerca de mí
+                                </h5>
+                            </div>
+                            <p class="text-muted">{{ veterinario.Descripcion }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Servicios -->
+                    <div class="servicios-section">
+                        <div class="card-header border-bottom mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-stethoscope text-primary me-2"></i>Servicios Veterinarios
+                                </h5>
+                                <button class="btn btn-primary"
+                                        onclick="agendarCita()">
+                                    <i class="fas fa-calendar-plus me-2"></i>Agendar Cita
+                                </button>
+                            </div>
+                        </div>
+
+                        <ul class="service-list">
+                            {% for servicio in servicios %}
+                            <li class="service-item">
+                                <div class="service-info">
+                                    <div class="service-icon">
+                                        <i class="fas fa-stethoscope"></i>
+                                    </div>
+                                    <div class="service-details">
+                                        <h6>{{ servicio.servicio_base.NombreServicio }}</h6>
+                                        <small>{{ servicio.servicio_base.TipoServicio }}</small>
+                                    </div>
+                                </div>
+                                <div class="service-price">
+                                    ${{ servicio.Precio|floatformat:0 }}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Lateral -->
+        <div class="col-lg-5">
+            <!-- Horarios -->
+            <div class="card side-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock text-primary me-2"></i>Horarios Disponibles</h5>
+                </div>
+                <div class="card-body">
+                    {% for fecha, horarios in horarios_por_fecha.items %}
+                    <h6 class="mb-2">{{ fecha|date:"l d/m/Y" }}</h6>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% for horario in horarios %}
+                        <button class="btn btn-outline-primary btn-sm" 
+                                onclick="agendarCita('{{ horario.id }}')">
+                            {{ horario.HorarioInicio|time:"H:i" }} - {{ horario.HorarioFin|time:"H:i" }}
+                        </button>
+                        {% empty %}
+                        <p class="text-muted small">No hay horarios disponibles</p>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Contacto -->
+            <div class="card side-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-address-card text-primary me-2"></i>Contacto</h5>
+                </div>
+                <div class="card-body">
+                    {% if veterinario.EmailVeterinario %}
+                    <p class="contact-info">
+                        <i class="fas fa-envelope me-2"></i>
+                        {{ veterinario.EmailVeterinario }}
+                    </p>
+                    {% endif %}
+                    <p class="contact-info d-flex align-items-center">
+                        <i class="fas fa-phone me-2"></i>
+                        <span>{{ veterinario.TelefonoVeterinario }}</span>
+                        <a href="https://wa.me/56{{ veterinario.TelefonoVeterinario }}" 
+                           class="btn btn-success btn-sm ms-2" 
+                           target="_blank">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </p>
+                    {% if veterinario.Ubicacion %}
+                    <p class="contact-info mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ veterinario.Ubicacion }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Reseñas -->
+            <div class="card side-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star text-primary me-2"></i>Reseñas
+                        <span class="badge bg-secondary ms-2">{{ veterinario.total_resenas }}</span>
+                    </h5>
+                    {% if user.is_authenticated %}
+                        {% if puede_calificar %}
+                            <button class="btn btn-primary btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#calificarModal">
+                                <i class="fas fa-pen me-1"></i>Escribir reseña
+                            </button>
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm" 
+                                    disabled 
+                                    title="Ya has calificado a este veterinario">
+                                <i class="fas fa-check me-1"></i>Ya calificado
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-sign-in-alt me-1"></i>Inicia sesión para calificar
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if veterinario.resenas.exists %}
+                        <div class="rating-summary mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <h3 class="mb-0 me-2">{{ veterinario.promedio_calificaciones|floatformat:1 }}</h3>
+                                <div class="star-rating">
+                                    {% for _ in ""|ljust:veterinario.promedio_calificaciones|floatformat:"0" %}
+                                        <i class="fas fa-star"></i>
+                                    {% endfor %}
+                                    {% for _ in ""|ljust:5|slice:veterinario.promedio_calificaciones|floatformat:"0" %}
+                                        <i class="far fa-star"></i>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <small class="text-muted">Basado en {{ veterinario.total_resenas }} reseñas</small>
+                        </div>
+                        {% include "veterinaria/includes/resenas.html" %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="far fa-comment-dots fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Aún no hay reseñas para este veterinario</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales -->
+{% include "veterinaria/includes/modal_agendar.html" %}
+{% include "veterinaria/includes/modal_calificar.html" %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function agendarCita(horarioId) {
+        $('#agendarModal').modal('show');
+        document.getElementById('horario_id').value = horarioId;
+    }
+
+    // Función para cargar los horarios disponibles
+    function cargarHorariosDisponibles(fecha) {
+        const veterinarioId = '{{ veterinario.id }}';
+        const servicioId = document.getElementById('servicio_id').value;
+        
+        fetch(`/api/horarios-disponibles/?fecha=${fecha}&veterinario=${veterinarioId}&servicio=${servicioId}`)
+            .then(response => response.json())
+            .then(data => {
+                const contenedorHorarios = document.getElementById('horarios-disponibles');
+                if (data.error) {
+                    contenedorHorarios.innerHTML = `<p class="text-muted">Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                if (data.horarios.length === 0) {
+                    contenedorHorarios.innerHTML = '<p class="text-muted">No hay horarios disponibles para esta fecha</p>';
+                    return;
+                }
+                
+                const botonesHorarios = data.horarios.map(horario => `
+                    <button class="btn btn-outline-primary btn-sm mb-2 me-2" 
+                            onclick="agendarCita('${horario.id}')">
+                        ${horario.inicio} - ${horario.fin}
+                    </button>
+                `).join('');
+                
+                contenedorHorarios.innerHTML = botonesHorarios;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('horarios-disponibles').innerHTML = 
+                    '<p class="text-danger">Error al cargar los horarios</p>';
+            });
+    }
+
+    // Escuchar cambios en el input de fecha
+    document.querySelector('input[type="date"]').addEventListener('change', function() {
+        cargarHorariosDisponibles(this.value);
+    });
+</script>
+<script src="{% static 'js/navbar.js' %}"></script>
+{% endblock %} 

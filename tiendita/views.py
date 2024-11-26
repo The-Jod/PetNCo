@@ -24,7 +24,7 @@ from django.utils import timezone
 from django.db.models import Q, Avg, Count
 from django.views import View
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, FormView
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_http_methods, require_POST, require_GET
 
 from django.views.generic import TemplateView, View
 from django.utils.decorators import method_decorator
@@ -33,6 +33,7 @@ import json
 from datetime import datetime
 
 from django.contrib.auth import update_session_auth_hash
+from django.db import transaction
 
 # Transbank
 from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions
@@ -52,6 +53,8 @@ from .models import (
     ServicioPersonalizado,
     DisponibilidadVeterinario,
     validate_image_file_extension,  # Importar la función de validación
+    ResenaVeterinario,  # Agregar esta importación
+    CitaVeterinaria,  # Agregar esta importación
 )
 from .forms import (
     ProductoForm, 
@@ -60,6 +63,15 @@ from .forms import (
 )
 
 from PIL import Image  # Añade este import al inicio del archivo
+
+try:
+    from .utils.google_calendar import get_google_calendar_service, crear_evento_calendario
+except ImportError:
+    # Fallback si no se puede importar
+    def get_google_calendar_service(*args, **kwargs):
+        return None
+    def crear_evento_calendario(*args, **kwargs):
+        return None
 
 logger = logging.getLogger(__name__)
 
@@ -601,7 +613,6 @@ class Product_CreateView(CreateView):
                 Q(NombreProducto__icontains=search_query) |
                 Q(SKUProducto__icontains=search_query)
             )
-        
         # Aplicar ordenamiento
         if order_by in ['SKUProducto', '-SKUProducto', 'NombreProducto', '-NombreProducto', 
                        'PrecioProducto', '-PrecioProducto', 'StockProducto', '-StockProducto']:
@@ -1233,52 +1244,140 @@ class DisponibilidadVeterinarioView(LoginRequiredMixin, View):
 class DisponibilidadAPIView(LoginRequiredMixin, View):
     def get(self, request):
         """Obtener disponibilidades por fecha"""
-        fecha = request.GET.get('fecha')
-        if not fecha:
-            return JsonResponse({'error': 'Fecha requerida'}, status=400)
+        try:
+            fecha = request.GET.get('fecha')
+            if not fecha:
+                return JsonResponse({'error': 'Fecha requerida'}, status=400)
+            
+            # Convertir la fecha al formato correcto
+            fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
+            
+            disponibilidades = DisponibilidadVeterinario.objects.filter(
+                veterinario=request.user.perfil_veterinario,
+                Fecha=fecha_obj,
+                EstaDisponible=True
+            ).values('id', 'HorarioInicio', 'HorarioFin', 'EstadoHorario')
 
-        disponibilidades = DisponibilidadVeterinario.objects.filter(
-            veterinario=request.user.perfil_veterinario,
-            Fecha=fecha
-        ).values('id', 'HorarioInicio', 'HorarioFin', 'EstaDisponible')
+            # Formatear las horas para JSON
+            disponibilidades_formateadas = []
+            for d in disponibilidades:
+                disponibilidades_formateadas.append({
+                    'id': d['id'],
+                    'inicio': d['HorarioInicio'].strftime('%H:%M'),
+                    'fin': d['HorarioFin'].strftime('%H:%M'),
+                    'estado': d['EstadoHorario']
+                })
 
-        return JsonResponse(list(disponibilidades), safe=False)
+            return JsonResponse(disponibilidades_formateadas, safe=False)
+        except ValueError:
+            return JsonResponse({'error': 'Formato de fecha inválido'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
 
     def post(self, request):
         """Crear nueva disponibilidad"""
         try:
+            # Verificar que el usuario tenga perfil de veterinario
+            if not hasattr(request.user, 'perfil_veterinario'):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Usuario no autorizado'
+                }, status=403)
+
             data = json.loads(request.body)
             fecha = datetime.strptime(data['fecha'], '%Y-%m-%d').date()
             horario_inicio = datetime.strptime(data['horario_inicio'], '%H:%M').time()
             horario_fin = datetime.strptime(data['horario_fin'], '%H:%M').time()
 
-            # Verificar si ya existe un horario que se solape
-            if DisponibilidadVeterinario.objects.filter(
-                veterinario=request.user.perfil_veterinario,
-                Fecha=fecha,
-                HorarioInicio__lt=horario_fin,
-                HorarioFin__gt=horario_inicio
-            ).exists():
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Ya existe un horario que se solapa con el ingresado'
-                }, status=400)
-
-            DisponibilidadVeterinario.objects.create(
+            # Crear instancia del modelo para validar
+            disponibilidad = DisponibilidadVeterinario(
                 veterinario=request.user.perfil_veterinario,
                 Fecha=fecha,
                 HorarioInicio=horario_inicio,
-                HorarioFin=horario_fin
+                HorarioFin=horario_fin,
+                EstaDisponible=True,
+                EstadoHorario='disponible'
             )
 
-            return JsonResponse({'success': True})
-        except Exception as e:
+            # Ejecutar validaciones del modelo
+            disponibilidad.full_clean()
+            disponibilidad.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Horario creado correctamente'
+            })
+        except ValidationError as e:
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'error': dict(e) if hasattr(e, 'message_dict') else str(e)
+            }, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Formato JSON inválido'
+            }, status=400)
+        except Exception as e:
+            print("Error:", str(e))  # Para debug
+            return JsonResponse({
+                'success': False,
+                'error': 'Error al procesar la solicitud'
             }, status=400)
 
 class DisponibilidadDetailAPIView(LoginRequiredMixin, View):
+    def post(self, request):
+        """Crear nueva disponibilidad"""
+        try:
+            # Verificar que el usuario tenga perfil de veterinario
+            if not hasattr(request.user, 'perfil_veterinario'):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Usuario no autorizado'
+                }, status=403)
+
+            # Imprimir el body para debug
+            print("Request body:", request.body)
+            
+            data = json.loads(request.body)
+            fecha = datetime.strptime(data['fecha'], '%Y-%m-%d').date()
+            horario_inicio = datetime.strptime(data['horario_inicio'], '%H:%M').time()
+            horario_fin = datetime.strptime(data['horario_fin'], '%H:%M').time()
+
+            # Crear instancia del modelo para validar
+            disponibilidad = DisponibilidadVeterinario(
+                veterinario=request.user.perfil_veterinario,
+                Fecha=fecha,
+                HorarioInicio=horario_inicio,
+                HorarioFin=horario_fin,
+                EstaDisponible=True,
+                EstadoHorario='disponible'
+            )
+
+            # Ejecutar validaciones del modelo
+            disponibilidad.full_clean()
+            disponibilidad.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Horario creado correctamente'
+            })
+        except ValidationError as e:
+            return JsonResponse({
+                'success': False,
+                'error': dict(e) if hasattr(e, 'message_dict') else str(e)
+            }, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Formato JSON inválido'
+            }, status=400)
+        except Exception as e:
+            print("Error:", str(e))  # Para debug
+            return JsonResponse({
+                'success': False,
+                'error': 'Error al procesar la solicitud'
+            }, status=400)
+    
     def put(self, request, pk):
         """Actualizar disponibilidad existente"""
         if not request.user.is_veterinario:
@@ -1628,9 +1727,9 @@ class GestionServiciosAPIView(UserPassesTestMixin, View):
 def lista_veterinarios(request):
     # Obtener todos los veterinarios activos con sus calificaciones
     veterinarios = PerfilVeterinario.objects.filter(EstaActivo=True).annotate(
-        promedio_rating=Avg('resenas__Calificacion'),
-        total_reviews=Count('resenas'),
-    )
+        rating=Avg('resenas__Calificacion'),
+        num_resenas=Count('resenas')
+    ).prefetch_related('servicios_personalizados__servicio_base')
 
     # Obtener lista única de especialidades
     especialidades = PerfilVeterinario.objects.values_list(
@@ -1671,8 +1770,8 @@ def filtrar_veterinarios(request):
 
     # Agregar anotaciones para ratings
     veterinarios = veterinarios.annotate(
-        promedio_rating=Avg('resenas__Calificacion'),
-        total_reviews=Count('resenas')
+        rating=Avg('resenas__Calificacion'),
+        num_resenas=Count('resenas')
     )
 
     # Preparar datos para JSON
@@ -1689,8 +1788,8 @@ def filtrar_veterinarios(request):
             'especialidad': vet.Especialidad,
             'imagen_url': vet.ImagenPerfil.url if vet.ImagenPerfil else None,
             'ubicacion': vet.Ubicacion,
-            'promedio_rating': float(vet.promedio_rating) if vet.promedio_rating else 0,
-            'total_reviews': vet.total_reviews,
+            'rating': float(vet.rating) if vet.rating else 0,
+            'num_resenas': vet.num_resenas,
             'servicios': [
                 {
                     'nombre': s.servicio_base.NombreServicio,
@@ -1951,4 +2050,306 @@ class ServicioToggleEstadoView(LoginRequiredMixin, View):
                 'success': False,
                 'error': 'Error al actualizar el estado del servicio'
             }, status=500)
+
+def detalle_veterinario(request, veterinario_id):
+    veterinario = get_object_or_404(PerfilVeterinario, id=veterinario_id)
+    fecha_actual = timezone.now().date()
+    fecha_maxima = fecha_actual + timedelta(days=30)
+    
+    # Obtener horarios disponibles
+    horarios = DisponibilidadVeterinario.objects.filter(
+        veterinario=veterinario,
+        Fecha__gte=fecha_actual,
+        Fecha__lte=fecha_maxima,
+        EstaDisponible=True,
+        EstadoHorario='disponible'
+    ).order_by('Fecha', 'HorarioInicio')
+
+    # Organizar horarios por fecha
+    horarios_por_fecha = {}
+    for horario in horarios:
+        fecha_str = horario.Fecha.strftime('%Y-%m-%d')
+        if fecha_str not in horarios_por_fecha:
+            horarios_por_fecha[fecha_str] = []
+        horarios_por_fecha[fecha_str].append(horario)
+    
+    # Obtener servicios activos
+    servicios = ServicioPersonalizado.objects.filter(
+        veterinario=veterinario,
+        EstaActivo=True
+    ).select_related('servicio_base')
+    
+    # Obtener reseñas y estadísticas
+    resenas = veterinario.resenas.all().order_by('-FechaCreacion')
+    promedio_calificacion = resenas.aggregate(Avg('Calificacion'))['Calificacion__avg'] or 0
+    total_resenas = resenas.count()
+    
+    # Calcular distribución de calificaciones
+    distribucion_calificaciones = {
+        5: resenas.filter(Calificacion=5).count(),
+        4: resenas.filter(Calificacion=4).count(),
+        3: resenas.filter(Calificacion=3).count(),
+        2: resenas.filter(Calificacion=2).count(),
+        1: resenas.filter(Calificacion=1).count(),
+    }
+    
+    # Verificar si el usuario puede calificar
+    puede_calificar = False
+    if request.user.is_authenticated:
+        puede_calificar = not ResenaVeterinario.objects.filter(
+            veterinario=veterinario,
+            usuario=request.user
+        ).exists()
+    
+    context = {
+        'veterinario': veterinario,
+        'servicios': servicios,
+        'horarios_por_fecha': horarios_por_fecha,
+        'puede_calificar': puede_calificar,
+        'resenas': resenas,
+        'total_resenas': total_resenas,
+        'promedio_calificacion': round(promedio_calificacion, 1),
+        'distribucion_calificaciones': distribucion_calificaciones
+    }
+    
+    return render(request, 'veterinaria/detalle_veterinario.html', context)
+
+@login_required
+def calificar_veterinario(request, veterinario_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        
+    veterinario = get_object_or_404(PerfilVeterinario, id=veterinario_id)
+    
+    # Verificar si ya existe una reseña
+    if ResenaVeterinario.objects.filter(veterinario=veterinario, usuario=request.user).exists():
+        return JsonResponse({'error': 'Ya has calificado a este veterinario'}, status=400)
+    
+    try:
+        calificacion = int(request.POST.get('calificacion'))
+        comentario = request.POST.get('comentario')
+        
+        if not (1 <= calificacion <= 5):
+            raise ValueError('Calificación inválida')
+            
+        ResenaVeterinario.objects.create(
+            veterinario=veterinario,
+            usuario=request.user,
+            Calificacion=calificacion,
+            Comentario=comentario
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Reseña enviada correctamente'
+        })
+        
+    except (ValueError, TypeError) as e:
+        return JsonResponse({
+            'error': str(e) if str(e) != '' else 'Datos inválidos'})
+
+@require_GET
+def verificar_disponibilidad(request, veterinario_id):
+    fecha = request.GET.get('fecha')
+    if not fecha:
+        return JsonResponse({'error': 'Fecha requerida'}, status=400)
+    
+    try:
+        fecha = datetime.strptime(fecha, '%Y-%m-%d').date()
+        horarios = DisponibilidadVeterinario.objects.filter(
+            veterinario_id=veterinario_id,
+            Fecha=fecha,
+            EstaDisponible=True,
+            EstadoHorario='disponible'
+        ).order_by('HorarioInicio')
+        
+        return JsonResponse({
+            'disponibles': [
+                {
+                    'id': h.id,
+                    'inicio': h.HorarioInicio.strftime('%H:%M'),
+                    'fin': h.HorarioFin.strftime('%H:%M'),
+                    'estado': h.EstadoHorario
+                } for h in horarios
+            ]
+        })
+    except ValueError:
+        return JsonResponse({'error': 'Formato de fecha inválido'}, status=400)
+
+@require_GET
+def api_horarios_disponibles(request):
+    fecha = request.GET.get('fecha')
+    veterinario_id = request.GET.get('veterinario')
+    servicio_id = request.GET.get('servicio')
+    
+    if not all([fecha, veterinario_id, servicio_id]):
+        return JsonResponse({
+            'error': 'Faltan parámetros requeridos'
+        }, status=400)
+    
+    try:
+        fecha = datetime.strptime(fecha, '%Y-%m-%d').date()
+        horarios = DisponibilidadVeterinario.objects.filter(
+            veterinario_id=veterinario_id,
+            Fecha=fecha,
+            EstaDisponible=True,
+            EstadoHorario='disponible'
+        ).order_by('HorarioInicio')
+        
+        return JsonResponse({
+            'horarios': [
+                {
+                    'id': h.id,
+                    'inicio': h.HorarioInicio.strftime('%H:%M'),
+                    'fin': h.HorarioFin.strftime('%H:%M'),
+                    'estado': h.EstadoHorario
+                } for h in horarios
+            ]
+        })
+    except ValueError:
+        return JsonResponse({
+            'error': 'Formato de fecha inválido'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
+
+@login_required
+def agendar_cita(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        with transaction.atomic():
+            veterinario_id = request.POST.get('veterinario_id')
+            horario_id = request.POST.get('horario_id')
+            servicios_ids = request.POST.getlist('servicios[]')
+            notas = request.POST.get('notas', '')
+            
+            # Validaciones básicas
+            if not all([veterinario_id, horario_id, servicios_ids]):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Faltan datos requeridos'
+                })
+            
+            # Obtener objetos necesarios
+            veterinario = get_object_or_404(PerfilVeterinario, id=veterinario_id)
+            horario = get_object_or_404(DisponibilidadVeterinario, id=horario_id)
+            
+            # Crear la cita
+            cita = CitaVeterinaria.objects.create(
+                usuario=request.user,
+                veterinario=veterinario,
+                horario=horario,
+                fecha=horario.Fecha,
+                hora_inicio=horario.HorarioInicio,
+                hora_fin=horario.HorarioFin,
+                notas=notas
+            )
+            
+            # Agregar servicios
+            servicios = ServicioPersonalizado.objects.filter(id__in=servicios_ids)
+            cita.servicios.add(*servicios)
+            
+            # Marcar horario como no disponible
+            horario.EstadoHorario = 'ocupado'
+            horario.EstaDisponible = False
+            horario.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Cita agendada exitosamente'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+def mis_citas(request):
+    citas = CitaVeterinaria.objects.filter(usuario=request.user)\
+        .select_related('veterinario', 'horario')\
+        .prefetch_related('servicios')\
+        .order_by('fecha', 'hora_inicio')
+    
+    context = {
+        'citas': citas
+    }
+    
+    return render(request, 'veterinaria/mis_citas.html', context)
+
+@login_required
+@require_POST
+def cancelar_cita(request, cita_id):
+    try:
+        with transaction.atomic():
+            cita = get_object_or_404(
+                CitaVeterinaria, 
+                id=cita_id, 
+                usuario=request.user,
+                estado__in=['pendiente', 'confirmada']
+            )
+            
+            # Liberar el horario
+            if cita.horario:
+                cita.horario.EstadoHorario = 'disponible'
+                cita.horario.EstaDisponible = True
+                cita.horario.save()
+            
+            # Actualizar estado de la cita
+            cita.estado = 'cancelada'
+            cita.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Cita cancelada exitosamente'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+def obtener_horarios_disponibles(request):
+    veterinario_id = request.GET.get('veterinario_id')
+    fecha = request.GET.get('fecha')
+    
+    if not all([veterinario_id, fecha]):
+        return JsonResponse({
+            'error': 'Faltan parámetros requeridos'
+        }, status=400)
+    
+    try:
+        fecha = datetime.strptime(fecha, '%Y-%m-%d').date()
+        horarios = DisponibilidadVeterinario.objects.filter(
+            veterinario_id=veterinario_id,
+            Fecha=fecha,
+            EstaDisponible=True,
+            EstadoHorario='disponible'
+        ).order_by('HorarioInicio')
+        
+        return JsonResponse({
+            'horarios': [
+                {
+                    'id': h.id,
+                    'inicio': h.HorarioInicio.strftime('%H:%M'),
+                    'fin': h.HorarioFin.strftime('%H:%M'),
+                    'estado': h.EstadoHorario
+                } for h in horarios
+            ]
+        })
+    except ValueError:
+        return JsonResponse({
+            'error': 'Formato de fecha inválido'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
 

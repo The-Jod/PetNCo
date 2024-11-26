@@ -17,6 +17,8 @@ from django.core.validators import (
     MinValueValidator
 )
 import re
+from django.db.models import Q
+from django.db.models import Avg
 
 # Definir la función de validación al principio del archivo
 def validate_image_file_extension(value):
@@ -229,151 +231,6 @@ class OrdenItem(models.Model):
     def __str__(self):
         return f"{self.CantidadProducto}x {self.NombreProducto}"
 
-
-
-
-
-
-
-#Sistema De Citas \\ Benja no me odies
-'''
-class Veterinaria(models.Model):
-    CodigoVeterinaria = models.AutoField(primary_key=True)
-    NombreVeterinaria = models.CharField(max_length=100)
-    LocalidadVeterinaria = models.CharField(max_length=100)
-    HorarioInicioVeterinaria = models.TimeField()
-    HorarioCierreVeterinaria = models.TimeField()
-    # CalificacionVeterinaria = models.FloatField(
-    #     default=0,
-    #     validators=[
-    #         models.MinValueValidator(0),
-    #         models.MaxValueValidator(5)
-    #     ]
-    # )
-    DisponibilidadVeterinaria = models.CharField(
-        max_length=1,
-        choices=[('S', 'Sí'), ('N', 'No')],
-        default='S'
-    )
-    # TipoAnimal = models.FloatField(choices=CustomUser.TIPO_ANIMAL_CHOICES)
-    # Nuevos campos
-    telefono = models.CharField(max_length=15, blank=True)
-    email = models.EmailField(blank=True)
-
-    class Meta:
-        verbose_name = 'Veterinaria'
-        verbose_name_plural = 'Veterinarias'
-        indexes = [
-            models.Index(fields=['LocalidadVeterinaria']),
-            # models.Index(fields=['TipoAnimal'])
-        ]
-
-    def __str__(self):
-        return self.NombreVeterinaria
-
-class Veterinario(models.Model):
-    usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
-    veterinaria = models.ForeignKey(Veterinaria, on_delete=models.CASCADE, null=True, blank=True)
-    especialidad = models.CharField(max_length=100)
-    telefono = models.CharField(max_length=15, blank=True)
-    experiencia_años = models.CharField(max_length=150)
-    horario_inicio = models.TimeField(null=True, blank=True)
-    horario_fin = models.TimeField(null=True, blank=True)
-    nombre_veterinario = models.CharField(max_length=100, blank=True, null=True)
-    email = models.EmailField(blank=True)
-
-    class Meta:
-        verbose_name = 'Veterinario'
-        verbose_name_plural = 'Veterinarios'
-
-    def __str__(self):
-        if self.usuario:
-            return f"Dr. {self.usuario.NombreUsuario}"
-        if self.nombre_veterinario:
-            return self.nombre_veterinario
-        elif self.email:
-            return self.email
-        return "Veterinario sin nombre ni correo"
-
-# Servicios
-class Servicio(models.Model):
-    TIPO_SERVICIO = [
-        ('PELUQUERIA', 'Peluquería'),
-        ('LIMPIEZA', 'Limpieza'),
-        ('DENTAL', 'Limpieza Dental'),
-        ('VACUNACION', 'Vacunación'),
-    ]
-
-    CodigoServicio = models.AutoField(primary_key=True)
-    NombreServicio = models.CharField(max_length=100)
-    TipoServicio = models.CharField(max_length=20, choices=TIPO_SERVICIO)
-    LocalidadServicio = models.CharField(max_length=100)
-    HorarioInicioServicio = models.TimeField()
-    HorarioCierreServicio = models.TimeField()
-    # CalificacionServicio = models.FloatField(
-    #     default=0,
-    #     validators=[
-    #         models.MinValueValidator(0),
-    #         models.MaxValueValidator(5)
-    #     ]
-    # )
-    DisponibilidadServicio = models.CharField(
-        max_length=1,
-        choices=[('S', 'Sí'), ('N', 'No')],
-        default='S'
-    )
-    # TipoAnimal = models.FloatField(choices=CustomUser.TIPO_ANIMAL_CHOICES)
-    Precio = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        verbose_name = 'Servicio'
-        verbose_name_plural = 'Servicios'
-
-    def __str__(self):
-        return f"{self.NombreServicio} - {self.get_TipoServicio_display()}"
-
-# Citas Veterinarias
-class CitaVeterinaria(models.Model):
-    ESTADO_CHOICES = [
-        ('PENDIENTE', 'Pendiente'),
-        ('CONFIRMADA', 'Confirmada'), 
-        ('CANCELADA', 'Cancelada'),
-    ]
-
-    usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='citas')
-    servicio = models.CharField(max_length=255)
-    veterinaria = models.ForeignKey('Veterinaria', on_delete=models.CASCADE)
-    veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE)
-    fecha_inicio = models.DateTimeField()
-    fecha_fin = models.DateTimeField()
-    titulo = models.CharField(max_length=200)
-    descripcion = models.TextField(blank=True, null=True)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    color = models.CharField(max_length=20, default='#3788d8')
-    todo_el_dia = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ['-fecha_inicio']
-
-    def __str__(self):
-        return f"{self.titulo} - {self.fecha_inicio.strftime('%Y-%m-%d %H:%M')} ({self.estado})"
-
-    def get_event_data(self):
-        return {
-            'id': self.id,
-            'title': self.titulo,
-            'start': self.fecha_inicio.isoformat(),
-            'end': self.fecha_fin.isoformat(),
-            'description': self.descripcion,
-            'color': self.color,
-            'allDay': self.todo_el_dia,
-            'estado': self.estado,
-            'veterinario': self.veterinario.nombre_veterinario,
-            'usuario': self.usuario.NombreUsuario,
-            'servicio': self.servicio
-        }
-'''
-
 class PerfilVeterinario(models.Model):
     usuario = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -482,14 +339,13 @@ class PerfilVeterinario(models.Model):
 
     @property
     def promedio_calificaciones(self):
-        """Retorna el promedio de calificaciones del veterinario"""
-        return self.resenas.aggregate(
-            promedio=models.Avg('Calificacion')
-        )['promedio'] or 0
+        resenas = self.resenas.all()
+        if not resenas:
+            return 0
+        return resenas.aggregate(Avg('Calificacion'))['Calificacion__avg'] or 0
     
     @property
-    def cantidad_resenas(self):
-        """Retorna el número total de reseñas"""
+    def total_resenas(self):
         return self.resenas.count()
     
     def distribucion_calificaciones(self):
@@ -498,6 +354,14 @@ class PerfilVeterinario(models.Model):
             i: self.resenas.filter(Calificacion=i).count()
             for i in range(1, 6)
         }
+
+    @property
+    def horarios_atencion(self):
+        """Alias para disponibilidades para mantener consistencia en templates"""
+        return self.disponibilidades.filter(
+            Fecha__gte=timezone.now().date(),
+            EstaDisponible=True
+        ).order_by('Fecha', 'HorarioInicio')
 
 class ServicioBase(models.Model):
     TIPO_CHOICES = [
@@ -553,6 +417,13 @@ class ServicioPersonalizado(models.Model):
         return f"{self.servicio_base.NombreServicio} - Dr(a). {self.veterinario.NombreVeterinario}"
 
 class DisponibilidadVeterinario(models.Model):
+    ESTADO_CHOICES = [
+        ('disponible', 'Disponible'),
+        ('reservado', 'Reservado'),
+        ('expirado', 'Expirado'),
+        ('cancelado', 'Cancelado')
+    ]
+    
     veterinario = models.ForeignKey(
         PerfilVeterinario,
         on_delete=models.CASCADE,
@@ -564,7 +435,12 @@ class DisponibilidadVeterinario(models.Model):
     EstaDisponible = models.BooleanField(default=True)
     FechaCreacion = models.DateTimeField(auto_now_add=True)
     UltimaActualizacion = models.DateTimeField(auto_now=True)
-
+    EstadoHorario = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='disponible'
+    )
+    
     class Meta:
         ordering = ['Fecha', 'HorarioInicio']
         constraints = [
@@ -573,11 +449,34 @@ class DisponibilidadVeterinario(models.Model):
                 name='unique_veterinario_fecha_inicio'
             )
         ]
+        indexes = [
+            models.Index(fields=['Fecha', 'HorarioInicio']),
+            models.Index(fields=['EstaDisponible', 'EstadoHorario']),
+            models.Index(fields=['Fecha', 'EstaDisponible']),
+            models.Index(fields=['veterinario', 'Fecha']),
+            models.Index(fields=['EstadoHorario']),
+        ]
+
+    def tiene_conflicto(self):
+        """Verifica si hay conflictos con otros horarios"""
+        solapados = DisponibilidadVeterinario.objects.filter(
+            veterinario=self.veterinario,
+            Fecha=self.Fecha,
+            EstaDisponible=True
+        ).filter(
+            Q(HorarioInicio__lt=self.HorarioFin, HorarioFin__gt=self.HorarioInicio) |
+            Q(HorarioInicio=self.HorarioInicio, HorarioFin=self.HorarioFin)
+        )
+        
+        if self.pk:  # Si estamos actualizando, excluimos el registro actual
+            solapados = solapados.exclude(pk=self.pk)
+            
+        return solapados.exists()
 
     def clean(self):
         super().clean()
         
-        # Validar que la fecha no sea anterior a hoy
+        # Validaciones existentes de fecha y hora
         ahora = timezone.localtime(timezone.now())
         hoy = ahora.date()
         hora_actual = ahora.time()
@@ -585,13 +484,9 @@ class DisponibilidadVeterinario(models.Model):
         if self.Fecha < hoy:
             raise ValidationError('No se pueden crear horarios en fechas pasadas')
         
-        # Si es hoy, validar que la hora de inicio sea posterior a la hora actual
         if self.Fecha == hoy:
-            # Convertir la hora de inicio a datetime para comparación correcta
             hora_inicio = datetime.combine(hoy, self.HorarioInicio)
             hora_actual = datetime.combine(hoy, hora_actual)
-            
-            # Agregar un margen de 5 minutos para evitar problemas de sincronización
             hora_actual = hora_actual - timedelta(minutes=5)
             
             if hora_inicio.time() <= hora_actual.time():
@@ -604,7 +499,7 @@ class DisponibilidadVeterinario(models.Model):
                 'HorarioInicio': 'La hora de inicio debe ser anterior a la hora de fin'
             })
         
-        # Calcular la diferencia en minutos
+        # Validación de duración
         inicio = datetime.combine(datetime.today(), self.HorarioInicio)
         fin = datetime.combine(datetime.today(), self.HorarioFin)
         diferencia = (fin - inicio).total_seconds() / 60
@@ -619,17 +514,8 @@ class DisponibilidadVeterinario(models.Model):
                 'HorarioInicio': 'El horario no puede exceder las 12 horas'
             })
         
-        # Verificar solapamiento de horarios
-        solapados = DisponibilidadVeterinario.objects.filter(
-            veterinario=self.veterinario,
-            Fecha=self.Fecha,
-            HorarioInicio__lt=self.HorarioFin,
-            HorarioFin__gt=self.HorarioInicio
-        )
-        if self.pk:  # Si estamos actualizando, excluimos el registro actual
-            solapados = solapados.exclude(pk=self.pk)
-        
-        if solapados.exists():
+        # Verificar conflictos usando el nuevo método
+        if self.tiene_conflicto():
             raise ValidationError('Este horario se solapa con otro existente')
 
     def save(self, *args, **kwargs):
@@ -670,3 +556,49 @@ class ResenaVeterinario(models.Model):
 
     def __str__(self):
         return f"Reseña de {self.usuario} para {self.veterinario}"
+
+class CitaVeterinaria(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('confirmada', 'Confirmada'),
+        ('cancelada', 'Cancelada'),
+        ('completada', 'Completada')
+    ]
+    
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='citas'
+    )
+    veterinario = models.ForeignKey(
+        'PerfilVeterinario',
+        on_delete=models.CASCADE,
+        related_name='citas'
+    )
+    servicios = models.ManyToManyField(
+        'ServicioPersonalizado',
+        related_name='citas'
+    )
+    horario = models.ForeignKey(
+        'DisponibilidadVeterinario',
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    fecha = models.DateField()
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    notas = models.TextField(blank=True, null=True)
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='pendiente'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    evento_google_usuario = models.CharField(max_length=255, blank=True, null=True)
+    evento_google_veterinario = models.CharField(max_length=255, blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-fecha', '-hora_inicio']
+        
+    def __str__(self):
+        return f"Cita {self.id} - {self.usuario} con {self.veterinario}"

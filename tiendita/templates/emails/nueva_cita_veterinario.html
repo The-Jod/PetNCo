@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #2ECC71; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { text-align: center; padding: 20px; color: #666; }
+        .patient-info { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Nueva Cita Agendada</h1>
+        </div>
+        <div class="content">
+            <p>Hola Dr(a). {{ veterinario.NombreVeterinario }},</p>
+            <p>Se ha agendado una nueva cita:</p>
+            
+            <div class="patient-info">
+                <h3>Información del Paciente:</h3>
+                <ul>
+                    <li><strong>Nombre:</strong> {{ usuario.get_full_name }}</li>
+                    <li><strong>Email:</strong> {{ usuario.EmailUsuario }}</li>
+                    <li><strong>Teléfono:</strong> {{ usuario.TelefonoUsuario }}</li>
+                </ul>
+            </div>
+            
+            <h3>Detalles de la Cita:</h3>
+            <ul>
+                <li><strong>Fecha:</strong> {{ cita.fecha|date:"d/m/Y" }}</li>
+                <li><strong>Hora:</strong> {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}</li>
+                <li><strong>Servicios:</strong>
+                    <ul>
+                        {% for servicio in servicios %}
+                        <li>{{ servicio.servicio_base.NombreServicio }} ({{ servicio.DuracionMinutos }} min)</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            </ul>
+            
+            {% if cita.notas %}
+            <p><strong>Notas del paciente:</strong><br>
+            {{ cita.notas }}</p>
+            {% endif %}
+        </div>
+        <div class="footer">
+            <p>Esta cita ya ha sido agregada a tu calendario.</p>
+        </div>
+    </div>
+</body>
+</html> 

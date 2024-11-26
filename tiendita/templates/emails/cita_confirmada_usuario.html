@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4A90E2; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { text-align: center; padding: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Confirmación de Cita Veterinaria</h1>
+        </div>
+        <div class="content">
+            <p>Hola {{ usuario.get_full_name }},</p>
+            <p>Tu cita ha sido agendada exitosamente:</p>
+            
+            <h3>Detalles de la cita:</h3>
+            <ul>
+                <li><strong>Fecha:</strong> {{ cita.fecha|date:"d/m/Y" }}</li>
+                <li><strong>Hora:</strong> {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}</li>
+                <li><strong>Veterinario:</strong> {{ veterinario.NombreVeterinario }}</li>
+                <li><strong>Servicios:</strong>
+                    <ul>
+                        {% for servicio in servicios %}
+                        <li>{{ servicio.servicio_base.NombreServicio }}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            </ul>
+            
+            {% if cita.notas %}
+            <p><strong>Notas adicionales:</strong><br>
+            {{ cita.notas }}</p>
+            {% endif %}
+            
+            <p>Por favor, llega 10 minutos antes de tu cita.</p>
+        </div>
+        <div class="footer">
+            <p>Si necesitas reagendar o cancelar tu cita, por favor contáctanos.</p>
+        </div>
+    </div>
+</body>
+</html> 

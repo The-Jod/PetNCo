@@ -13,7 +13,7 @@ from django.utils import timezone
 import os
 
 # Local application imports
-from .models import Producto, CustomUser
+from .models import Producto, CustomUser, DisponibilidadVeterinario
 
 def validar_rut_chileno(rut):
     # Limpia el RUT de puntos y guión
@@ -63,7 +63,7 @@ class ProductoForm(forms.ModelForm):
     NombreProducto = forms.CharField(
         validators=[
             RegexValidator(
-                regex='^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$',
+                regex=r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$',
                 message='El nombre del producto debe contener solo letras y espacios',
                 code='invalid_nombre'
             )
@@ -417,5 +417,32 @@ class CambiarPasswordForm(forms.Form):
         if password_nuevo and password_confirmacion:
             if password_nuevo != password_confirmacion:
                 raise forms.ValidationError('Las contraseñas nuevas no coinciden')
+        return cleaned_data
+
+class DisponibilidadForm(forms.ModelForm):
+    class Meta:
+        model = DisponibilidadVeterinario
+        fields = ['Fecha', 'HorarioInicio', 'HorarioFin']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        inicio = cleaned_data.get('HorarioInicio')
+        fin = cleaned_data.get('HorarioFin')
+        fecha = cleaned_data.get('Fecha')
+
+        if all([inicio, fin, fecha]):
+            # Validar que la fecha no sea pasada
+            if fecha < timezone.now().date():
+                raise ValidationError('No se pueden crear horarios en fechas pasadas')
+            
+            # Validar que el fin sea después del inicio
+            if fin <= inicio:
+                raise ValidationError('La hora de fin debe ser posterior a la hora de inicio')
+            
+            # Validar duración mínima (ejemplo: 30 minutos)
+            duracion = datetime.combine(fecha, fin) - datetime.combine(fecha, inicio)
+            if duracion.total_seconds() < 1800:  # 30 minutos
+                raise ValidationError('El horario debe tener una duración mínima de 30 minutos')
+
         return cleaned_data
 

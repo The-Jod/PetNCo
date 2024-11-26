@@ -1,164 +1,238 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Veterinarios - Vet & Pet Center{% endblock %}
-
 {% block extra_styles %}
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'css/lista_veterinaria.css' %}">
 <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/stylishass.css' %}">
+<style>
+    /* Estilos para el contenedor principal */
+    .main-container {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    /* Estilos para la tarjeta de filtros */
+    .filters-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    .filters-card .card-header {
+        background: linear-gradient(45deg, #4a90e2, #63b3ed);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 1.2rem;
+    }
+
+    .filters-card .form-label {
+        color: #2d3748;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .filters-card .form-select {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .filters-card .form-select:focus {
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    }
+
+    .search-btn {
+        background: linear-gradient(45deg, #4a90e2, #63b3ed);
+        border: none;
+        border-radius: 8px;
+        padding: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    }
+
+    /* Estilos para las tarjetas de veterinarios */
+    .vet-card {
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+    }
+
+    .vet-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+
+    .vet-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .vet-name {
+        color: #2d3748;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .vet-specialty {
+        color: #718096;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .service-badge {
+        background-color: #edf2f7;
+        color: #4a5568;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .service-badge:hover {
+        background-color: #e2e8f0;
+    }
+
+    .rating-stars {
+        color: #f6ad55;
+        font-size: 0.9rem;
+    }
+
+    .rating-stars i {
+        margin-right: 2px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background-color: #fff;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    }
+</style>
 {% endblock %}
-
+{% block extra_scripts %}
+<script src="{% static 'js/navbar.js' %}"></script>
+{% endblock %}
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <!-- Filtros en card a la izquierda -->
-        <div class="col-md-3">
-            <div class="filter-card">
-                <h3 class="mb-4">Filtros</h3>
-                
-                <!-- Búsqueda -->
-                <div class="filter-section">
-                    <h4>Búsqueda</h4>
-                    <div class="search-box mb-3">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="form-control" id="searchInput" 
-                               placeholder="Buscar veterinario...">
+<div class="main-container">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Filtros -->
+            <div class="col-md-3">
+                <div class="card filters-card sticky-top" style="top: 20px;">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sliders-h me-2"></i>Filtros de Búsqueda
+                        </h5>
                     </div>
-                </div>
-
-                <!-- Tipo de Atención -->
-                <div class="filter-section">
-                    <h4>Tipo de Atención</h4>
-                    <div class="filter-options">
-                        <label>
-                            <input type="checkbox" value="presencial"> Presencial
-                        </label>
-                        <label>
-                            <input type="checkbox" value="domicilio"> A Domicilio
-                        </label>
-                        <label>
-                            <input type="checkbox" value="virtual"> Virtual
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Especialidad -->
-                <div class="filter-section">
-                    <h4>Especialidad</h4>
-                    <select class="form-select" id="especialidad">
-                        <option value="">Todas las especialidades</option>
-                        {% for especialidad in especialidades %}
-                        <option value="{{ especialidad }}">{{ especialidad }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Calificación -->
-                <div class="filter-section">
-                    <h4>Calificación Mínima</h4>
-                    <div class="filter-options rating-filter">
-                        {% for i in "54321"|make_list %}
-                        <label>
-                            <input type="radio" name="rating" value="{{ i }}">
-                            <span class="stars">
-                                {% for j in "12345"|make_list %}
-                                <i class="fas fa-star{% if j|add:"0" > i|add:"0" %}-o{% endif %}"></i>
-                                {% endfor %}
-                            </span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Rango de Precios -->
-                <div class="filter-section">
-                    <h4>Rango de Precios</h4>
-                    <div class="price-range">
-                        <input type="range" class="form-range" id="precioMin" min="0" max="100000" step="1000">
-                        <div class="d-flex justify-content-between">
-                            <span>$0</span>
-                            <span>$100.000</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botón Limpiar Filtros -->
-                <button class="btn btn-outline-secondary clear-filters">
-                    <i class="fas fa-undo-alt"></i> Limpiar Filtros
-                </button>
-            </div>
-        </div>
-
-        <!-- Lista de veterinarios -->
-        <div class="col-md-9 content-area">
-            <div class="veterinarios-lista">
-                {% for veterinario in veterinarios %}
-                <div class="veterinario-card">
-                    <div class="row g-0">
-                        <!-- Columna izquierda: Imagen y reseñas -->
-                        <div class="col-md-4">
-                            <div class="veterinario-image-container">
-                                {% if veterinario.ImagenPerfil %}
-                                <img src="{{ veterinario.ImagenPerfil.url }}" 
-                                     alt="{{ veterinario.NombreVeterinario }}"
-                                     class="img-fluid rounded"
-                                     onerror="this.src='{% static 'img/ProductPlaceholder.png' %}'">
-                                {% else %}
-                                <img src="{% static 'img/ProductPlaceholder.png' %}" 
-                                     alt="{{ veterinario.NombreVeterinario }}"
-                                     class="img-fluid rounded">
-                                {% endif %}
-                            </div>
-                            <div class="veterinario-rating mt-3">
-                                <div class="stars">
-                                    {% for i in "12345" %}
-                                    <i class="fas fa-star{% if forloop.counter > veterinario.promedio_rating %}-o{% endif %}"></i>
+                    <div class="card-body p-4">
+                        <form id="filtrosForm">
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-stethoscope me-2"></i>Especialidad
+                                </label>
+                                <select class="form-select">
+                                    <option value="">Todas las especialidades</option>
+                                    {% for especialidad in especialidades %}
+                                        <option value="{{ especialidad }}">{{ especialidad }}</option>
                                     {% endfor %}
-                                </div>
-                                <span class="rating-count">({{ veterinario.total_reviews }} reseñas)</span>
+                                </select>
                             </div>
-                        </div>
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-star me-2"></i>Calificación mínima
+                                </label>
+                                <select class="form-select">
+                                    <option value="">Todas las calificaciones</option>
+                                    <option value="4">4+ estrellas</option>
+                                    <option value="3">3+ estrellas</option>
+                                    <option value="2">2+ estrellas</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="search-btn btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Columna derecha: Información y servicios -->
-                        <div class="col-md-8">
-                            <div class="veterinario-info">
-                                <h3 class="veterinario-name">Dr(a). {{ veterinario.NombreVeterinario }}</h3>
-                                <p class="veterinario-specialty">{{ veterinario.Especialidad }}</p>
-                                
-                                <div class="veterinario-services mb-3">
-                                    <h4>Servicios:</h4>
-                                    <div class="service-tags">
-                                        {% for servicio in veterinario.servicios_activos %}
-                                        <span class="service-tag">{{ servicio.NombreServicio }}</span>
-                                        {% endfor %}
+            <!-- Lista de veterinarios -->
+            <div class="col-md-9">
+                <div class="row g-4">
+                    {% for veterinario in veterinarios %}
+                    <div class="col-md-6">
+                        <div class="card vet-card">
+                            <div class="card-body p-4">
+                                <div class="d-flex" onclick="window.location.href='{% url 'detalle_veterinario' veterinario.id %}'" style="cursor: pointer;">
+                                    <div class="flex-shrink-0">
+                                        <img src="{{ veterinario.ImagenPerfil.url|default:'static/img/default-vet.png' }}" 
+                                             class="vet-image">
+                                    </div>
+                                    <div class="flex-grow-1 ms-4">
+                                        <h5 class="vet-name">{{ veterinario.NombreCompletoVeterinario }}</h5>
+                                        <p class="vet-specialty mb-3">
+                                            <i class="fas fa-user-md me-2"></i>{{ veterinario.Especialidad }}
+                                        </p>
+                                        <div class="mb-3">
+                                            <div class="rating-stars">
+                                                {% for i in "12345"|make_list %}
+                                                    {% if forloop.counter <= veterinario.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <small class="text-muted ms-2">({{ veterinario.num_resenas }} reseñas)</small>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for servicio in veterinario.servicios_personalizados.all|slice:":3" %}
+                                                <span class="service-badge">
+                                                    {{ servicio.servicio_base.NombreServicio }}
+                                                </span>
+                                            {% endfor %}
+                                            {% if veterinario.servicios_personalizados.count > 3 %}
+                                                <span class="service-badge">+{{ veterinario.servicios_personalizados.count|add:"-3" }}</span>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="veterinario-location">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span>{{ veterinario.Ubicacion }}</span>
-                                </div>
-
-                                <div class="veterinario-footer mt-3">
-                                    <button class="btn btn-primary btn-agendar" 
-                                            data-veterinario-id="{{ veterinario.id }}">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        Agendar Cita
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h4>No se encontraron resultados</h4>
+                            <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script src="{% static 'js/navbar.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,108 @@
+<!-- Modal de Calificación -->
+<div class="modal fade" id="calificarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Escribir Reseña</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formCalificar" method="POST" action="{% url 'calificar_veterinario' veterinario.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Calificación</label>
+                        <div class="rating-input">
+                            {% for i in "54321"|make_list %}
+                            <input type="radio" name="calificacion" value="{{ i }}" id="star{{ i }}" required>
+                            <label for="star{{ i }}" title="{{ i }} estrellas">★</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comentario</label>
+                        <textarea class="form-control" name="comentario" rows="4" required 
+                                placeholder="Cuéntanos tu experiencia..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Reseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('formCalificar').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: '¡Gracias!',
+                text: 'Reseña enviada correctamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                $('#calificarModal').modal('hide');
+                window.location.reload(); // Recargar para ver la nueva reseña
+            });
+        } else {
+            throw new Error(data.error || 'Error al enviar la reseña');
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            title: 'Error',
+            text: error.message,
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
+    });
+});
+</script>
+
+<style>
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.5em;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input label {
+    cursor: pointer;
+    font-size: 2em;
+    color: #ddd;
+    transition: color 0.2s ease;
+}
+
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label {
+    color: #ffd700;
+}
+
+.rating-input:hover label {
+    color: #ffd700;
+}
+
+.rating-input:hover label:hover ~ label {
+    color: #ddd;
+}
+</style> 
